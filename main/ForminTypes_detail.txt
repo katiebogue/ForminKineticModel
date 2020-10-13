@@ -1,0 +1,41 @@
+Protein_Abbreviation-Species UNIPROT_Query_Code (full name / alternate names)
+
+Diaph1-Human O60610 (protein diaphanous homolog 1 / DRF1) 
+Diap3-Human Q69NSV4 (protein diaphanous homolog 3 / MDia2 DRF2) 
+Diap2-Human O60879 (protein diaphanous homolog 2 / DRF2) 
+Diap1-Mouse O08808 (protein diaphanous homolog 1 / DRF1 mDia1) 
+Diap2-Mouse O70566 (protein diaphanous homolog 2 / DRF2 mDia3)
+Diap3-Mouse Q9Z207 (protein diaphanous homolog 3 / DRF3 mDIA2) 
+Diap1_Rat F1M775 (protein diaphanous homolog 1 / DRF1) 
+Diap3-Rat F1LVW7 (protein diaphanous homolog 3 / DRF3 mDia2) 
+
+DAAM1-Human Q9Y4D1 (disheveled-associated activator of morphogenesis 1) 
+DAAM2-Human Q86T65
+DAAM1-Mouse Q8BPM0
+DAAM2-Mouse Q80U19
+
+CAPU-FruitFly Q24120 (protein cappuccino in drosophilia melanogaster)
+
+FMN1-Human Q68DA7 (formin 1 / limb deformity protein homolog)
+FMN2-Human Q9NZ56 (formin-2)
+FMN1-Mouse Q05860 (formin-1 / limb deformity protein)
+FMN2-Mouse Q9JL04 (formin-2)
+
+INF2-Mouse Q0GNC1 (inverted formin-2)
+
+FHOD1-Human Q9Y613 (fh1/fh2 domain-containing protein 1 / FHOS)
+FHOD3-Human Q2V2M9 (fh1/fh2 domain-containing protein 3 / formactin-2 hFHOS2)
+FHOD1-Mouse Q6P9Q4 
+FHOD3-Mouse Q76LL6
+
+BNR1-Yeast P40450 (BNI-related protein 1)
+
+CDC12P-Yeast Q10059 (cell division control protein 12)
+
+BNI1P-Yeast P418323 (protein BNI1 / pointed projection formation protein 3; sensitive to high expression protein 5; synthetic lethal 39)
+
+
+
+
+
+
