@@ -12,7 +12,7 @@
     % user_string.m % using_hg2.m
     % ghostscript.m % append_pdfs.m
 
-% imports the following files
+% imports the following look-up tables
     % ForminTypes.txt
     % single_300.txt %double_200.txt %dimer_122.txt
 
@@ -37,17 +37,20 @@ opt3 = 1
 % if opt4 = 0, saves pdf with each formin on a different page
 % if opt4 = 1, creates (but not saves) matlab figures with 3 fh1 per figure
     % if opt3 = 0, grid will have gaps in place of fh1 with length > 200
-opt4 = 1
+opt4 = 0
 
-% name of outputed pdf    % must end with '.pdf'
+% name of outputed pdf       % must end with '.pdf'
 pdf_name = 'RESULTS.pdf';
 
+% location of look-up tables
+path = '../../PolymerData/' ;
+
+
 %% (1) read output files and extract all values of p_occ
- %need to change paths
-%path = ..\ %path to txt files
-m1 = dlmread('single1_300.txt');
-m2 = dlmread('double_200.txt');
-m3 = dlmread('dimer_122.txt');
+
+m1 = dlmread(append(path,'single1_300.txt'));
+m2 = dlmread(append(path,'double_200.txt'));
+m3 = dlmread(append(path,'dimer_122.txt'));
 
 find_pocc
 
