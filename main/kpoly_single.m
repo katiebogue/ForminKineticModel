@@ -1,13 +1,13 @@
 % opt3 = 0
 % location of look-up tables
-path = '../../PolymerData/' ;
+% path = '../../PolymerData/' ;
 
 
 %% (1) read output files and extract all values of p_occ
 
-m1 = dlmread(append(path,'single1_300.txt'));
-m2 = dlmread(append(path,'double_200.txt'));
-m3 = dlmread(append(path,'dimer_122.txt'));
+m1 = dlmread('single1_300.txt');
+m2 = dlmread('double_200.txt');
+m3 = dlmread('dimer_122.txt');
 
 find_pocc
 
@@ -18,9 +18,9 @@ Name_Query = char(importdata('ForminTypes.txt'));
 Name_Query = strsplit(Name_Query);
 
 % adds current matlab path to python paths if necessary
-% %if count(py.sys.path,'') == 0
-%     insert(py.sys.path,int32(0),'');
-% end
+if count(py.sys.path,'') == 0
+     insert(py.sys.path,int32(0),'');
+ end
 
 all_fh1_names = [];
 all_kpoly1 = [];
