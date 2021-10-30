@@ -95,7 +95,7 @@ p_occ3b = [];
 % see (intro) regarding which probabilities are extrapolated
 % if not extrapolated, exact simulated probabilities used
 
-if iSite_tot == 0 
+if iSite_tot == 0 %skips if no binding sites
     continue
 end
 

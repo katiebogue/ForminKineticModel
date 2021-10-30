@@ -18,7 +18,7 @@ def gathering(query):
     from itertools import groupby
     # Import numpy for efficient array/math functions
     import numpy as np
-    from numpy import floor
+    from numpy import floor  
     
     service = UniProt() 
     result_xml = service.search(query, frmt="xml")

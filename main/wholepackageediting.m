@@ -1,3 +1,6 @@
+clear
+clc
+close all
 %% (0) INTRO
 
 % saves pdf containing the following info:
@@ -37,7 +40,7 @@ opt3 = 1
 % if opt4 = 0, saves pdf with each formin on a different page
 % if opt4 = 1, creates (but not saves) matlab figures with 3 fh1 per figure
     % if opt3 = 0, grid will have gaps in place of fh1 with length > 200
-opt4 = 1
+opt4 = 0
 
 % name of outputed pdf       % must end with '.pdf'
 pdf_name = 'RESULTS.pdf';
@@ -65,6 +68,14 @@ if count(py.sys.path,'') == 0
    insert(py.sys.path,int32(0),'');
 end
 
+all_fh1_names = [];
+all_kpoly1 = [];
+all_kpoly2 = [];
+all_kpoly3 = [];
+
+all_iSite_tot = [];
+
+
 for LOOP = 1:length(Name_Query)/2
     
 fh1_name = convertCharsToStrings(Name_Query(2*LOOP -1));   %takes the names (every other string
@@ -77,8 +88,8 @@ query = convertCharsToStrings(Name_Query(2*LOOP));         %takes the lookup val
 
 %calls py script to get polymer stats from UNIPROT
 py.importlib.import_module('bioservices')
-py.importlib.import_module('gather_info')
-x = py.gather_info.gathering(query);   %uses python function defined in gather_info that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
+py.importlib.import_module('PP_interruption')
+x = py.PP_interruption.gathering(query);   %uses python function defined in gather_info that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
 
 %changes variable format to matlab doubles
 fh1_length = cell2mat(x(1));  %length of FH1 domain from gathering
@@ -98,6 +109,9 @@ end
 
 %sets more variables and constants
 iSite_tot = length(pp_index_vec); %number of total binding sites on one filament
+
+all_iSite_tot = [all_iSite_tot; iSite_tot];
+
 
 % skips fh1 with length over 200 based on chosen opt3
 if opt3 == 0
@@ -124,6 +138,12 @@ p_occ3b = [];
 % extracts specific probabilities for current fh1 from arrays set in find_pocc 
 % see (intro) regarding which probabilities are extrapolated
 % if not extrapolated, exact simulated probabilities used
+
+
+if iSite_tot == 0 %skips if no binding sites
+    continue
+end
+
 if fh1_length <= 300
     [row,~] = find(X1(:,1) == fh1_length & X1(:,2) == pp_index_vec); %num of row corresponding to fH1 length AND location of PP
     p_occ1 = X1(row,3); %all probabilities for that length at each PP location
@@ -166,6 +186,28 @@ make_filament_schematic
 
 calculate_kpoly
 
+%% add kpoly combined chart
+log_kpoly1=log(k_poly1);
+log_kpoly2=log(k_poly2);
+log_kpoly3= log(k_poly3);
+
+
+%y = [k_poly1, k_poly2, k_poly3];
+% hb = bar(LOOP, y);
+% set(hb(1), 'FaceColor','b')
+% set(hb(2), 'FaceColor','r')
+% set(hb(3), 'FaceColor','g')
+
+hold on
+all_fh1_names = [all_fh1_names; fh1_name];
+all_kpoly1 = [all_kpoly1; log_kpoly1];
+all_kpoly2 = [all_kpoly2; log_kpoly2];
+all_kpoly3 = [all_kpoly3; log_kpoly3];
+
+
+%pp_index_vec
+%fh1_length_vec
+%row
 
 %% (5) create pdfs
 
@@ -202,7 +244,49 @@ if opt4 == 1
         append_pdfs(pdf_name, append('temp.pdf'))
     end
 end
-        
+
+close all
+ kpoly_table = table(all_kpoly1, all_kpoly2, all_kpoly3, 'RowNames', all_fh1_names);
+ sorted_kpoly_table = sortrows(kpoly_table);
+ 
+ kpoly_bar = bar(sorted_kpoly_table{:,:});
+ set(gca,'xtick',[1:25], 'xticklabel',sorted_kpoly_table.Properties.RowNames)
+ xtickangle(90)
+ set(kpoly_bar(1), 'FaceColor','b')
+ set(kpoly_bar(2), 'FaceColor','r')
+ set(kpoly_bar(3), 'FaceColor','g')
+ legend( 'single', 'double', 'N-term dimerized')
+ xlabel('Formins')
+ ylabel('log(kpoly)')
+ ylim([0 10])
+ 
+ saveas(gcf, append('temp.pdf'))
+ append_pdfs(pdf_name, append('temp.pdf'))
+ 
+close all
+ 
+hb = bar(all_iSite_tot, 'stacked');
+set(hb(1), 'FaceColor','b')
+%set(hb(2), 'FaceColor','r')
+hold on
+
+%legend( '6PI', '6P')
+%names = {'Diap1--Human', 'Diap2--Human', 'Diap3--Human', 'Diap1--Mouse', 'Diap2--Mouse', 'Diap3--Mouse', 'Diap1--Rat','Diap3--Rat','DAAM1--Human', 'DAAM2--Human', 'DAAM1--Mouse', 'DAAM2--Mouse', 'CAPU--FruitFly', 'FMN1--Human', 'FMN2--Human', 'FMN1--Mouse', 'FMN2--Mouse', 'INF2--Mouse', 'FHOD1--Human', 'FHOD3--Human', 'FHOD1--Mouse', 'FHOD3--Mouse', 'BNR1--Yeast', 'CDC12P--Yeast', 'BNI1P--Yeast'};
+xTick=get(gca,'xtick'); 
+% xMax=max(xtick); 
+% xMin=min(xtick); 
+% newXTick=linspace(xMin,xMax,25); 
+set(gca,'xtick',[1:length(all_fh1_names)], 'xticklabel', all_fh1_names)
+xtickangle(90)
+%set(gca, 'XTickLabel', {'Diap1--Human', 'Diap2--Human', 'Diap3--Human', 'Diap1--Mouse', 'Diap2--Mouse', 'Diap3--Mouse', 'Diap1--Rat','Diap3--Rat','DAAM1--Human', 'DAAM2--Human', 'DAAM1--Mouse', 'DAAM2--Mouse', 'CAPU--FruitFly', 'FMN1--Human', 'FMN2--Human', 'FMN1--Mouse', 'FMN2--Mouse', 'INF2--Mouse','})
+ylim([0 35])
+
+xlabel('Formins')
+ylabel('Binding sites')
+
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
 % deletes temporary pdf and closes all matlab figures
 
 close all

@@ -6,23 +6,23 @@
 
 %sets formatting options based on opt4
 if opt4 == 1
-    if LOOP == 1
+    if LOOP == 1 %first formin
         figure()
-        subplot(3,4,1)
+        subplot(3,4,1) %3x4 grid w/ axis on 1st cell
     else
-        if rem(LOOP,3) == 1
+        if rem(LOOP,3) == 1  %divisible by 3 w/ remainder 1
             figure()
-            subplot(3,4,1)
-        elseif rem(LOOP,3) == 2
-            subplot(3,4,5)
-        elseif rem(LOOP,3) == 0
-            subplot(3,4,9)
+            subplot(3,4,1) %3x4 grid w/ axis on 1st cell
+        elseif rem(LOOP,3) == 2  %divisible by 3 w/ remainder 2
+            subplot(3,4,5) %3x4 grid w/ axis on 5th cell
+        elseif rem(LOOP,3) == 0 %if divisible by 3
+            subplot(3,4,9) %3x4 grid w/ axis on 9th cell
         end
     end
     
 else
     figure()
-    subplot(1,4,1)
+    subplot(1,4,1) %1x4 grid w/ axis on 1st cell
 end
 
 hold on
@@ -37,7 +37,7 @@ plot(x,y,'k','LineWidth',2)
 for i = 1:iSite_tot
     location = pp_index_vec(i);
     width = pp_length_vec(i);
-    scatter(1,location,12*width,'filled')
+    scatter(1,location,12*width,'filled') %adds dots with width proportional to # of PP
 end
 
 set(gca,'XTick',[])
@@ -65,13 +65,13 @@ hold off
 
 if opt2 == 1
     if opt4 == 1
-        title(fh1_name);
+        title(fh1_name); %just name
     else
         sgtitle(fh1_name);
     end
 else
     if opt4 == 1
-        title(fh1_info);
+        title(fh1_info); %all info in fh1_info
     else
         sgtitle(fh1_info);
     end

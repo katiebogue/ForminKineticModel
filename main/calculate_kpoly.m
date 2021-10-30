@@ -38,18 +38,18 @@ fil=[1 2];
 %formatting options based on opt4
 if opt4 == 1
     if LOOP == 1
-        subplot(3,4,2)
+        subplot(3,4,2) %3x4 grid w/ axis on 2nd cell
     else
         if rem(LOOP,3) == 1
-            subplot(3,4,2)
+            subplot(3,4,2) %3x4 grid w/ axis on 2nd cell
         elseif rem(LOOP,3) == 2
-            subplot(3,4,6)
+            subplot(3,4,6) %3x4 grid w/ axis on 6th cell
         elseif rem(LOOP,3) == 0
-            subplot(3,4,10)
+            subplot(3,4,10) %3x4 grid w/ axis on 10th cell
         end
     end
 else
-    subplot(1,4,2)
+    subplot(1,4,2) %1x4 grid w/ axis on 2nd cell
 end
 
 bar(fil, kp1,0.5, 'stacked')
@@ -78,18 +78,18 @@ fil=[1 2 3];
 % formatting options based on opt4
 if opt4 == 1
     if LOOP == 1
-        subplot(3,4,3)
+        subplot(3,4,3) %3x4 grid w/ axis on 3rd cell
     else
         if rem(LOOP,3) == 1
-            subplot(3,4,3)
+            subplot(3,4,3) %3x4 grid w/ axis on 3rd cell
         elseif rem(LOOP,3) == 2
-            subplot(3,4,7)
+            subplot(3,4,7) %3x4 grid w/ axis on 7th cell
         elseif rem(LOOP,3) == 0
-            subplot(3,4,11)
+            subplot(3,4,11) %3x4 grid w/ axis on 11th cell
         end
     end
 else
-    subplot(1,4,3)
+    subplot(1,4,3) %1x4 grid w/ axis on 3rd cell
 end
 
 bar(fil, kp2 ,0.5, 'stacked')
@@ -118,18 +118,18 @@ fil=[1, 2, 3];
 %formatting options based on opt4
 if opt4 == 1
     if LOOP == 1
-        subplot(3,4,4)
+        subplot(3,4,4) %3x4 grid w/ axis on 4th cell
     else
         if rem(LOOP,3) == 1
-            subplot(3,4,4)
+            subplot(3,4,4) %3x4 grid w/ axis on 4th cell
         elseif rem(LOOP,3) == 2
-            subplot(3,4,8)
+            subplot(3,4,8) %3x4 grid w/ axis on 8th cell
         elseif rem(LOOP,3) == 0
-            subplot(3,4,12)
+            subplot(3,4,12) %3x4 grid w/ axis on 12th cell
         end
     end
 else
-    subplot(1,4,4)
+    subplot(1,4,4) %1x4 grid w/ axis on 4th cell
 end
 
 bar(fil, kp3 ,0.5, 'stacked')
