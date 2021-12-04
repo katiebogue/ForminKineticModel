@@ -1,4 +1,6 @@
-pdf_name = 'results.pdf';
+clc
+clear all
+pdf_name = 'results11/20.pdf';
 
 % location of look-up tables
 path = '../../PolymerData/' ;
@@ -37,35 +39,39 @@ query = convertCharsToStrings(Name_Query(2*LOOP));
 %calls py script to get polymer stats from UNIPROT
 py.importlib.import_module('bioservices')
 py.importlib.import_module('PP_interruption')
-x = py.PP_interruption.gathering(query);
+x = py.PP_interruption.gathering_int(query);
+
+%py.importlib.import_module('gather_info')
+%x = py.gather_info.gathering(query);
+
 
 %changes variable format to matlab doubles
 fh1_length = cell2mat(x(1));
 x2 = {cell(x(2))}; %pp_index_vec
 x2 = x2{1}{1};
-%x4 = {cell(x(4))}; %pp_index_vec
-%x4= x4{1}{1};
+% x4 = {cell(x(4))}; %pp_index_vec
+% x4= x4{1}{1};
 pp_index_vec = [];
 pp_index_vec2 = [];
 for i = 1:length(x2)
     pp_index_vec = [pp_index_vec x2{i}]; %locations of binding sites along a single filament
 end
-%for i = 1:length(x4)
-%    pp_index_vec2 = [pp_index_vec2 x4{i}];
-%end
+% for i = 1:length(x4)
+%     pp_index_vec2 = [pp_index_vec2 x4{i}];
+% end
 
 x3 = {cell(x(3))}; %pp_length_vec
 x3 = x3{1}{1};
-%x5 = {cell(x(5))}; %pp_length_vec
-%x5 = x5{1}{1};
+% x5 = {cell(x(5))}; %pp_length_vec
+% x5 = x5{1}{1};
 pp_length_vec = [];
 pp_length_vec2 = [];
 for i = 1:length(x3)
     pp_length_vec = [pp_length_vec x3{i}]; %number of polyprolines at each binding site
 end
-%for i = 1:length(x5)
-%    pp_length_vec2 = [pp_length_vec2 x5{i}];
-%end
+% for i = 1:length(x5)
+%     pp_length_vec2 = [pp_length_vec2 x5{i}];
+% end
 
 %sets more variables and constants
 iSite_tot = length(pp_index_vec); %number of total binding sites on one filament
@@ -103,7 +109,7 @@ ylim([0 35])
 
 xlabel('Formins')
 ylabel('Binding sites')
-savefig('4PI.fig')
+savefig('6PI_int_mostrecent.fig')
 
 
 

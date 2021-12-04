@@ -4,7 +4,7 @@
 # In[35]:
 
 
-def gathering(query,min_PP_length):
+def gathering(query):
     from bioservices import UniProt
     
     # Import BeautifulSoup, a package specialized for interpreting xml data
@@ -70,7 +70,7 @@ def gathering(query,min_PP_length):
 
     for (k,g) in seq:
         length_seq = len(list(g)) # length of poly_proline sequence
-        if k=='P' and length_seq > min_PP_length: # for indexing, refer to report
+        if k=='P' and length_seq >3: # for indexing, refer to report
             if length_seq%2 == 0: 
                 displayIndex = floor ((length_seq) / 2 ) - 1 + index 
                 pp_index_vec.append(displayIndex)
@@ -92,11 +92,11 @@ def gathering(query,min_PP_length):
 # In[36]:
 
 
-#gathering('Q24120')
+gathering('Q24120')
 
 
 # In[38]:
 
 
-#gathering('Q9Y4D1')
+gathering('Q9Y4D1')
 

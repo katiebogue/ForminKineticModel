@@ -10,7 +10,7 @@
 # In[35]:
 
 
-def gathering(query):
+def gathering_int(query,min_PP_length):
     from bioservices import UniProt
     
     # Import BeautifulSoup, a package specialized for interpreting xml data
@@ -108,7 +108,7 @@ def gathering(query):
         if n < len(letter_seq)-2 and letter_seq[n] == 'P' and length_seq[n+1] ==1 and letter_seq[n+2] == 'P':
             total_length_PRM = length_seq[n] +  length_seq[n+1] + length_seq[n+2]
             #print('index', n, 'total length', total_length_PRM, 'length of sequence', length_seq[n])
-            if total_length_PRM>6:
+            if total_length_PRM>= min_PP_length:
                 displayIndex = ceil ((total_length_PRM) / 2 )  + seq_index 
                 pp_index_vec.append(displayIndex)
                 pp_length_vec.append(total_length_PRM)
@@ -125,10 +125,12 @@ def gathering(query):
         #total_length2 = length_seq[n] 
         #print(n, total_length2, length_seq[n])
             #if length_seq[n]%2 == 0: 
-            displayIndex = ceil ((length_seq[n]) / 2 ) + seq_index
-            pp_index_vec.append(displayIndex)
-            pp_length_vec.append(length_seq[n])
-            seq_index +=length_seq[n]
+                displayIndex = ceil ((length_seq[n]) / 2 ) + seq_index
+                pp_index_vec.append(displayIndex)
+                pp_index_vec2.append(displayIndex)
+                pp_length_vec.append(length_seq[n])
+                pp_length_vec2.append(length_seq[n])
+                seq_index +=length_seq[n]
         else:
             seq_index += length_seq[n]
         #print(n, length_seq[n]) 
@@ -138,23 +140,25 @@ def gathering(query):
         
      
     pp_length_vec = [float(i) for i in pp_length_vec]
-    #pp_length_vec2 = [float(i) for i in pp_length_vec2]
+    pp_length_vec2 = [float(i) for i in pp_length_vec2]
     
-    return fh1_length, pp_index_vec, pp_length_vec #pp_index_vec2, pp_length_vec2
+    return fh1_length, pp_index_vec, pp_length_vec, #pp_index_vec2, pp_length_vec2
 
-  
+    #return fh1_length, pp_index_vec2, pp_length_vec2, #pp_index_vec2, pp_length_vec2
+
+    #return 24,24,24,24,24
 
 
 # In[36]:
 
 
-gathering('Q24120')
+#gathering('Q24120')
 
 
 # In[38]:
 
 
-gathering('Q9Y4D1')
+#gathering('Q9Y4D1')
 
 
 # In[ ]:

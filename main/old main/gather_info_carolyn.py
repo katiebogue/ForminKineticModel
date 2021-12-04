@@ -1,10 +1,10 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
-# In[35]:
+# In[1]:
 
 
-def gathering(query,min_PP_length):
+def gathering(query):
     from bioservices import UniProt
     
     # Import BeautifulSoup, a package specialized for interpreting xml data
@@ -18,7 +18,7 @@ def gathering(query,min_PP_length):
     from itertools import groupby
     # Import numpy for efficient array/math functions
     import numpy as np
-    from numpy import floor  
+    from numpy import floor
     
     service = UniProt() 
     result_xml = service.search(query, frmt="xml")
@@ -26,7 +26,7 @@ def gathering(query,min_PP_length):
     
     featureFH1 = soup.find_all('feature', description='FH1')
     
-    # note the following code assumes there is one (and only one) annoted FH1 in this structure!
+    # note the following code assumes there is one (and only one) annoted FH1 in this structure
 
     if len(featureFH1) == 0:
         print('No FH1 domain in this protein')
@@ -65,12 +65,14 @@ def gathering(query,min_PP_length):
     fh1_length = float(fh1_length)
     #print(f'\nLength of entire sequence is {fh1_length}')
 
+    seq = (groupby(fh1_sequence));
 
-    seq = (groupby(fh1_sequence)); # group string by letter
 
     for (k,g) in seq:
+        print(k)
         length_seq = len(list(g)) # length of poly_proline sequence
-        if k=='P' and length_seq > min_PP_length: # for indexing, refer to report
+        print(length_seq)
+        if k=='P' and length_seq >3: # for indexing, refer to report
             if length_seq%2 == 0: 
                 displayIndex = floor ((length_seq) / 2 ) - 1 + index 
                 pp_index_vec.append(displayIndex)
@@ -89,14 +91,22 @@ def gathering(query,min_PP_length):
     return fh1_length, pp_index_vec, pp_length_vec
 
 
-# In[36]:
+# In[3]:
 
 
-#gathering('Q24120')
+#test case
+# Q24120 = Capu
+gathering('Q24120')
 
 
-# In[38]:
+# In[ ]:
 
 
-#gathering('Q9Y4D1')
+
+
+
+# In[ ]:
+
+
+
 
