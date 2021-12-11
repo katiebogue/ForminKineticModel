@@ -26,30 +26,30 @@ close all
 %Determining Binding Sites:
 % if interruptions = Y, binding sites are calculated allowing for non proline interruptions
 % if interruptions = N, binding sites are calculated without interruptions
-interruptions = 'N'
+interruptions = 'N';
 
-min_PP_length = 6 %defines the minimum length of polyproline region to be considered a binding site
+min_PP_length = 6; %defines the minimum length of polyproline region to be considered a binding site
 
 % if opt = 0, graphs across all formin types have same axes
 % if opt = 1, each formin will have individually scaled graphs
 % if opt = 2, graphs have same axes unless FH1 length is over 300 amino acids
-opt1 = 1
+opt1 = 1;
 
 % if opt2 = 1, graphs are titled with fh1 name and species
 % if opt2 = 2, graphs are titled with fh1 name, species, length, and number binding sites
-opt2 = 1
+opt2 = 1;
 
 % if opt3 = 0, minimal extrapolation; excludes fh1 with length > 200
 % extrapolation always occurs for dimerized > 122 (due to simulation run time)
 % if opt3 = 1, all 25 fh1s included; extrapolation occurs in addition for:
     % all filiments length > 300
     % double (and dimer) with length > 200 (due to large number errors)
-opt3 = 1
+opt3 = 1;
 
 % if opt4 = 0, saves pdf with each formin on a different page
 % if opt4 = 1, creates (but not saves) matlab figures with 3 fh1 per figure
     % if opt3 = 0, grid will have gaps in place of fh1 with length > 200
-opt4 = 0
+opt4 = 0;
 
 % location of look-up tables
 path = '../../PolymerData/' ;
@@ -58,7 +58,7 @@ path = '../../PolymerData/' ;
 %filepath = '/Users/Katiebogue/MATLAB/GitHub/ForminKineticModel/main/Results/';
 
 % name of outputed pdf       % must end with '.pdf'
-time= datestr(now, 'dd-mmm-yyyy HH-MM');
+time= datestr(now, 'yyyy-mm-dd HH-MM');
 if interruptions == 'Y'
      int_var= "with_int"
 end
@@ -99,6 +99,7 @@ all_log_kpoly3_2 = [];
 
 all_iSite_tot = [];
 
+cd '/Users/Katiebogue/MATLAB/GitHub/ForminKineticModel/main/Results';
 
 for LOOP = 1:length(Name_Query)/2
     
@@ -225,7 +226,7 @@ log_kpoly2=log(k_poly2);
 log_kpoly3= log(k_poly3);
 
 %Kpoly Ndimer comparison
-log_kpoly3_2= log(k_poly3./k_poly2);
+log_kpoly3_2= log2(k_poly3./k_poly2);
 
 
 %y = [k_poly1, k_poly2, k_poly3];
@@ -288,15 +289,15 @@ close all
  sorted_kpoly_table = sortrows(kpoly_table);
  
  kpoly_bar = bar(sorted_kpoly_table{:,:});
- set(gca,'xtick',[1:25], 'xticklabel',sorted_kpoly_table.Properties.RowNames)
- xtickangle(90)
- set(kpoly_bar(1), 'FaceColor','b')
- set(kpoly_bar(2), 'FaceColor','r')
- set(kpoly_bar(3), 'FaceColor','g')
- legend( 'single', 'double', 'N-term dimerized')
- xlabel('Formins')
- ylabel('log(kpoly)')
- ylim([0 10])
+ set(gca,'xtick',[1:25], 'xticklabel',sorted_kpoly_table.Properties.RowNames);
+ xtickangle(90);
+ set(kpoly_bar(1), 'FaceColor','b');
+ set(kpoly_bar(2), 'FaceColor','r');
+ set(kpoly_bar(3), 'FaceColor','g');
+ legend( 'single', 'double', 'N-term dimerized');
+ xlabel('Formins');
+ ylabel('log(kpoly)');
+ ylim([0 10]);
  
  saveas(gcf, append('temp.pdf'))
  append_pdfs(pdf_name, append('temp.pdf'))
@@ -310,8 +311,8 @@ close all
  xtickangle(90)
  set(kpoly_bar_ratio(1), 'FaceColor','m')
  xlabel('Formins')
- ylabel('log(kpoly N terminal dimerized/kpoly double)')
- ylim([-0.5 0.5])
+ ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
+ ylim([-1.0 0.2])
  
  saveas(gcf, append('temp.pdf'))
  append_pdfs(pdf_name, append('temp.pdf'))
@@ -320,7 +321,7 @@ close all
 close all
  
 hb = bar(all_iSite_tot, 'stacked');
-set(hb(1), 'FaceColor','b')
+set(hb(1), 'FaceColor','b');
 %set(hb(2), 'FaceColor','r')
 hold on
 
