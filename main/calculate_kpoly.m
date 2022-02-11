@@ -11,6 +11,7 @@ c_PA=2.5;
 %calculates kpoly for all three states
 kp1 = k_paf*c_PA*(1-p_occ1).*pp_length_vec';
 k_poly1 = sum(kp1);
+kp1x = kp1;
 
 kp2a = k_paf*c_PA*(1-p_occ2a).*pp_length_vec';
 kp2b = k_paf*c_PA*(1-p_occ2b).*pp_length_vec';

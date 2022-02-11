@@ -1,10 +1,10 @@
-%% 
+%%
 % finds probability of occlusion for all three states from simulation
 % generates:
     % 3 column array with length / binding site location / probability of
     % occlusion for all possible binding sites along simulated fh1 lengths
     % scattered interpolant object
-    
+
 % the array (X1, X2a/b, X3a/b) contains exact probabilities
 % the interpolants (F1, F2a/b, F3a/b) contain interpolated and extrapolated
 % probabilities
@@ -31,8 +31,8 @@ for iN=length_array1
     for iy =1:iN
         length_vec1 = [length_vec1 iN]; %list of filament lengths
         iSite_vec1 = [iSite_vec1 iy]; %all iSites used
-        p_occ1_all = [p_occ1_all m1(iN, 16 + 2*(N_All +1) + 7*(iy - 1))];
-        
+        p_occ1_all = [p_occ1_all m1(iN, 16 + 2*(N_All +1) + 7*(iy - 1))]; %lookup table 1
+
         if p_occ1_all(end) > 1
             numErr = numErr+1;
         end
@@ -56,7 +56,7 @@ iSite_vec2 = [];
 for iN=length_array2
     N_All =NFil*iN;
     for iy =1:iN
-        p_a = m2(iN, 16 + 2*(N_All +1) + 7*(iy - 1));
+        p_a = m2(iN, 16 + 2*(N_All +1) + 7*(iy - 1)); %lookup table 2
         p_b = m2(iN, 16 + 2*(N_All +1) + 7*(iy - 1) + (6 + 9*iN + 2 + NFil + NFil));
         if p_a > 1 || p_b >1
             numErr = numErr+1;

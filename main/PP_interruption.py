@@ -10,7 +10,7 @@
 # In[35]:
 
 
-def gathering_int(query,min_PP_length):
+def gathering_int(query,min_PP_length,standard):
     from bioservices import UniProt
     
     # Import BeautifulSoup, a package specialized for interpreting xml data
@@ -31,25 +31,31 @@ def gathering_int(query,min_PP_length):
     soup = BeautifulSoup(result_xml, 'html.parser') # xml "soup" object
     
     featureFH1 = soup.find_all('feature', description='FH1')
-    
+    featureFH2 = soup.find_all('feature', description='FH2') #adding FH2 domain to define end of FH1 domain
+
+    soup_sequences = soup.find_all('sequence') #finding full formin amino acid sequence
+    soup_sequence = soup_sequences[-1].get_text();    
+
     # note the following code assumes there is one (and only one) annoted FH1 in this structure!
 
-    if len(featureFH1) == 0:
-        print('No FH1 domain in this protein')
-
-
-
-    beginPosition = int(featureFH1[0].find('location').find('begin').get('position'))
-    endPosition = int(featureFH1[0].find('location').find('end').get('position'))
-
+    if standard == 'Y': #set in wholepkg
+        beginPosition = soup_sequence.find('PPPP'or 'PP.PP'or 'PPP.P'or'P.PPP') #start at first P of a series of at least four Ps with a max of 1 interruption
+        endPosition = int(featureFH2[0].find('location').find('begin').get('position')) #end at FH2 domain 
+    elif len(featureFH1) == 0: #if uniprot does not have fh1 domain already defined
+        beginPosition = soup_sequence.find('PPPP'or 'PP.PP'or 'PPP.P'or'P.PPP') #start at first P of a series of at least four Ps with a max of 1 interruption
+        endPosition = int(featureFH2[0].find('location').find('begin').get('position')) #end at FH2 domain
+    else: #if uniprot has fh1 domain already defined
+        beginPosition = int(featureFH1[0].find('location').find('begin').get('position'))
+        endPosition = int(featureFH1[0].find('location').find('end').get('position'))
+    
+    
     lengthOfFH1 = endPosition-beginPosition+1
     
     if lengthOfFH1 == 0:
         print('error')
     #print(lengthOfFH1)
     
-    soup_sequences = soup.find_all('sequence')
-    soup_sequence = soup_sequences[-1].get_text();
+  
     #print(soup_sequences)
     #print(soup_sequence)
      #script to display index and number of prolines in each PP sequence. Also returns 
@@ -152,7 +158,12 @@ def gathering_int(query,min_PP_length):
 # In[36]:
 
 
-#gathering('Q24120')
+
+#gathering_int('O60610',4)
+
+#%%
+
+#gathering_int('Q9VSQ0',4)
 
 
 # In[38]:

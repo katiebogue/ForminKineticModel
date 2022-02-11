@@ -26,9 +26,14 @@ close all
 %Determining Binding Sites:
 % if interruptions = Y, binding sites are calculated allowing for non proline interruptions
 % if interruptions = N, binding sites are calculated without interruptions
-interruptions = 'N';
+interruptions = 'Y';
 
-min_PP_length = 6; %defines the minimum length of polyproline region to be considered a binding site
+min_PP_length = 3; %defines the minimum length of polyproline region to be considered a binding site
+
+%Defining FH1 domain 
+% if standard = Y, all FH1 domains will be defined as starting at first P of a series of at least four Ps with a max of 1 interruption & ending at FH2 domain
+% if standard = N, fh1 domains will be defined by uniprot and, if uniprot does not have one defined, the fh1 domain will be defined as above
+standard = 'Y';
 
 % if opt = 0, graphs across all formin types have same axes
 % if opt = 1, each formin will have individually scaled graphs
@@ -59,16 +64,20 @@ path = '../../PolymerData/' ;
 
 % name of outputed pdf       % must end with '.pdf'
 time= datestr(now, 'yyyy-mm-dd HH-MM');
+time= convertCharsToStrings(time);
 if interruptions == 'Y'
-     int_var= "with_int"
+     int_var= 'with_int'
+     settings_variable = 'Minimum PP length of ' + string(min_PP_length) + ' ' + 'with interruptions';
 end
 
 if interruptions == 'N'
-   int_var= "without_int"
+   int_var= 'without_int'
+   settings_variable = 'Minimum PP length of ' + string(min_PP_length) + ' ' + 'without interruptions';
 end
 
-pdf_name = 'RESULTS_PPlnth-' + string(min_PP_length) + '_' + int_var + '_' + time + '.pdf';
+pdf_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + int_var + '.pdf';
 
+fig_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + int_var + '.fig';
 
 
 %% (1) read output files and extract all values of p_occ
@@ -91,19 +100,40 @@ if count(py.sys.path,'') == 0
 end
 
 all_fh1_names = [];
+all_fh1_names_nobind = [];
 all_kpoly1 = [];
 all_kpoly2 = [];
 all_kpoly3 = [];
 
 all_log_kpoly3_2 = [];
 
+all_kpoly1_nobind = [];
+all_kpoly2_nobind = [];
+all_kpoly3_nobind = [];
+
+all_log_kpoly3_2_nobind = [];
+
 all_iSite_tot = [];
+
+all_fh1_length = [];
+
+all_mean_PP_length = [];
+
+all_PP_length = [];
+
+all_kp1 = [];
+
+all_kp2a = [];
+all_kp2b = [];
+
+all_kp3a = [];
+all_kp3b = [];
 
 cd '/Users/Katiebogue/MATLAB/GitHub/ForminKineticModel/main/Results';
 
 for LOOP = 1:length(Name_Query)/2
     
-fh1_name = convertCharsToStrings(Name_Query(2*LOOP -1));   %takes the names (every other string
+fh1_name = convertCharsToStrings(Name_Query(2*LOOP -1));   %takes the names (every other string)
 query = convertCharsToStrings(Name_Query(2*LOOP));         %takes the lookup values (every other string)
 
 %     fh1_name = 'fhod3-human'
@@ -116,17 +146,18 @@ py.importlib.import_module('bioservices')
 
 if interruptions == 'Y'
     py.importlib.import_module('PP_interruption')
-    x = py.PP_interruption.gathering_int(query,min_PP_length);   %uses python function defined in PP_interruption that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
+    x = py.PP_interruption.gathering_int(query,min_PP_length,standard);   %uses python function defined in PP_interruption that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
 end
 
 if interruptions == 'N'
     py.importlib.import_module('gather_info')
-    x = py.gather_info.gathering(query,min_PP_length);   %uses python function defined in gather_info that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
+    x = py.gather_info.gathering(query,min_PP_length,standard);   %uses python function defined in gather_info that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
 end
 
 
 %changes variable format to matlab doubles
 fh1_length = cell2mat(x(1));  %length of FH1 domain from gathering
+all_fh1_length = [all_fh1_length; fh1_length];
 x2 = {cell(x(2))}; %pp_index_vec  
 x2 = x2{1}{1};  %contains locations of PP domains (middle) as a list
 pp_index_vec = [];
@@ -139,7 +170,14 @@ x3 = x3{1}{1};
 pp_length_vec = [];
 for i = 1:length(x3)
     pp_length_vec = [pp_length_vec x3{i}]; %number of polyprorlines at each binding site
+    all_PP_length = [all_PP_length; x3{i}];
+
 end
+
+
+mean_PP_length = mean(pp_length_vec);
+all_mean_PP_length = [all_mean_PP_length; mean_PP_length];
+
 
 %sets more variables and constants
 iSite_tot = length(pp_index_vec); %number of total binding sites on one filament
@@ -173,8 +211,15 @@ p_occ3b = [];
 % see (intro) regarding which probabilities are extrapolated
 % if not extrapolated, exact simulated probabilities used
 
+all_fh1_names_nobind = [all_fh1_names_nobind; fh1_name];
 
 if iSite_tot == 0 %skips if no binding sites
+    all_kpoly1_nobind = [all_kpoly1_nobind; 0];
+    all_kpoly2_nobind = [all_kpoly2_nobind; 0];
+    all_kpoly3_nobind = [all_kpoly3_nobind; 0];
+
+    all_log_kpoly3_2_nobind = [all_log_kpoly3_2_nobind; 0];
+    
     continue
 end
 
@@ -220,10 +265,17 @@ make_filament_schematic
 
 calculate_kpoly
 
+all_kp1 = [all_kp1; kp1x];
+
+all_kp2a = [all_kp2a; kp2a];
+all_kp2b = [all_kp2b; kp2b];
+
+all_kp3a = [all_kp3a; kp3a];
+all_kp3b = [all_kp3b; kp3b];
 %% add kpoly combined chart
-log_kpoly1=log(k_poly1);
-log_kpoly2=log(k_poly2);
-log_kpoly3= log(k_poly3);
+log_kpoly1= log2(k_poly1);
+log_kpoly2= log2(k_poly2);
+log_kpoly3= log2(k_poly3);
 
 %Kpoly Ndimer comparison
 log_kpoly3_2= log2(k_poly3./k_poly2);
@@ -243,6 +295,12 @@ all_kpoly3 = [all_kpoly3; log_kpoly3];
 
 all_log_kpoly3_2 = [all_log_kpoly3_2; log_kpoly3_2];
 
+
+all_kpoly1_nobind = [all_kpoly1_nobind; log_kpoly1];
+all_kpoly2_nobind = [all_kpoly2_nobind; log_kpoly2];
+all_kpoly3_nobind = [all_kpoly3_nobind; log_kpoly3];
+
+all_log_kpoly3_2_nobind = [all_log_kpoly3_2_nobind; log_kpoly3_2];
 
 %pp_index_vec
 %fh1_length_vec
@@ -284,20 +342,30 @@ if opt4 == 1
     end
 end
 
+all_PP_length_x_PP_isite_tot = all_iSite_tot.*all_mean_PP_length;
+
+data_table_all = table(all_kpoly1_nobind, all_kpoly2_nobind, all_kpoly3_nobind, all_log_kpoly3_2_nobind, all_iSite_tot, all_fh1_length, all_mean_PP_length, all_PP_length_x_PP_isite_tot,'RowNames', all_fh1_names_nobind);
+
+%writetable(data_table_all,spreadsheet_name,'Sheet',1);
+
+
 close all
  kpoly_table = table(all_kpoly1, all_kpoly2, all_kpoly3, 'RowNames', all_fh1_names);
  sorted_kpoly_table = sortrows(kpoly_table);
  
  kpoly_bar = bar(sorted_kpoly_table{:,:});
- set(gca,'xtick',[1:25], 'xticklabel',sorted_kpoly_table.Properties.RowNames);
+ set(gca,'xtick',[1:length(all_fh1_names)], 'xticklabel',sorted_kpoly_table.Properties.RowNames);
  xtickangle(90);
  set(kpoly_bar(1), 'FaceColor','b');
  set(kpoly_bar(2), 'FaceColor','r');
  set(kpoly_bar(3), 'FaceColor','g');
  legend( 'single', 'double', 'N-term dimerized');
  xlabel('Formins');
- ylabel('log(kpoly)');
- ylim([0 10]);
+ ylabel('log_2(kpoly)');
+ ylim([0 12]);
+ 
+ title('Polymerization Rates per Formin')
+ subtitle(settings_variable)
  
  saveas(gcf, append('temp.pdf'))
  append_pdfs(pdf_name, append('temp.pdf'))
@@ -307,12 +375,15 @@ close all
  sorted_kpoly_table_ratio = sortrows(kpoly_table_ratio);
  
  kpoly_bar_ratio = bar(sorted_kpoly_table_ratio{:,:});
- set(gca,'xtick',[1:25], 'xticklabel',sorted_kpoly_table_ratio.Properties.RowNames)
+ set(gca,'xtick',[1:length(all_fh1_names)], 'xticklabel',sorted_kpoly_table_ratio.Properties.RowNames)
  xtickangle(90)
  set(kpoly_bar_ratio(1), 'FaceColor','m')
  xlabel('Formins')
  ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
- ylim([-1.0 0.2])
+ ylim([-1.8 0.2])
+ 
+ title('Change in Polymerization Rates w/ Dimerization per Formin')
+ subtitle(settings_variable)
  
  saveas(gcf, append('temp.pdf'))
  append_pdfs(pdf_name, append('temp.pdf'))
@@ -331,16 +402,135 @@ xTick=get(gca,'xtick');
 % xMax=max(xtick); 
 % xMin=min(xtick); 
 % newXTick=linspace(xMin,xMax,25); 
-set(gca,'xtick',[1:length(all_fh1_names)], 'xticklabel', all_fh1_names)
+set(gca,'xtick',[1:length(all_fh1_names_nobind)], 'xticklabel', all_fh1_names_nobind)
 xtickangle(90)
 %set(gca, 'XTickLabel', {'Diap1--Human', 'Diap2--Human', 'Diap3--Human', 'Diap1--Mouse', 'Diap2--Mouse', 'Diap3--Mouse', 'Diap1--Rat','Diap3--Rat','DAAM1--Human', 'DAAM2--Human', 'DAAM1--Mouse', 'DAAM2--Mouse', 'CAPU--FruitFly', 'FMN1--Human', 'FMN2--Human', 'FMN1--Mouse', 'FMN2--Mouse', 'INF2--Mouse','})
 ylim([0 35])
 
 xlabel('Formins')
 ylabel('Binding sites')
+title('Number of Binding Sites per Formin')
+subtitle(settings_variable)
 
 saveas(gcf, append('temp.pdf'))
 append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+%add page with data in numbers to pdf
+
+fig= figure('Name','All Data');
+uit = uitable(fig,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','ColumnName',{'k_poly Single', 'k_poly Double', 'k_poly N-Dimer','log_2(kpoly ratio)','# Binding Sites','FH1 length', 'Mean PRM size','Mean PRM size x # Binding Sites'},'Data',[all_kpoly1_nobind, all_kpoly2_nobind, all_kpoly3_nobind, all_log_kpoly3_2_nobind, all_iSite_tot, all_fh1_length, all_mean_PP_length, all_PP_length_x_PP_isite_tot]);
+uit.RowName = all_fh1_names_nobind
+
+saveas(fig,fig_name);
+
+%set(gcf,'PaperPosition',[0 0 8.5 11])
+
+close all
+
+kpoly_diff_PRM_scatter = scatter(all_iSite_tot,all_log_kpoly3_2_nobind, 'filled');
+ xlabel('Number of PRMs')
+ ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
+
+ title('Change in Polymerization Rates vs Number of PRMs')
+ subtitle(settings_variable)
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+kpoly1_PRM_scatter = scatter(all_iSite_tot,all_kpoly1_nobind, 'filled');
+hold on
+kpoly2_PRM_scatter = scatter(all_iSite_tot,all_kpoly2_nobind, 'filled');
+hold on
+kpoly3_PRM_scatter = scatter(all_iSite_tot,all_kpoly3_nobind, 'filled');
+xlabel('Number of PRMs')
+ylabel('kpoly')
+legend('Single', 'Double', 'N-Dimer');
+
+ title('Polymerization Rates vs Number of PRMs')
+ subtitle(settings_variable)
+
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+kpoly_diff_length_scatter = scatter(all_fh1_length,all_log_kpoly3_2_nobind, 'filled');
+ xlabel('Length of FH1 domain (1st PRM to FH2)')
+ ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
+ 
+ title('Change in Polymerization Rates vs Length of FH1 Domain')
+ subtitle(settings_variable)
+
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+kpoly1_length_scatter = scatter(all_fh1_length,all_kpoly1_nobind, 'filled');
+hold on
+kpoly2_length_scatter = scatter(all_fh1_length,all_kpoly2_nobind, 'filled');
+hold on
+kpoly3_length_scatter = scatter(all_fh1_length,all_kpoly3_nobind, 'filled');
+xlabel('Length of FH1 domain (1st PRM to FH2)')
+ylabel('kpoly')
+legend('Single', 'Double', 'N-Dimer');
+
+ title('Polymerization Rates vs Length of FH1 Domain')
+ subtitle(settings_variable)
+
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+kpoly_diff_size_scatter = scatter(all_mean_PP_length,all_log_kpoly3_2_nobind, 'filled');
+ xlabel('Mean PRM size')
+ ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
+
+ title('Change in Polymerization Rates vs Mean PRM size')
+ subtitle(settings_variable)
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+kpoly_diff_size_scatter = scatter(all_PP_length_x_PP_isite_tot,all_log_kpoly3_2_nobind, 'filled');
+ xlabel('Mean PRM size x #PRMs')
+ ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
+
+ title('Change in Polymerization Rates vs Mean PRM size x Number of PRMs')
+ subtitle(settings_variable)
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+kpoly1_individual_scatter = scatter(all_PP_length,all_kp1, 'filled');
+hold on
+kpoly2a_individual_scatter = scatter(all_PP_length,all_kp2a, 'filled');
+hold on
+kpoly2b_individual_scatter = scatter(all_PP_length,all_kp2b, 'filled');
+hold on
+kpoly3a_individual_scatter = scatter(all_PP_length,all_kp3a, 'filled');
+hold on
+kpoly3b_individual_scatter = scatter(all_PP_length,all_kp3b, 'filled');
+
+xlabel('Length of PP')
+ylabel('kpoly')
+legend('Single', 'Double-1', 'Double-2', 'N-Dimer-1', 'N-Dimer-2');
+
+ title('Polymerization Rates per individual PRM')
+ subtitle(settings_variable)
+
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
 
 % deletes temporary pdf and closes all matlab figures
 
