@@ -23,7 +23,7 @@ close all
 
 %% (0.1) formatting options:    
 %test with less formins:
-testing = 'N';
+testing = 'Y';
 
 %Determining Binding Sites:
 % if interruptions = Y, binding sites are calculated allowing for non proline interruptions
@@ -578,7 +578,7 @@ close all
 n=1
 kplabels = [];
 colors = ["#0072BD", "#D95319", "#EDB120", "#7E2F8E", "#77AC30", "#4DBEEE", "#A2142F"]
-for colorindex = 1:length(all_iSite_tot)/2
+for colorindex = 1:length(all_iSite_tot)
     colors = [colors colors];
 end
 while n<= length(all_kp1)
@@ -622,6 +622,10 @@ close all
 
 n=1
 kplabels = [];
+colors = ["#0072BD", "#D95319", "#EDB120", "#7E2F8E", "#77AC30", "#4DBEEE", "#A2142F"]
+for colorindex = 1:length(all_iSite_tot)
+    colors = [colors colors];
+end
 while n<= length(all_kp1)
     for LOOPY = 1:length(all_iSite_tot)
         PRMnum = all_iSite_tot(LOOPY)
@@ -663,6 +667,10 @@ close all
 
 n=1
 kplabels = [];
+colors = ["#0072BD", "#D95319", "#EDB120", "#7E2F8E", "#77AC30", "#4DBEEE", "#A2142F"]
+for colorindex = 1:length(all_iSite_tot)
+    colors = [colors colors];
+end
 while n<= length(all_kp1)
     for LOOPY = 1:length(all_iSite_tot)
         PRMnum = all_iSite_tot(LOOPY)
@@ -703,30 +711,13 @@ append_pdfs(pdf_name, append('temp.pdf'))
 close all
 %%%%
 
-
-
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly3a_2a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kpoly3a_2a(n:endpoint),'d','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_2b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kpoly3b_2b(n:endpoint), 'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpalabel = all_fh1_names_nobind(LOOPY)+ ' a'
-        kpblabel = all_fh1_names_nobind(LOOPY)+ ' b'
-        kplabels = [kplabels kpalabel kpblabel]
-        n=n+PRMnum
-    end
-end
+kpoly3a_2a_individual_scatter_length = scatter(all_PP_length,all_kpoly3a_2a, 'filled');
+hold on
+kpoly3b_2b_individual_scatter_length = scatter(all_PP_length,all_kpoly3b_2b, 'filled');
 
 xlabel('Length of PRM')
 ylabel('kpoly Dimer/ kpoly Double')
-
-legend(kplabels, 'Location','northeastoutside');
+legend('a', 'b', 'Location','northeastoutside');
 
  title('Change in Polymerization Rates vs. PP length per individual PRM')
  subtitle(settings_variable)
@@ -735,30 +726,14 @@ saveas(gcf, append('temp.pdf'))
 append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
-%%%%
 
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly3a_2a_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kpoly3a_2a(n:endpoint),'d','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_2b_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kpoly3b_2b(n:endpoint), 'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpalabel = all_fh1_names_nobind(LOOPY)+ ' a'
-        kpblabel = all_fh1_names_nobind(LOOPY)+ ' b'
-        kplabels = [kplabels kpalabel kpblabel]
-        n=n+PRMnum
-    end
-end
+kpoly3a_2a_individual_scatter_loc = scatter(all_PP_location,all_kpoly3a_2a, 'filled');
+hold on
+kpoly3b_2b_individual_scatter_loc = scatter(all_PP_location,all_kpoly3b_2b, 'filled');
 
 xlabel('Distance from PRM to FH2')
 ylabel('kpoly Dimer/ kpoly Double')
-
-legend(kplabels, 'Location','northeastoutside');
+legend('a', 'b', 'Location','northeastoutside');
 
  title('Change in Polymerization Rates vs. PP dist to FH2 per individual PRM')
  subtitle(settings_variable)
@@ -767,29 +742,14 @@ saveas(gcf, append('temp.pdf'))
 append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
-%%%%
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly3a_2a_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kpoly3a_2a(n:endpoint),'d','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_2b_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kpoly3b_2b(n:endpoint), 'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpalabel = all_fh1_names_nobind(LOOPY)+ ' a'
-        kpblabel = all_fh1_names_nobind(LOOPY)+ ' b'
-        kplabels = [kplabels kpalabel kpblabel];
-        n=n+PRMnum
-    end
-end
+
+kpoly3a_2a_individual_scatter_dis = scatter(all_PP_dist_end,all_kpoly3a_2a, 'filled');
+hold on
+kpoly3b_2b_individual_scatter_dis = scatter(all_PP_dist_end,all_kpoly3b_2b, 'filled');
 
 xlabel('Distance from PRM to end')
 ylabel('kpoly Dimer/ kpoly Double')
-
-legend(kplabels, 'Location','northeastoutside');
+legend('a', 'b', 'Location','northeastoutside');
 
  title('Change in Polymerization Rates vs. PP dist to end per individual PRM')
  subtitle(settings_variable)

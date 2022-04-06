@@ -118,18 +118,44 @@ def gathering(query,min_PP_length,standard):
     # note the following code assumes there is one (and only one) annoted FH1 in this structure!
     
     soup_sequences = soup.find_all('sequence') #finding full formin amino acid sequence
-    soup_sequence = soup_sequences[-1].get_text();
+    soup_sequencee = soup_sequences[-1].get_text();
+    soup_sequence=[]
+    j=0
+    while j <= len(soup_sequencee)-1:
+        if soup_sequencee[j] == 'P':
+            soup_sequence.append("P")
+            j+=1
+        else:
+            soup_sequence.append("X")
+            j+=1
+    #print(soup_sequence)
+    soup_sequence= ''.join(soup_sequence)
+    #print(soup_sequence)
+
+    find_1= soup_sequence.find('PXPPP')
+    find_2= soup_sequence.find('PPXPP')
+    find_3= soup_sequence.find('PPPXP')
+    find_4= soup_sequence.find('PPPP')
     
+    find_all= [find_1,find_2,find_3,find_4]
+    #print(find_all)
+    for i in range(0,3):
+        if find_all[i]>0:
+            find_all[i]=find_all[i]
+        else:
+            find_all[i]= len(soup_sequence)+5
+    # note the following code assumes there is one (and only one) annoted FH1 in this structure!
+
     if standard == 'Y': #set in wholepkg
-        beginPosition = soup_sequence.find('PPPP'or 'PP.PP'or 'PPP.P'or'P.PPP') #start at first P of a series of at least four Ps with a max of 1 interruption
-        endPosition = int(featureFH2[0].find('location').find('begin').get('position')) #end at FH2 domain 
+        beginPosition = min(find_all) #start at first P of a series of at least four Ps with a max of 1 interruption
+        endPosition = int(featureFH2[0].find('location').find('begin').get('position')) #end at FH2 domain
     elif len(featureFH1) == 0: #if uniprot does not have fh1 domain already defined
-        beginPosition = soup_sequence.find('PPPP'or 'PP.PP'or 'PPP.P'or'P.PPP') #start at first P of a series of at least four Ps with a max of 1 interruption
+        beginPosition = min(find_all) #start at first P of a series of at least four Ps with a max of 1 interruption
         endPosition = int(featureFH2[0].find('location').find('begin').get('position')) #end at FH2 domain
     else: #if uniprot has fh1 domain already defined
         beginPosition = int(featureFH1[0].find('location').find('begin').get('position'))
         endPosition = int(featureFH1[0].find('location').find('end').get('position'))
-    
+
     #print(beginPosition, endPosition)
     
     lengthOfFH1 = endPosition-beginPosition+1
@@ -152,12 +178,22 @@ def gathering(query,min_PP_length,standard):
     fh1_sequence = soup_sequence[beginPosition-1:endPosition] #specifiying FH1 domain
     fh1_sequence = fh1_sequence[::-1] #reverses string sequence
    # print(fh1_sequence)
-    
+   
+    P_index_vec=[]
+    j=0
+    while j <= len(fh1_sequence)-1:
+        if fh1_sequence[j] == 'P':
+            P_index_vec.append(float(j))
+            j+=1
+        else:
+            j+=1
+   
     displayIndex = 0 # index used for poly_proline sequence
     index = 0 # regular indexing 
     
     pp_index_vec = [] # poly-proline vector for storing index
     pp_length_vec = [] # poly-proline vector for storing length
+    pp_index_vec_start = []
     
     fh1_length = len(fh1_sequence)
     fh1_length = float(fh1_length)
@@ -168,15 +204,17 @@ def gathering(query,min_PP_length,standard):
     
     for (k,g) in seq:
         length_seq = len(list(g)) # length of poly_proline sequence
-        if k=='P' and length_seq > min_PP_length: # for indexing, refer to report
+        if k=='P' and length_seq >= min_PP_length: # for indexing, refer to report
             if length_seq%2 == 0: 
                 displayIndex = floor ((length_seq) / 2 ) - 1 + index 
                 pp_index_vec.append(displayIndex)
                 pp_length_vec.append(length_seq)
+                pp_index_vec_start.append(float(index))
             else:
                 displayIndex = floor ((length_seq) / 2 ) + index
                 pp_index_vec.append(displayIndex)
                 pp_length_vec.append(length_seq)
+                pp_index_vec_start.append(float(index))
         index += length_seq
         
     pp_length_vec = [float(i) for i in pp_length_vec]
@@ -184,12 +222,12 @@ def gathering(query,min_PP_length,standard):
     #print(f'\nPoly_proline index vector:{pp_index_vec}')
     #print(f'\nPoly_proline length vector: {pp_length_vec}')
     
-    return fh1_length, pp_index_vec, pp_length_vec
+    return fh1_length, pp_index_vec, pp_length_vec, P_index_vec, pp_index_vec_start 
 
 # In[36]:
 
 
-#gathering('O60610',4)
+gathering('Q24120',3, 'Y')
 #%%
 #gathering('Q9VSQ0',4)
 
