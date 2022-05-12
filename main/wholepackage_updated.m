@@ -23,12 +23,22 @@ close all
 
 %% (0.1) formatting options:    
 %test with less formins:
-testing = 'N';
+testing = 'Y';
+
+%Incorperating delivery
+% if delivvery = Y, delivery is calculated and plotted along with capture
+% if delivery = N, only capture is used to find polymerization rate
+delivery = 'Y'
+
+%set constants for rate calculations
+k_paf=10;
+c_PA=2.5;
+k_pab=10;
 
 %Determining Binding Sites:
 % if interruptions = Y, binding sites are calculated allowing for non proline interruptions
 % if interruptions = N, binding sites are calculated without interruptions
-interruptions = 'N';
+interruptions = 'Y';
 
 min_PP_length = 4; %defines the minimum length of polyproline region to be considered a binding site
 
@@ -64,6 +74,7 @@ path = '../../PolymerData/' ;
 %location of saved pdf
 %filepath = '/Users/Katiebogue/MATLAB/GitHub/ForminKineticModel/main/Results/';
 
+%%
 % name of outputed pdf       % must end with '.pdf'
 time= datestr(now, 'yyyy-mm-dd HH-MM');
 time= convertCharsToStrings(time);
@@ -142,7 +153,52 @@ all_kp3b = [];
 
 all_fh1_names_perPRM = [];
 
-cd '/Users/Katiebogue/MATLAB/GitHub/ForminKineticModel/main/Results';
+if delivery == 'Y'
+    all_kcap1 = [];
+    all_kcap2 = [];
+    all_kcap3 = [];
+
+    all_log_kcap3_2 = [];
+
+    all_kcap1_nobind = [];
+    all_kcap2_nobind = [];
+    all_kcap3_nobind = [];
+    
+    all_kc1 = [];
+
+    all_kc2a = [];
+    all_kc2b = [];
+
+    all_kc3a = [];
+    all_kc3b = [];
+    
+    all_log_kcap3_2_nobind = [];
+
+    
+    all_kdel1 = [];
+    all_kdel2 = [];
+    all_kdel3 = [];
+
+    all_log_kdel3_2 = [];
+
+    all_kdel1_nobind = [];
+    all_kdel2_nobind = [];
+    all_kdel3_nobind = [];
+    
+    all_kd1 = [];
+
+    all_kd2a = [];
+    all_kd2b = [];
+
+    all_kd3a = [];
+    all_kd3b = [];
+    
+    all_log_kdel3_2_nobind = [];
+
+end
+    
+
+cd '/Users/Katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results';
 
 for LOOP = 1:length(Name_Query)/2
     
@@ -237,6 +293,18 @@ p_occ2b = [];
 p_occ3a = [];
 p_occ3b = [];
 
+p_occ1_0 = 0;
+p_occ2a_0 = 0;
+p_occ2b_0 = 0;
+p_occ3a_0 = 0;
+p_occ3b_0 = 0;
+
+p_r1 = [];
+p_r2a = [];
+p_r2b = [];
+p_r3a = [];
+p_r3b = [];
+
 % extracts specific probabilities for current fh1 from arrays set in find_pocc 
 % see (intro) regarding which probabilities are extrapolated
 % if not extrapolated, exact simulated probabilities used
@@ -256,25 +324,55 @@ end
 if fh1_length <= 300
     [row,~] = find(X1(:,1) == fh1_length & X1(:,2) == pp_index_vec); %num of row corresponding to fH1 length AND location of PP
     p_occ1 = X1(row,3); %all probabilities for that length at each PP location
+    [row_0,~] = find(X1(:,1) == fh1_length & X1(:,2) == 1);
+    p_occ1_0 = X1(row_0,3); %probability at position 0
+    p_r1 = X1(row,4);
     
     if fh1_length <= 200
         [row,~] = find(X2a(:,1) == fh1_length & X2a(:,2) == pp_index_vec);
         p_occ2a = X2a(row,3);
+        [row_0,~] = find(X2a(:,1) == fh1_length & X2a(:,2) == 1);
+        p_occ2a_0 = X1(row_0,3);
+        p_r2a = X2a(row,4);
+       
         [row,~] = find(X2b(:,1) == fh1_length & X2b(:,2) == pp_index_vec);
         p_occ2b = X2b(row,3);
+        [row_0,~] = find(X2b(:,1) == fh1_length & X2b(:,2) == 1);
+        p_occ2b_0 = X2b(row_0,3);
+        p_r2b = X2b(row,4);
     else
         p_occ2a = F2a(fh1_length_vec,pp_index_vec');
         p_occ2b = F2b(fh1_length_vec,pp_index_vec');
+        
+        p_occ2a_0 = F2a(fh1_length,1);
+        p_occ2b_0 = F2b(fh1_length,1);
+        
+        p_r2a = FF2a(fh1_length_vec,pp_index_vec');
+        p_r2b = FF2b(fh1_length_vec,pp_index_vec');
+        
     end
     
     if fh1_length <= 121
          [row,~] = find(X3a(:,1) == fh1_length & X3a(:,2) == pp_index_vec);
          p_occ3a = X3a(row,3);
+         [row_0,~] = find(X3a(:,1) == fh1_length & X3a(:,2) == 1);
+         p_occ3a_0 = X3a(row_0,3);
+         p_r3a = X3a(row,4);
+         
          [row,~] = find(X3b(:,1) == fh1_length & X3b(:,2) == pp_index_vec);
          p_occ3b = X3b(row,3);
+         [row_0,~] = find(X3b(:,1) == fh1_length & X3b(:,2) == 1);
+         p_occ3b_0 = X3b(row_0,3);
+         p_r3b = X3b(row,4);
     else
         p_occ3a = F3a(fh1_length_vec,pp_index_vec');
         p_occ3b = F3b(fh1_length_vec,pp_index_vec');
+        
+        p_occ3a_0 = F3a(fh1_length,1);
+        p_occ3b_0 = F3b(fh1_length,1);
+        
+        p_r3a = FF3a(fh1_length_vec,pp_index_vec');
+        p_r3b = FF3b(fh1_length_vec,pp_index_vec');
     end
 else 
     p_occ1 = F1(fh1_length_vec,pp_index_vec');
@@ -282,6 +380,18 @@ else
     p_occ2b = F2b(fh1_length_vec,pp_index_vec'); 
     p_occ3a = F3a(fh1_length_vec,pp_index_vec');
     p_occ3b = F3b(fh1_length_vec,pp_index_vec');
+    
+    p_occ1_0 = F1(fh1_length,1);
+    p_occ2a_0 = F2a(fh1_length,1);
+    p_occ2b_0 = F2b(fh1_length,1);
+    p_occ3a_0 = F3a(fh1_length,1);
+    p_occ3b_0 = F3b(fh1_length,1);
+    
+    p_r1 = FF1(fh1_length_vec,pp_index_vec');
+    p_r2a = FF2a(fh1_length_vec,pp_index_vec');
+    p_r2b = FF2b(fh1_length_vec,pp_index_vec'); 
+    p_r3a = FF3a(fh1_length_vec,pp_index_vec');
+    p_r3b = FF3b(fh1_length_vec,pp_index_vec');
 end
 
 % sets title containing name, length, and number of binding sites
@@ -293,7 +403,29 @@ fh1_info = strcat(fh1_name,' \\ Length = ',lenstr,' \\ ',iSitestr,' binding site
 % creates all graphs
 make_filament_schematic
 
-calculate_kpoly
+if delivery == 'N'
+    calculate_kpoly
+end
+if delivery == 'Y'
+    calculate_kpoly_delivery
+    
+    all_kc1 = [all_kc1; kc1x];
+
+    all_kc2a = [all_kc2a; kc2a];
+    all_kc2b = [all_kc2b; kc2b];
+
+    all_kc3a = [all_kc3a; kc3a];
+    all_kc3b = [all_kc3b; kc3b];
+    
+    all_kd1 = [all_kd1; kd1x];
+
+    all_kd2a = [all_kd2a; kd2a];
+    all_kd2b = [all_kd2b; kd2b];
+
+    all_kd3a = [all_kd3a; kd3a];
+    all_kd3b = [all_kd3b; kd3b];
+    
+end
 
 all_kp1 = [all_kp1; kp1x];
 
@@ -331,6 +463,44 @@ all_kpoly2_nobind = [all_kpoly2_nobind; log_kpoly2];
 all_kpoly3_nobind = [all_kpoly3_nobind; log_kpoly3];
 
 all_log_kpoly3_2_nobind = [all_log_kpoly3_2_nobind; log_kpoly3_2];
+
+if delivery == 'Y'
+    log_kcap1= log2(k_cap1);
+    log_kcap2= log2(k_cap2);
+    log_kcap3= log2(k_cap3);
+
+    log_kcap3_2= log2(k_cap3./k_cap2);
+
+    all_kcap1 = [all_kcap1; log_kcap1];
+    all_kcap2 = [all_kcap2; log_kcap2];
+    all_kcap3 = [all_kcap3; log_kcap3];
+
+    all_log_kcap3_2 = [all_log_kcap3_2; log_kcap3_2];
+
+    all_kcap1_nobind = [all_kcap1_nobind; log_kcap1];
+    all_kcap2_nobind = [all_kcap2_nobind; log_kcap2];
+    all_kcap3_nobind = [all_kcap3_nobind; log_kcap3];
+
+    all_log_kcap3_2_nobind = [all_log_kcap3_2_nobind; log_kcap3_2];
+    
+    log_kdel1= log2(k_del1);
+    log_kdel2= log2(k_del2);
+    log_kdel3= log2(k_del3);
+
+    log_kdel3_2= log2(k_del3./k_del2);
+
+    all_kdel1 = [all_kdel1; log_kdel1];
+    all_kdel2 = [all_kdel2; log_kdel2];
+    all_kdel3 = [all_kdel3; log_kdel3];
+
+    all_log_kdel3_2 = [all_log_kdel3_2; log_kdel3_2];
+
+    all_kdel1_nobind = [all_kdel1_nobind; log_kdel1];
+    all_kdel2_nobind = [all_kdel2_nobind; log_kdel2];
+    all_kdel3_nobind = [all_kdel3_nobind; log_kdel3];
+
+    all_log_kdel3_2_nobind = [all_log_kdel3_2_nobind; log_kdel3_2];
+end
 
 %pp_index_vec
 %fh1_length_vec
@@ -379,424 +549,19 @@ all_PP_dist_end = all_fh1_length_PP-all_PP_location;
 all_kpoly3a_2a = all_kp3a./all_kp2a;
 all_kpoly3b_2b = all_kp3b./all_kp2b;
 
+if delivery == 'Y'
+    all_kcap3a_2a = all_kc3a./all_kc2a;
+    all_kcap3b_2b = all_kc3b./all_kc2b;
+    all_kdel3a_2a = all_kd3a./all_kd2a;
+    all_kdel3b_2b = all_kd3b./all_kd2b;
+end
+
 
 data_table_all = table(all_kpoly1_nobind, all_kpoly2_nobind, all_kpoly3_nobind, all_log_kpoly3_2_nobind, all_iSite_tot, all_fh1_length, all_mean_PP_length, all_PP_length_x_PP_isite_tot,'RowNames', all_fh1_names_nobind);
 
 %writetable(data_table_all,spreadsheet_name,'Sheet',1);
 
-
-close all
- kpoly_table = table(all_kpoly1, all_kpoly2, all_kpoly3, 'RowNames', all_fh1_names);
- sorted_kpoly_table = sortrows(kpoly_table);
- 
- kpoly_bar = bar(sorted_kpoly_table{:,:});
- set(gca,'xtick',[1:length(all_fh1_names)], 'xticklabel',sorted_kpoly_table.Properties.RowNames);
- xtickangle(90);
- set(kpoly_bar(1), 'FaceColor','b');
- set(kpoly_bar(2), 'FaceColor','r');
- set(kpoly_bar(3), 'FaceColor','g');
- legend( 'single', 'double', 'N-term dimerized');
- xlabel('Formins');
- ylabel('log_2(kpoly)');
- ylim([0 12]);
- 
- title('Polymerization Rates per Formin')
- subtitle(settings_variable)
- 
- saveas(gcf, append('temp.pdf'))
- append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
- kpoly_table_ratio = table(all_log_kpoly3_2, 'RowNames', all_fh1_names);
- sorted_kpoly_table_ratio = sortrows(kpoly_table_ratio);
- 
- kpoly_bar_ratio = bar(sorted_kpoly_table_ratio{:,:});
- set(gca,'xtick',[1:length(all_fh1_names)], 'xticklabel',sorted_kpoly_table_ratio.Properties.RowNames)
- xtickangle(90)
- set(kpoly_bar_ratio(1), 'FaceColor','m')
- xlabel('Formins')
- ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
- ylim([-1.8 0.2])
- 
- title('Change in Polymerization Rates w/ Dimerization per Formin')
- subtitle(settings_variable)
- 
- saveas(gcf, append('temp.pdf'))
- append_pdfs(pdf_name, append('temp.pdf'))
-
- 
-close all
- 
-hb = bar(all_iSite_tot, 'stacked');
-set(hb(1), 'FaceColor','b');
-%set(hb(2), 'FaceColor','r')
-hold on
-
-%legend( '6PI', '6P')
-%names = {'Diap1--Human', 'Diap2--Human', 'Diap3--Human', 'Diap1--Mouse', 'Diap2--Mouse', 'Diap3--Mouse', 'Diap1--Rat','Diap3--Rat','DAAM1--Human', 'DAAM2--Human', 'DAAM1--Mouse', 'DAAM2--Mouse', 'CAPU--FruitFly', 'FMN1--Human', 'FMN2--Human', 'FMN1--Mouse', 'FMN2--Mouse', 'INF2--Mouse', 'FHOD1--Human', 'FHOD3--Human', 'FHOD1--Mouse', 'FHOD3--Mouse', 'BNR1--Yeast', 'CDC12P--Yeast', 'BNI1P--Yeast'};
-xTick=get(gca,'xtick'); 
-% xMax=max(xtick); 
-% xMin=min(xtick); 
-% newXTick=linspace(xMin,xMax,25); 
-set(gca,'xtick',[1:length(all_fh1_names_nobind)], 'xticklabel', all_fh1_names_nobind)
-xtickangle(90)
-%set(gca, 'XTickLabel', {'Diap1--Human', 'Diap2--Human', 'Diap3--Human', 'Diap1--Mouse', 'Diap2--Mouse', 'Diap3--Mouse', 'Diap1--Rat','Diap3--Rat','DAAM1--Human', 'DAAM2--Human', 'DAAM1--Mouse', 'DAAM2--Mouse', 'CAPU--FruitFly', 'FMN1--Human', 'FMN2--Human', 'FMN1--Mouse', 'FMN2--Mouse', 'INF2--Mouse','})
-ylim([0 35])
-
-xlabel('Formins')
-ylabel('Binding sites')
-title('Number of Binding Sites per Formin')
-subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-
-%add page with data in numbers to pdf
-
-fig= figure('Name','All Data');
-uit = uitable(fig,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','ColumnName',{'k_poly Single', 'k_poly Double', 'k_poly N-Dimer','log_2(kpoly ratio)','# Binding Sites','FH1 length', 'Mean PRM size','Mean PRM size x # Binding Sites'},'Data',[all_kpoly1_nobind, all_kpoly2_nobind, all_kpoly3_nobind, all_log_kpoly3_2_nobind, all_iSite_tot, all_fh1_length, all_mean_PP_length, all_PP_length_x_PP_isite_tot]);
-uit.RowName = all_fh1_names_nobind
-
-saveas(fig,fig_name);
-
-%set(gcf,'PaperPosition',[0 0 8.5 11])
-
-close all
-
-kpoly_diff_PRM_scatter = scatter(all_iSite_tot,all_log_kpoly3_2_nobind, 'filled');
- xlabel('Number of PRMs')
- ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
- labels = all_fh1_names_nobind
- labelpoints(all_iSite_tot,all_log_kpoly3_2_nobind,labels,'N',0.15, 1,'outliers_SD', 1)
-%  xpos = all_log_kpoly3_2_nobind(1);
-%  ypos = all_iSite_tot(1);
-%  labels = all_fh1_names_nobind(1);
-%  h = labelpoints (xpos, ypos, labels)
-
- title('Change in Polymerization Rates vs Number of PRMs')
- subtitle(settings_variable)
- 
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-
-kpoly1_PRM_scatter = scatter(all_iSite_tot,all_kpoly1_nobind, 'filled');
-hold on
-kpoly2_PRM_scatter = scatter(all_iSite_tot,all_kpoly2_nobind, 'filled');
-hold on
-kpoly3_PRM_scatter = scatter(all_iSite_tot,all_kpoly3_nobind, 'filled');
-xlabel('Number of PRMs')
-ylabel('kpoly')
-legend('Single', 'Double', 'N-Dimer', 'Location','northeastoutside');
-
-labels = all_fh1_names_nobind
-labelpoints(all_iSite_tot,all_kpoly1_nobind,labels,'N',0.15, 1,'outliers_SD', 1)
-labelpoints(all_iSite_tot,all_kpoly2_nobind,labels,'E',0.15, 1,'outliers_SD', 1)
-labelpoints(all_iSite_tot,all_kpoly3_nobind,labels,'N',0.15, 1,'outliers_SD', 1)
-
- title('Polymerization Rates vs Number of PRMs')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-
-kpoly_diff_length_scatter = scatter(all_fh1_length,all_log_kpoly3_2_nobind, 'filled');
- xlabel('Length of FH1 domain (1st PRM to FH2)')
- ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
- 
-labels = all_fh1_names_nobind
-labelpoints(all_fh1_length,all_log_kpoly3_2_nobind,labels,'N',0.15, 1,'outliers_SD', 1)
- 
- title('Change in Polymerization Rates vs Length of FH1 Domain')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-
-kpoly1_length_scatter = scatter(all_fh1_length,all_kpoly1_nobind, 'filled');
-hold on
-kpoly2_length_scatter = scatter(all_fh1_length,all_kpoly2_nobind, 'filled');
-hold on
-kpoly3_length_scatter = scatter(all_fh1_length,all_kpoly3_nobind, 'filled');
-xlabel('Length of FH1 domain (1st PRM to FH2)')
-ylabel('kpoly')
-legend('Single', 'Double', 'N-Dimer', 'Location','northeastoutside');
-
-labels = all_fh1_names_nobind
-labelpoints(all_fh1_length,all_kpoly1_nobind,labels,'N',0.15, 1,'outliers_SD', 1)
-labelpoints(all_fh1_length,all_kpoly2_nobind,labels,'E',0.15, 1,'outliers_SD', 1)
-labelpoints(all_fh1_length,all_kpoly3_nobind,labels,'N',0.15, 1,'outliers_SD', 1)
-
-
- title('Polymerization Rates vs Length of FH1 Domain')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-
-kpoly_diff_size_scatter = scatter(all_mean_PP_length,all_log_kpoly3_2_nobind, 'filled');
- xlabel('Mean PRM size')
- ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
-
-labels = all_fh1_names_nobind
-labelpoints(all_mean_PP_length,all_log_kpoly3_2_nobind,labels,'N',0.15, 1,'outliers_SD', 1)
-
- 
- title('Change in Polymerization Rates vs Mean PRM size')
- subtitle(settings_variable)
- 
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-
-kpoly_diff_size_scatter = scatter(all_PP_length_x_PP_isite_tot,all_log_kpoly3_2_nobind, 'filled');
- xlabel('Mean PRM size x #PRMs')
- ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
-
-labels = all_fh1_names_nobind
-labelpoints(all_PP_length_x_PP_isite_tot,all_log_kpoly3_2_nobind,labels,'N',0.15, 1,'outliers_SD', 1)
-
- 
- title('Change in Polymerization Rates vs Mean PRM size x Number of PRMs')
- subtitle(settings_variable)
- 
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-
-n=1
-kplabels = [];
-colors = ["#0072BD", "#D95319", "#EDB120", "#7E2F8E", "#77AC30", "#4DBEEE", "#A2142F"]
-for colorindex = 1:length(all_iSite_tot)/2
-    colors = [colors colors];
-end
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly1_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp1(n:endpoint), 'd','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp2a(n:endpoint),'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp2b(n:endpoint),'s', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp3a(n:endpoint),'^', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp3b(n:endpoint),'p', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kp1label = all_fh1_names_nobind(LOOPY)+ ' single'
-        kp2alabel = all_fh1_names_nobind(LOOPY)+ ' double-1'
-        kp2blabel = all_fh1_names_nobind(LOOPY)+ ' double-2'
-        kp3alabel = all_fh1_names_nobind(LOOPY)+ ' dimer-1'
-        kp3blabel = all_fh1_names_nobind(LOOPY)+ ' dimer-2'
-        kplabels = [kplabels kp1label kp2alabel kp2blabel kp3alabel kp3blabel]
-        n=n+PRMnum
-    end
-end
-
-xlabel('Length of PRM')
-ylabel('kpoly')
-
-legend(kplabels, 'Location','northeastoutside');
-
- title('Polymerization Rates vs. PP length per individual PRM')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-%%%%%%
-
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly1_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp1(n:endpoint), 'd','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2a_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp2a(n:endpoint),'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2b_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp2b(n:endpoint),'s', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3a_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp3a(n:endpoint),'^', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp3b(n:endpoint),'p', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kp1label = all_fh1_names_nobind(LOOPY)+ ' single'
-        kp2alabel = all_fh1_names_nobind(LOOPY)+ ' double-1'
-        kp2blabel = all_fh1_names_nobind(LOOPY)+ ' double-2'
-        kp3alabel = all_fh1_names_nobind(LOOPY)+ ' dimer-1'
-        kp3blabel = all_fh1_names_nobind(LOOPY)+ ' dimer-2'
-        kplabels = [kplabels kp1label kp2alabel kp2blabel kp3alabel kp3blabel]
-        n=n+PRMnum
-    end
-end
-
-xlabel('Distance from PRM to FH2')
-ylabel('kpoly')
-
-legend(kplabels, 'Location','northeastoutside');
-
- title('Polymerization Rates vs. PP dist to FH2 per individual PRM')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-%%%%
-
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly1_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp1(n:endpoint), 'd','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2a_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp2a(n:endpoint),'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2b_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp2b(n:endpoint),'s', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3a_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp3a(n:endpoint),'^', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp3b(n:endpoint),'p', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kp1label = all_fh1_names_nobind(LOOPY)+ ' single'
-        kp2alabel = all_fh1_names_nobind(LOOPY)+ ' double-1'
-        kp2blabel = all_fh1_names_nobind(LOOPY)+ ' double-2'
-        kp3alabel = all_fh1_names_nobind(LOOPY)+ ' dimer-1'
-        kp3blabel = all_fh1_names_nobind(LOOPY)+ ' dimer-2'
-        kplabels = [kplabels kp1label kp2alabel kp2blabel kp3alabel kp3blabel]
-        n=n+PRMnum
-    end
-end
-
-xlabel('Distance from PRM to end')
-ylabel('kpoly')
-
-legend(kplabels, 'Location','northeastoutside');
-
- title('Polymerization Rates vs. PP dist to end per individual PRM')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-
-close all
-%%%%
-
-
-
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly3a_2a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kpoly3a_2a(n:endpoint),'d','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_2b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kpoly3b_2b(n:endpoint), 'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpalabel = all_fh1_names_nobind(LOOPY)+ ' a'
-        kpblabel = all_fh1_names_nobind(LOOPY)+ ' b'
-        kplabels = [kplabels kpalabel kpblabel]
-        n=n+PRMnum
-    end
-end
-
-xlabel('Length of PRM')
-ylabel('kpoly Dimer/ kpoly Double')
-
-legend(kplabels, 'Location','northeastoutside');
-
- title('Change in Polymerization Rates vs. PP length per individual PRM')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-%%%%
-
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly3a_2a_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kpoly3a_2a(n:endpoint),'d','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_2b_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kpoly3b_2b(n:endpoint), 'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpalabel = all_fh1_names_nobind(LOOPY)+ ' a'
-        kpblabel = all_fh1_names_nobind(LOOPY)+ ' b'
-        kplabels = [kplabels kpalabel kpblabel]
-        n=n+PRMnum
-    end
-end
-
-xlabel('Distance from PRM to FH2')
-ylabel('kpoly Dimer/ kpoly Double')
-
-legend(kplabels, 'Location','northeastoutside');
-
- title('Change in Polymerization Rates vs. PP dist to FH2 per individual PRM')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-%%%%
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly3a_2a_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kpoly3a_2a(n:endpoint),'d','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_2b_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kpoly3b_2b(n:endpoint), 'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpalabel = all_fh1_names_nobind(LOOPY)+ ' a'
-        kpblabel = all_fh1_names_nobind(LOOPY)+ ' b'
-        kplabels = [kplabels kpalabel kpblabel];
-        n=n+PRMnum
-    end
-end
-
-xlabel('Distance from PRM to end')
-ylabel('kpoly Dimer/ kpoly Double')
-
-legend(kplabels, 'Location','northeastoutside');
-
- title('Change in Polymerization Rates vs. PP dist to end per individual PRM')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
+make_formin_plots
 
 % deletes temporary pdf and closes all matlab figures
 

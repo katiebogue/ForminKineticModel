@@ -6,17 +6,48 @@
 %% Calculations
 
 %calculates kcapture for all three states
-kp1 = k_paf*c_PA*(1-p_occ1).*pp_length_vec';
+kc1 = k_paf*c_PA*(1-p_occ1).*pp_length_vec';
+k_cap1 = sum(kc1);
+kc1x = kc1;
+
+kc2a = k_paf*c_PA*(1-p_occ2a).*pp_length_vec';
+kc2b = k_paf*c_PA*(1-p_occ2b).*pp_length_vec';
+k_cap2 = sum(kc2a) + sum(kc2b);
+
+kc3a = k_paf*c_PA*(1-p_occ3a).*pp_length_vec';
+kc3b = k_paf*c_PA*(1-p_occ3b).*pp_length_vec';
+k_cap3 = sum(kc3a) + sum(kc3b);
+
+%calculates kdelivery for all three states
+kd1 = k_pab*(1-p_occ1_0).*(1.0e33*p_r1/0.027);
+k_del1 = sum(kd1);
+kd1x = kd1;
+
+kd2a = k_pab*(1-p_occ2a_0).*(1.0e33*p_r2a/0.027);
+kd2b = k_pab*(1-p_occ2b_0).*(1.0e33*p_r2b/0.027);
+k_del2 = sum(kd2a) + sum(kd2b);
+
+kd3a = k_pab*(1-p_occ3a_0).*(1.0e33*p_r3a/0.027);
+kd3b = k_pab*(1-p_occ3b_0).*(1.0e33*p_r3b/0.027);
+k_del3 = sum(kd3a) + sum(kd3b);
+
+%calculates kpoly for all three states
+kp1 = (1./kc1) + (1./kd1);
+kp1 = 1./kp1;
 k_poly1 = sum(kp1);
 kp1x = kp1;
 
-kp2a = k_paf*c_PA*(1-p_occ2a).*pp_length_vec';
-kp2b = k_paf*c_PA*(1-p_occ2b).*pp_length_vec';
+kp2a = (1./kc2a) + (1./kd2a);
+kp2b = (1./kc2b) + (1./kd2b);
+kp2a = 1./kp2a;
+kp2b = 1./kp2b;
 k_poly2 = sum(kp2a) + sum(kp2b);
 
-kp3a = k_paf*c_PA*(1-p_occ3a).*pp_length_vec';
-kp3b = k_paf*c_PA*(1-p_occ3b).*pp_length_vec';
-k_poly3 = sum(kp3a) + sum(kp3b);
+kp3a = (1./kc3a) + (1./kd3a);
+kp3b = (1./kc3b) + (1./kd3b);
+kp3a = 1./kp3a;
+kp3b = 1./kp3b;
+k_poly3 = sum(kp2a) + sum(kp2b);
 
 % CURRENTLY UNUSED
 % calculates ratio of kpoly dimer to kpoly double
@@ -30,8 +61,8 @@ max_kp = max([k_poly1, k_poly2, k_poly3]) + 5;
 
     
 %single
-kp1 = [kp1'; kp1'];
-fil=[1 2];
+kplot1 = [kc1'; kd1'; kp1'];
+fil=[1 2 3];
 
 %formatting options based on opt4
 if opt4 == 1
@@ -50,11 +81,12 @@ else
     subplot(1,4,2) %1x4 grid w/ axis on 2nd cell
 end
 
-bar(fil, kp1,0.5, 'stacked')
+bar(fil,kplot1,0.5, 'stacked')
 title('Single');
-xlim([0.5 1.5]);
+%xlim([0.5 1.5]);
 xlabel('Filaments');
-ylabel('k_p_o_l_y');
+ylabel('k');
+xticklabels({'k_{cap}', 'k_{del}' , 'k_{poly}'});
 
 %formatting options based on opt1
 if opt1 == 1
@@ -70,7 +102,7 @@ else
 end
 
 %double
-kp2 = [kp2a';kp2b'; (kp2a+kp2b)'];
+kplot2 = [(kc2a+kc2b)'; (kd2a+kd2b)'; (kp2a+kp2b)'];
 fil=[1 2 3];
 
 % formatting options based on opt4
@@ -90,11 +122,11 @@ else
     subplot(1,4,3) %1x4 grid w/ axis on 3rd cell
 end
 
-bar(fil, kp2 ,0.5, 'stacked')
+bar(fil, kplot2 ,0.5, 'stacked')
 title('Double-Filament');
 xlabel('Filaments');
-ylabel('k_{poly}');
-xticklabels({1, 2, 'total'});
+ylabel('k');
+xticklabels({'k_{cap}', 'k_{del}' , 'k_{poly}'});
 
 %formatting options based on opt1
 if opt1 == 1
@@ -110,7 +142,7 @@ else
 end
 
 %dimer
-kp3 = [kp3a';kp3b'; (kp3a+kp3b)'];
+kplot3 = [(kc3a+kc3b)'; (kd3a+kd3b)'; (kp3a+kp3b)'];
 fil=[1, 2, 3];
 
 %formatting options based on opt4
@@ -130,11 +162,11 @@ else
     subplot(1,4,4) %1x4 grid w/ axis on 4th cell
 end
 
-bar(fil, kp3 ,0.5, 'stacked')
+bar(fil, kplot3 ,0.5, 'stacked')
 title('N-Dimerized');
 xlabel('Filaments');
-ylabel('k_{poly}');
-xticklabels({1, 2, 'total'});
+ylabel('k');
+xticklabels({'k_{cap}', 'k_{del}' , 'k_{poly}'});
 
 %formatting options based on opt1
 if opt1 == 1
