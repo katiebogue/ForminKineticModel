@@ -203,10 +203,11 @@ close all
 
 n=1
 kplabels = [];
-colors = ["#0072BD", "#D95319", "#EDB120", "#7E2F8E", "#77AC30", "#4DBEEE", "#A2142F"]
-for colorindex = 1:length(all_iSite_tot)/2
-    colors = [colors colors];
-end
+% colors = ["#0072BD", "#D95319", "#EDB120", "#7E2F8E", "#77AC30", "#4DBEEE", "#A2142F"]
+% for colorindex = 1:length(all_iSite_tot)/2
+%     colors = [colors colors];
+% end
+
 while n<= length(all_kp1)
     for LOOPY = 1:length(all_iSite_tot)
         PRMnum = all_iSite_tot(LOOPY)

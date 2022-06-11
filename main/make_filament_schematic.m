@@ -41,19 +41,19 @@ plot(z,y,'k','LineWidth',2)
 for i = 1:iSite_tot
     location = pp_index_vec(i);
     width = pp_length_vec(i);
-    scatter(1,location,12*width,'filled') %adds dots with width proportional to # of PP
+    scatter(1,location,12*width,'filled','MarkerFaceColor', colors(i)) %adds dots with width proportional to # of PP
 end
 for i = 1:iSite_tot
     start = pp_index_vec_start(i)-0.6; 
     width = pp_length_vec(i);
     eend = start+width+0.4
     ly = [start,eend]
-    plot(z,ly,'color','#EDB120','LineWidth',8) %adds dots with width proportional to # of PP
+    plot(z,ly,'color','#EDB120','LineWidth',8) %adds highlight of PRMS
 end
 for i = 1:length(P_index_vec)
     location = P_index_vec(i);
     width = 2;
-    scatter(1.5,location,12*width,'filled','MarkerFaceColor','#0072BD','MarkerEdgeColor','k') %adds dots with width proportional to # of PP
+    scatter(1.5,location,12*width,'filled','MarkerFaceColor','#0072BD','MarkerEdgeColor','k') %adds dots for each P
 end
 
 xlim([0.5,2])

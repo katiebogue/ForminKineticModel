@@ -19,16 +19,16 @@ kc3b = k_paf*c_PA*(1-p_occ3b).*pp_length_vec';
 k_cap3 = sum(kc3a) + sum(kc3b);
 
 %calculates kdelivery for all three states
-kd1 = k_pab*(1-p_occ1_0).*(1.0e33*p_r1/0.027);
+kd1 = k_pab*(1-p_occ1_0).*(1.0e33*p_r1/(27*6.022e23));
 k_del1 = sum(kd1);
 kd1x = kd1;
 
-kd2a = k_pab*(1-p_occ2a_0).*(1.0e33*p_r2a/0.027);
-kd2b = k_pab*(1-p_occ2b_0).*(1.0e33*p_r2b/0.027);
+kd2a = k_pab*(1-p_occ2a_0).*(1.0e33*p_r2a/(27*6.022e23));
+kd2b = k_pab*(1-p_occ2b_0).*(1.0e33*p_r2b/(27*6.022e23));
 k_del2 = sum(kd2a) + sum(kd2b);
 
-kd3a = k_pab*(1-p_occ3a_0).*(1.0e33*p_r3a/0.027);
-kd3b = k_pab*(1-p_occ3b_0).*(1.0e33*p_r3b/0.027);
+kd3a = k_pab*(1-p_occ3a_0).*(1.0e33*p_r3a/(27*6.022e23));
+kd3b = k_pab*(1-p_occ3b_0).*(1.0e33*p_r3b/(27*6.022e23));
 k_del3 = sum(kd3a) + sum(kd3b);
 
 %calculates kpoly for all three states

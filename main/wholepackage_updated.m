@@ -23,7 +23,7 @@ close all
 
 %% (0.1) formatting options:    
 %test with less formins:
-testing = 'Y';
+testing = 'N';
 
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
@@ -71,8 +71,8 @@ opt4 = 0;
 % location of look-up tables
 path = '../../PolymerData/' ;
 
-%location of saved pdf
-%filepath = '/Users/Katiebogue/MATLAB/GitHub/ForminKineticModel/main/Results/';
+%location of data files
+results_filepath = '/Users/Katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results';
 
 %%
 % name of outputed pdf       % must end with '.pdf'
@@ -91,6 +91,8 @@ end
 pdf_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + int_var + '.pdf';
 
 fig_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + int_var + '.fig';
+
+workspace_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + int_var + '.mat';
 
 
 %% (1) read output files and extract all values of p_occ
@@ -115,6 +117,15 @@ Name_Query = strsplit(Name_Query);
 % adds current matlab path to python paths if necessary
 if count(py.sys.path,'') == 0
    insert(py.sys.path,int32(0),'');
+end
+
+% creates better color selection for plotting
+rgbmatrix = distinguishable_colors(length(Name_Query)*15,'w');
+colors = [];
+for k = 1:length(rgbmatrix)
+    hexcode = rgb2hex(rgbmatrix(k,:));
+    hexcode = convertCharsToStrings(hexcode);
+    colors = [colors, hexcode];
 end
 
 all_fh1_names = [];
@@ -198,7 +209,7 @@ if delivery == 'Y'
 end
     
 
-cd '/Users/Katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results';
+cd(results_filepath)
 
 for LOOP = 1:length(Name_Query)/2
     
@@ -562,6 +573,8 @@ data_table_all = table(all_kpoly1_nobind, all_kpoly2_nobind, all_kpoly3_nobind, 
 %writetable(data_table_all,spreadsheet_name,'Sheet',1);
 
 make_formin_plots
+
+save(workspace_name)
 
 % deletes temporary pdf and closes all matlab figures
 

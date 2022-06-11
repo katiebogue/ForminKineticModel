@@ -16,7 +16,7 @@
 
 %% single
 
-numErr = 0;
+numErr = 0; 
 
 %initialization
 NFil1=1;
