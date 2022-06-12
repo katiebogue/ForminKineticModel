@@ -20,6 +20,7 @@ close all
 % imports the following look-up tables
     % ForminTypes.txt
     % single_300.txt %double_200.txt %dimer_122.txt
+    
 
 %% (0.1) formatting options:    
 %test with less formins:
@@ -28,7 +29,7 @@ testing = 'N';
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
 % if delivery = N, only capture is used to find polymerization rate
-delivery = 'Y'
+delivery = 'N'
 
 %set constants for rate calculations
 k_paf=10;
