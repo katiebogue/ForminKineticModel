@@ -73,7 +73,8 @@ opt4 = 0;
 path = '../../PolymerData/' ;
 
 %location of data files
-results_filepath = '/Users/Katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results';
+results_filepath = 'MATLAB/GitHub/Data/ForminKineticmodel_data/Results';
+
 
 %%
 % name of outputed pdf       % must end with '.pdf'
