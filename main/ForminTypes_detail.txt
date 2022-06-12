@@ -1,4 +1,4 @@
-Protein_Abbreviation-Species UNIPROT_Query_Code (full name / alternate names)
+Protein_Abbreviation-Species UNIPROT_Query_Code (full name / alternate names) 
 
 Diaph1-Human O60610 (protein diaphanous homolog 1 / DRF1) 
 Diap3-Human Q69NSV4 (protein diaphanous homolog 3 / MDia2 DRF2) 
