@@ -96,6 +96,7 @@ fig_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + i
 
 workspace_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + int_var + '.mat';
 
+folder_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + int_var;
 
 %% (1) read output files and extract all values of p_occ
 
@@ -122,7 +123,7 @@ if count(py.sys.path,'') == 0
 end
 
 % creates better color selection for plotting
-rgbmatrix = distinguishable_colors(length(Name_Query)*15,'w');
+rgbmatrix = distinguishable_colors(length(Name_Query),'w');
 colors = [];
 for k = 1:length(rgbmatrix)
     hexcode = rgb2hex(rgbmatrix(k,:));
@@ -212,6 +213,9 @@ end
     
 
 cd(results_filepath)
+mkdir(folder_name)
+cd(folder_name)
+
 
 for LOOP = 1:length(Name_Query)/2
     
@@ -447,6 +451,7 @@ all_kp2b = [all_kp2b; kp2b];
 
 all_kp3a = [all_kp3a; kp3a];
 all_kp3b = [all_kp3b; kp3b];
+
 %% add kpoly combined chart
 log_kpoly1= log2(k_poly1);
 log_kpoly2= log2(k_poly2);
@@ -559,14 +564,14 @@ all_PP_length_x_PP_isite_tot = all_iSite_tot.*all_mean_PP_length;
 
 all_PP_dist_end = all_fh1_length_PP-all_PP_location;
 
-all_kpoly3a_2a = all_kp3a./all_kp2a;
-all_kpoly3b_2b = all_kp3b./all_kp2b;
+all_kpoly3a_2a = log2(all_kp3a./all_kp2a);
+all_kpoly3b_2b = log2(all_kp3b./all_kp2b);
 
 if delivery == 'Y'
-    all_kcap3a_2a = all_kc3a./all_kc2a;
-    all_kcap3b_2b = all_kc3b./all_kc2b;
-    all_kdel3a_2a = all_kd3a./all_kd2a;
-    all_kdel3b_2b = all_kd3b./all_kd2b;
+    all_kcap3a_2a = log2(all_kc3a./all_kc2a);
+    all_kcap3b_2b = log2(all_kc3b./all_kc2b);
+    all_kdel3a_2a = log2(all_kd3a./all_kd2a);
+    all_kdel3b_2b = log2(all_kd3b./all_kd2b);
 end
 
 

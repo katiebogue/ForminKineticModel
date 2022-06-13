@@ -5,6 +5,7 @@ close all
  kpoly_table = table(all_kpoly1, all_kpoly2, all_kpoly3, 'RowNames', all_fh1_names);
  sorted_kpoly_table = sortrows(kpoly_table);
  
+%% bar graph showing all polymerization rates
  kpoly_bar = bar(sorted_kpoly_table{:,:});
  set(gca,'xtick',[1:length(all_fh1_names)], 'xticklabel',sorted_kpoly_table.Properties.RowNames);
  xtickangle(90);
@@ -23,6 +24,9 @@ close all
  append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
+
+%% Change in Polymerization Rates w/ Dimerization per Formin
+
  kpoly_table_ratio = table(all_log_kpoly3_2, 'RowNames', all_fh1_names);
  sorted_kpoly_table_ratio = sortrows(kpoly_table_ratio);
  
@@ -42,7 +46,9 @@ close all
 
  
 close all
- 
+
+%% Number of PRMs
+
 hb = bar(all_iSite_tot, 'stacked');
 set(hb(1), 'FaceColor','b');
 %set(hb(2), 'FaceColor','r')
@@ -69,7 +75,7 @@ append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
 
-%add page with data in numbers to pdf
+%save fig with data
 
 fig= figure('Name','All Data');
 uit = uitable(fig,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','ColumnName',{'k_poly Single', 'k_poly Double', 'k_poly N-Dimer','log_2(kpoly ratio)','# Binding Sites','FH1 length', 'Mean PRM size','Mean PRM size x # Binding Sites'},'Data',[all_kpoly1_nobind, all_kpoly2_nobind, all_kpoly3_nobind, all_log_kpoly3_2_nobind, all_iSite_tot, all_fh1_length, all_mean_PP_length, all_PP_length_x_PP_isite_tot]);
@@ -83,7 +89,7 @@ close all
 
 %% Formin correlation plots
 
-% Change in Polymerization Rates vs Number of PRMs
+%% Change in Polymerization Rates vs Number of PRMs
 kpoly_diff_PRM_scatter = scatter(all_iSite_tot,all_log_kpoly3_2_nobind, 'filled');
  xlabel('Number of PRMs')
  ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
@@ -102,14 +108,14 @@ append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
 
-% Polymerization Rates vs Number of PRMs
-kpoly1_PRM_scatter = scatter(all_iSite_tot,all_kpoly1_nobind, 'filled');
+%% Polymerization Rates vs Number of PRMs
+kpoly1_PRM_scatter = scatter(all_iSite_tot,all_kpoly1_nobind, 'filled','o');
 hold on
-kpoly2_PRM_scatter = scatter(all_iSite_tot,all_kpoly2_nobind, 'filled');
+kpoly2_PRM_scatter = scatter(all_iSite_tot,all_kpoly2_nobind, 'filled','s');
 hold on
-kpoly3_PRM_scatter = scatter(all_iSite_tot,all_kpoly3_nobind, 'filled');
+kpoly3_PRM_scatter = scatter(all_iSite_tot,all_kpoly3_nobind, 'filled','p');
 xlabel('Number of PRMs')
-ylabel('kpoly')
+ylabel('log_2(kpoly)')
 legend('Single', 'Double', 'N-Dimer', 'Location','northeastoutside');
 
 labels = all_fh1_names_nobind
@@ -125,7 +131,7 @@ append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
 
-% Change in Polymerization Rates vs Length of FH1 Domain
+%% Change in Polymerization Rates vs Length of FH1 Domain
 kpoly_diff_length_scatter = scatter(all_fh1_length,all_log_kpoly3_2_nobind, 'filled');
  xlabel('Length of FH1 domain (1st PRM to FH2)')
  ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
@@ -141,14 +147,14 @@ append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
 
-% Polymerization Rates vs Length of FH1 Domain
-kpoly1_length_scatter = scatter(all_fh1_length,all_kpoly1_nobind, 'filled');
+%% Polymerization Rates vs Length of FH1 Domain
+kpoly1_length_scatter = scatter(all_fh1_length,all_kpoly1_nobind, 'filled','o');
 hold on
-kpoly2_length_scatter = scatter(all_fh1_length,all_kpoly2_nobind, 'filled');
+kpoly2_length_scatter = scatter(all_fh1_length,all_kpoly2_nobind, 'filled','s');
 hold on
-kpoly3_length_scatter = scatter(all_fh1_length,all_kpoly3_nobind, 'filled');
+kpoly3_length_scatter = scatter(all_fh1_length,all_kpoly3_nobind, 'filled','p');
 xlabel('Length of FH1 domain (1st PRM to FH2)')
-ylabel('kpoly')
+ylabel('log_2(kpoly)')
 legend('Single', 'Double', 'N-Dimer', 'Location','northeastoutside');
 
 labels = all_fh1_names_nobind
@@ -165,7 +171,7 @@ append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
 
-% Change in Polymerization Rates vs Mean PRM size
+%% Change in Polymerization Rates vs Mean PRM size
 kpoly_diff_size_scatter = scatter(all_mean_PP_length,all_log_kpoly3_2_nobind, 'filled');
  xlabel('Mean PRM size')
  ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
@@ -182,7 +188,7 @@ append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
 
-% Change in Polymerization Rates vs Mean PRM size x Number of PRMs
+%% Change in Polymerization Rates vs Mean PRM size x Number of PRMs
 kpoly_diff_size_scatter = scatter(all_PP_length_x_PP_isite_tot,all_log_kpoly3_2_nobind, 'filled');
  xlabel('Mean PRM size x #PRMs')
  ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
@@ -200,226 +206,586 @@ append_pdfs(pdf_name, append('temp.pdf'))
 close all
 
 %% Per PRM plots
+%creates colors
+bg = [1 1 1;0.9255 0.9412 0.9451];
+rgbmatrix = distinguishable_colors(length(all_fh1_names_nobind));
+colors = [];
+for k = 1:length(rgbmatrix)
+    hexcode = rgb2hex(rgbmatrix(k,:));
+    hexcode = convertCharsToStrings(hexcode);
+    colors = [colors, hexcode];
+end
 
-n=1
-kplabels = [];
+%create matrix of plot shapes
+shapes = ['o';'s';'d';'^';'v';'<';'p';'h'];
+for k = 1:length(all_fh1_names_nobind)
+    shapes1 = ['o';'s';'d';'^';'v';'<';'p';'h'];
+    shapes = [shapes; shapes1];
+end 
+
+% convert to log2 scale
+
+all_log_kp1 = log2(all_kp1);
+
+all_log_kp2a = log2(all_kp2a);
+all_log_kp2b = log2(all_kp2b);
+
+all_log_kp3a = log2(all_kp3a);
+all_log_kp3b = log2(all_kp3b);
+
+%kplabels = [];
 % colors = ["#0072BD", "#D95319", "#EDB120", "#7E2F8E", "#77AC30", "#4DBEEE", "#A2142F"]
 % for colorindex = 1:length(all_iSite_tot)/2
 %     colors = [colors colors];
 % end
 
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly1_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp1(n:endpoint), 'd','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp2a(n:endpoint),'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp2b(n:endpoint),'s', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp3a(n:endpoint),'^', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kp3b(n:endpoint),'p', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kp1label = all_fh1_names_nobind(LOOPY)+ ' single'
-        kp2alabel = all_fh1_names_nobind(LOOPY)+ ' double-1'
-        kp2blabel = all_fh1_names_nobind(LOOPY)+ ' double-2'
-        kp3alabel = all_fh1_names_nobind(LOOPY)+ ' dimer-1'
-        kp3blabel = all_fh1_names_nobind(LOOPY)+ ' dimer-2'
-        kplabels = [kplabels kp1label kp2alabel kp2blabel kp3alabel kp3blabel]
-        n=n+PRMnum
-    end
-end
+%% Vs. PRM length
 
-xlabel('Length of PRM')
-ylabel('kpoly')
+% All settings
 
-legend(kplabels, 'Location','northeastoutside');
+kpoly1_individual_scatter = scatter(all_PP_length,all_log_kp1, 'filled','o');
+hold on
+kpoly2a_individual_scatter = scatter(all_PP_length,all_log_kp2a, 'filled','s');
+hold on
+kpoly2b_individual_scatter = scatter(all_PP_length,all_log_kp2b, 'filled','s');
+hold on
+kpoly3a_individual_scatter = scatter(all_PP_length,all_log_kp3a, 'filled','p');
+hold on
+kpoly3b_individual_scatter = scatter(all_PP_length,all_log_kp3b, 'filled','p');
 
- title('Polymerization Rates vs. PP length per individual PRM')
+xlabel('Length of PP')
+ylabel('log_2(kpoly)')
+legend('Single', 'Double-1', 'Double-2', 'N-Dimer-1', 'N-Dimer-2','Location','northeastoutside');
+
+ title('Polymerization Rates per individual PRM')
  subtitle(settings_variable)
-
+ 
 saveas(gcf, append('temp.pdf'))
 append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
-%%%%%%
 
-n=1
-kplabels = [];
+% single
+n=1;
+
 while n<= length(all_kp1)
     for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly1_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp1(n:endpoint), 'd','filled', 'MarkerFaceColor', colors(LOOPY));
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly1_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_log_kp1(n:endpoint),'filled',shapes(LOOPY),'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
         hold on
-        kpoly2a_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp2a(n:endpoint),'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2b_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp2b(n:endpoint),'s', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3a_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp3a(n:endpoint),'^', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kp3b(n:endpoint),'p', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kp1label = all_fh1_names_nobind(LOOPY)+ ' single'
-        kp2alabel = all_fh1_names_nobind(LOOPY)+ ' double-1'
-        kp2blabel = all_fh1_names_nobind(LOOPY)+ ' double-2'
-        kp3alabel = all_fh1_names_nobind(LOOPY)+ ' dimer-1'
-        kp3blabel = all_fh1_names_nobind(LOOPY)+ ' dimer-2'
-        kplabels = [kplabels kp1label kp2alabel kp2blabel kp3alabel kp3blabel]
-        n=n+PRMnum
+        n=n+PRMnum;
     end
 end
 
-xlabel('Distance from PRM to FH2')
-ylabel('kpoly')
+xlabel('Length of PRM')
+ylabel('log_2(kpoly)')
 
-legend(kplabels, 'Location','northeastoutside');
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+ title('Polymerization Rates vs. PP length per individual PRM (single)')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+% double
+n=1;
+
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly2a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_log_kp2a(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+xlabel('Length of PRM')
+ylabel('log_2(kpoly)')
+
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+n=1;
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly2b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_log_kp2b(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+ title('Polymerization Rates vs. PP length per individual PRM (double)')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+% dimer
+n=1;
+
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_log_kp3a(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+xlabel('Length of PRM')
+ylabel('log_2(kpoly)')
+
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+n=1;
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_log_kp3b(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+ title('Polymerization Rates vs. PP length per individual PRM (dimer)')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+%% Distance from PRM to FH2
+
+% All settings
+
+kpoly1_individual_scatter_loc = scatter(all_PP_location,all_log_kp1, 'filled','o');
+hold on
+kpoly2a_individual_scatter_loc = scatter(all_PP_location,all_log_kp2a, 'filled','s');
+hold on
+kpoly2b_individual_scatter_loc = scatter(all_PP_location,all_log_kp2b, 'filled','s');
+hold on
+kpoly3a_individual_scatter_loc = scatter(all_PP_location,all_log_kp3a, 'filled','p');
+hold on
+kpoly3b_individual_scatter_loc = scatter(all_PP_location,all_log_kp3b, 'filled','p');
+
+xlabel('Distance from PRM to FH2')
+ylabel('log_2(kpoly)')
+legend('Single', 'Double-1', 'Double-2', 'N-Dimer-1', 'N-Dimer-2','Location','northeastoutside');
 
  title('Polymerization Rates vs. PP dist to FH2 per individual PRM')
  subtitle(settings_variable)
-
+ 
 saveas(gcf, append('temp.pdf'))
 append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
-%%%%
 
-n=1
-kplabels = [];
+% single
+n=1;
+
 while n<= length(all_kp1)
     for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly1_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp1(n:endpoint), 'd','filled', 'MarkerFaceColor', colors(LOOPY));
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly1_individual_scatter_length_loc = scatter(all_PP_location(n:endpoint),all_log_kp1(n:endpoint),'filled',shapes(LOOPY),'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
         hold on
-        kpoly2a_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp2a(n:endpoint),'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly2b_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp2b(n:endpoint),'s', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3a_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp3a(n:endpoint),'^', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kp3b(n:endpoint),'p', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kp1label = all_fh1_names_nobind(LOOPY)+ ' single'
-        kp2alabel = all_fh1_names_nobind(LOOPY)+ ' double-1'
-        kp2blabel = all_fh1_names_nobind(LOOPY)+ ' double-2'
-        kp3alabel = all_fh1_names_nobind(LOOPY)+ ' dimer-1'
-        kp3blabel = all_fh1_names_nobind(LOOPY)+ ' dimer-2'
-        kplabels = [kplabels kp1label kp2alabel kp2blabel kp3alabel kp3blabel]
-        n=n+PRMnum
-    end
-end
-
-xlabel('Distance from PRM to end')
-ylabel('kpoly')
-
-legend(kplabels, 'Location','northeastoutside');
-
- title('Polymerization Rates vs. PP dist to end per individual PRM')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-
-close all
-%%%%
-
-
-
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly3a_2a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kpoly3a_2a(n:endpoint),'d','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_2b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kpoly3b_2b(n:endpoint), 'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpalabel = all_fh1_names_nobind(LOOPY)+ ' a'
-        kpblabel = all_fh1_names_nobind(LOOPY)+ ' b'
-        kplabels = [kplabels kpalabel kpblabel]
-        n=n+PRMnum
-    end
-end
-
-xlabel('Length of PRM')
-ylabel('kpoly Dimer/ kpoly Double')
-
-legend(kplabels, 'Location','northeastoutside');
-
- title('Change in Polymerization Rates vs. PP length per individual PRM')
- subtitle(settings_variable)
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
-%%%%
-
-n=1
-kplabels = [];
-while n<= length(all_kp1)
-    for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly3a_2a_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kpoly3a_2a(n:endpoint),'d','filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpoly3b_2b_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kpoly3b_2b(n:endpoint), 'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpalabel = all_fh1_names_nobind(LOOPY)+ ' a'
-        kpblabel = all_fh1_names_nobind(LOOPY)+ ' b'
-        kplabels = [kplabels kpalabel kpblabel]
-        n=n+PRMnum
+        n=n+PRMnum;
     end
 end
 
 xlabel('Distance from PRM to FH2')
-ylabel('kpoly Dimer/ kpoly Double')
+ylabel('log_2(kpoly)')
 
-legend(kplabels, 'Location','northeastoutside');
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
 
- title('Change in Polymerization Rates vs. PP dist to FH2 per individual PRM')
- subtitle(settings_variable)
-
+ title('Polymerization Rates vs. PP dist to FH2 per individual PRM (single)')
+ subtitle(settings_variable) 
+ 
 saveas(gcf, append('temp.pdf'))
 append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
-%%%%
-n=1
-kplabels = [];
+
+% double
+n=1;
+
 while n<= length(all_kp1)
     for LOOPY = 1:length(all_iSite_tot)
-        PRMnum = all_iSite_tot(LOOPY)
-        endpoint = n + PRMnum-1
-    
-        kpoly3a_2a_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kpoly3a_2a(n:endpoint),'d','filled', 'MarkerFaceColor', colors(LOOPY));
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly2a_individual_scatter_length_loc = scatter(all_PP_location(n:endpoint),all_log_kp2a(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
         hold on
-        kpoly3b_2b_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kpoly3b_2b(n:endpoint), 'o', 'filled', 'MarkerFaceColor', colors(LOOPY));
-        hold on
-        kpalabel = all_fh1_names_nobind(LOOPY)+ ' a'
-        kpblabel = all_fh1_names_nobind(LOOPY)+ ' b'
-        kplabels = [kplabels kpalabel kpblabel];
-        n=n+PRMnum
+        n=n+PRMnum;
     end
 end
 
-xlabel('Distance from PRM to end')
-ylabel('kpoly Dimer/ kpoly Double')
+xlabel('Distance from PRM to FH2')
+ylabel('log_2(kpoly)')
 
-legend(kplabels, 'Location','northeastoutside');
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
 
- title('Change in Polymerization Rates vs. PP dist to end per individual PRM')
- subtitle(settings_variable)
+n=1;
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly2b_individual_scatter_length_loc = scatter(all_PP_location(n:endpoint),all_log_kp2b(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
 
+ title('Polymerization Rates vs. PP dist to FH2 per individual PRM (double)')
+ subtitle(settings_variable) 
+ 
 saveas(gcf, append('temp.pdf'))
 append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+% dimer
+n=1;
+
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3a_individual_scatter_length_loc = scatter(all_PP_location(n:endpoint),all_log_kp3a(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+xlabel('Distance from PRM to FH2')
+ylabel('log_2(kpoly)')
+
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+n=1;
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3b_individual_scatter_length_loc = scatter(all_PP_location(n:endpoint),all_log_kp3b(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+ title('Polymerization Rates vs. PP dist to FH2 per individual PRM (dimer)')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+%% Distance from PRM to end
+
+% All settings
+
+kpoly1_individual_scatter_dis= scatter(all_PP_dist_end,all_log_kp1, 'filled','o');
+hold on
+kpoly2a_individual_scatter_dis= scatter(all_PP_dist_end,all_log_kp2a, 'filled','s');
+hold on
+kpoly2b_individual_scatter_dis= scatter(all_PP_dist_end,all_log_kp2b, 'filled','s');
+hold on
+kpoly3a_individual_scatter_dis= scatter(all_PP_dist_end,all_log_kp3a, 'filled','p');
+hold on
+kpoly3b_individual_scatter_dis= scatter(all_PP_dist_end,all_log_kp3b, 'filled','p');
+
+xlabel('Distance from PRM to N-term')
+ylabel('log_2(kpoly)')
+legend('Single', 'Double-1', 'Double-2', 'N-Dimer-1', 'N-Dimer-2','Location','northeastoutside');
+
+ title('Polymerization Rates vs. PP dist to N-term per individual PRM')
+ subtitle(settings_variable)
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+% single
+n=1;
+
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly1_individual_scatter_length_dis= scatter(all_PP_dist_end(n:endpoint),all_log_kp1(n:endpoint),'filled',shapes(LOOPY),'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+xlabel('Distance from PRM to N-term')
+ylabel('log_2(kpoly)')
+
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+ title('Polymerization Rates vs. PP dist to N-term per individual PRM (single)')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+% double
+n=1;
+
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly2a_individual_scatter_length_dis= scatter(all_PP_dist_end(n:endpoint),all_log_kp2a(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+xlabel('Distance from PRM to N-term')
+ylabel('log_2(kpoly)')
+
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+n=1;
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly2b_individual_scatter_length_dis= scatter(all_PP_dist_end(n:endpoint),all_log_kp2b(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+ title('Polymerization Rates vs. PP dist to N-term per individual PRM (double)')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+% dimer
+n=1;
+
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3a_individual_scatter_length_dis= scatter(all_PP_dist_end(n:endpoint),all_log_kp3a(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+xlabel('Distance from PRM to N-term')
+ylabel('log_2(kpoly)')
+
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+n=1;
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3b_individual_scatter_length_dis= scatter(all_PP_dist_end(n:endpoint),all_log_kp3b(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+ title('Polymerization Rates vs. PP dist to N-term per individual PRM (dimer)')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+%% Change in Polymerization Rates vs. PP length per individual PRM
+
+% two filaments
+
+kpoly3a_2a_individual_scatter_length = scatter(all_PP_length,all_kpoly3a_2a,'filled', 'o');
+hold on
+kpoly3b_2b_individual_scatter_length = scatter(all_PP_length,all_kpoly3b_2b, 'filled', 's');
+hold on
+
+xlabel('Length of PRM')
+ylabel('log_2(kpoly Dimer/ kpoly Double)')
+legend('filament a', 'filament b');
+
+ title('Change in Polymerization Rates vs. PP length per individual PRM')
+ subtitle(settings_variable)
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+% formin legend
+n=1;
+
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3a_2a_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kpoly3a_2a(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+xlabel('Length of PRM')
+ylabel('log_2(kpoly Dimer/ kpoly Double)')
+
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+n=1;
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3b_2b_individual_scatter_length = scatter(all_PP_length(n:endpoint),all_kpoly3b_2b(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+ title('Change in Polymerization Rates vs. PP length per individual PRM')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+%% Change in Polymerization Rates vs. PP dist to FH2 per individual PRM
+
+% two filaments
+
+kpoly3a_2a_individual_scatter_loc = scatter(all_PP_location,all_kpoly3a_2a,'filled', 'o');
+hold on
+kpoly3b_2b_individual_scatter_loc = scatter(all_PP_location,all_kpoly3b_2b, 'filled', 's');
+hold on
+
+xlabel('Distance from PRM to FH2')
+ylabel('log_2(kpoly Dimer/ kpoly Double)')
+legend('filament a', 'filament b');
+
+ title('Change in Polymerization Rates vs. PP dist to FH2 per individual PRM')
+ subtitle(settings_variable)
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+% formin legend
+n=1;
+
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3a_2a_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kpoly3a_2a(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+xlabel('Distance from PRM to FH2')
+ylabel('log_2(kpoly Dimer/ kpoly Double)')
+
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+n=1;
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3b_2b_individual_scatter_loc = scatter(all_PP_location(n:endpoint),all_kpoly3b_2b(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+ title('Change in Polymerization Rates vs. PP dist to FH2 per individual PRM')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+%% Change in Polymerization Rates vs. PP dist to FH2 per individual PRM
+
+% two filaments
+
+kpoly3a_2a_individual_scatter_dis = scatter(all_PP_dist_end,all_kpoly3a_2a,'filled', 'o');
+hold on
+kpoly3b_2b_individual_scatter_dis = scatter(all_PP_dist_end,all_kpoly3b_2b, 'filled', 's');
+hold on
+
+xlabel('Distance from PRM to N-term')
+ylabel('log_2(kpoly Dimer/ kpoly Double)')
+legend('filament a', 'filament b');
+
+ title('Change in Polymerization Rates vs. PP dist to N-term per individual PRM')
+ subtitle(settings_variable)
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all
+
+% formin legend
+n=1;
+
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3a_2a_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kpoly3a_2a(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+xlabel('Distance from PRM to N-term')
+ylabel('log_2(kpoly Dimer/ kpoly Double)')
+
+legend(all_fh1_names_nobind, 'Location','northeastoutside');
+
+n=1;
+while n<= length(all_kp1)
+    for LOOPY = 1:length(all_iSite_tot)
+        PRMnum = all_iSite_tot(LOOPY);
+        endpoint = n + PRMnum-1;
+        kpoly3b_2b_individual_scatter_dis = scatter(all_PP_dist_end(n:endpoint),all_kpoly3b_2b(n:endpoint), 'filled',shapes(LOOPY), 'MarkerFaceColor', colors(LOOPY),'MarkerEdgeColor','k');
+        hold on
+        n=n+PRMnum;
+    end
+end
+
+ title('Change in Polymerization Rates vs. PP dist to N-term per individual PRM')
+ subtitle(settings_variable) 
+ 
+saveas(gcf, append('temp.pdf'))
+append_pdfs(pdf_name, append('temp.pdf'))
+
+close all

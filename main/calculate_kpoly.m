@@ -30,7 +30,7 @@ max_kp = max([k_poly1, k_poly2, k_poly3]) + 5;
 
     
 %single
-kp1 = [kp1'; kp1'];
+kp1_twice = [kp1'; kp1'];
 fil=[1 2];
 
 %formatting options based on opt4
@@ -50,11 +50,15 @@ else
     subplot(1,4,2) %1x4 grid w/ axis on 2nd cell
 end
 
-bar(fil, kp1,0.5, 'stacked')
+single_bar = bar(fil, kp1_twice,0.5, 'stacked')
 title('Single');
 xlim([0.5 1.5]);
 xlabel('Filaments');
 ylabel('k_p_o_l_y');
+
+for i = 1:length(kp1)
+    single_bar(i).FaceColor = colors(i);
+end
 
 %formatting options based on opt1
 if opt1 == 1
@@ -70,7 +74,7 @@ else
 end
 
 %double
-kp2 = [kp2a';kp2b'; (kp2a+kp2b)'];
+kp2_com = [kp2a';kp2b'; (kp2a+kp2b)'];
 fil=[1 2 3];
 
 % formatting options based on opt4
@@ -90,11 +94,15 @@ else
     subplot(1,4,3) %1x4 grid w/ axis on 3rd cell
 end
 
-bar(fil, kp2 ,0.5, 'stacked')
+double_bar = bar(fil, kp2_com ,0.5, 'stacked')
 title('Double-Filament');
 xlabel('Filaments');
 ylabel('k_{poly}');
 xticklabels({1, 2, 'total'});
+
+for i = 1:length(kp1)
+    double_bar(i).FaceColor = colors(i);
+end
 
 %formatting options based on opt1
 if opt1 == 1
@@ -110,7 +118,7 @@ else
 end
 
 %dimer
-kp3 = [kp3a';kp3b'; (kp3a+kp3b)'];
+kp3_com = [kp3a';kp3b'; (kp3a+kp3b)'];
 fil=[1, 2, 3];
 
 %formatting options based on opt4
@@ -130,11 +138,16 @@ else
     subplot(1,4,4) %1x4 grid w/ axis on 4th cell
 end
 
-bar(fil, kp3 ,0.5, 'stacked')
+dimer_bar = bar(fil, kp3_com ,0.5, 'stacked')
 title('N-Dimerized');
 xlabel('Filaments');
 ylabel('k_{poly}');
 xticklabels({1, 2, 'total'});
+
+
+for i = 1:length(kp1)
+    dimer_bar(i).FaceColor = colors(i);
+end
 
 %formatting options based on opt1
 if opt1 == 1
