@@ -42,25 +42,37 @@ if del_state == 3
     kp1 = (1./kd1) + ((kd1 + k_paf_rev)./(kd1.*kc1)); %find kpoly for each individual PRM
 end
 if del_state == 4
-%    kp1 = (1./kd1) + ((kd1 + k_paf_rev)./(kd1.*kc1)); %find kpoly for each individual PRM
+    kp1 = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd1 .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd1 .* r_PF_rev))./(kc1 .* kd1 .* r_PF_rev)); %find kpoly for each individual PRM
 end
 kp1 = 1./kp1; %inverse above
 k_poly1 = sum(kp1); %sum up the kpolys for all the PRMs
 kp1x = kp1;
 
 %double
-kp2a = (1./kd2a) + ((kd2a + k_paf_rev)./(kd2a.*kc2a));
-kp2b = (1./kd2b) + ((kd2b + k_paf_rev)./(kd2b.*kc2b));
+if del_state == 3
+    kp2a = (1./kd2a) + ((kd2a + k_paf_rev)./(kd2a.*kc2a));
+    kp2b = (1./kd2b) + ((kd2b + k_paf_rev)./(kd2b.*kc2b));
+end
+if del_state == 4
+    kp2a = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd2a .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd2a .* r_PF_rev))./(kc2a .* kd2a .* r_PF_rev)); %find kpoly for each individual PRM
+    kp2b = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd2b .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd2b .* r_PF_rev))./(kc2a .* kd2b .* r_PF_rev)); %find kpoly for each individual PRM
+end
 kp2a = 1./kp2a; %inverse above
 kp2b = 1./kp2b; %inverse above
 k_poly2 = sum(kp2a) + sum(kp2b);  %sum up the kpolys for all the PRMs
 
 %dimer
-kp3a = (1./kd3a) + ((kd3a + k_paf_rev)./(kd3a.*kc3a));
-kp3b = (1./kd3b) + ((kd3b + k_paf_rev)./(kd3b.*kc3b));
+if del_state == 3
+    kp3a = (1./kd3a) + ((kd3a + k_paf_rev)./(kd3a.*kc3a));
+    kp3b = (1./kd3b) + ((kd3b + k_paf_rev)./(kd3b.*kc3b));
+end
+if del_state == 4
+    kp3a = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd3a .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd3a .* r_PF_rev))./(kc3a .* kd3a .* r_PF_rev)); %find kpoly for each individual PRM
+    kp3b = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd3b .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd3b .* r_PF_rev))./(kc3a .* kd3b .* r_PF_rev)); %find kpoly for each individual PRM
+end
 kp3a = 1./kp3a; %inverse above
 kp3b = 1./kp3b; %inverse above
-k_poly3 = sum(kp2a) + sum(kp2b);  %sum up the kpolys for all the PRMs
+k_poly3 = sum(kp3a) + sum(kp3b);  %sum up the kpolys for all the PRMs
 
 % CURRENTLY UNUSED
 % calculates ratio of kpoly dimer to kpoly double
@@ -70,7 +82,7 @@ kp_ratio = k_poly3 / k_poly2;
 %% Graphing
 % creates polymerization bar charts for all three states
 
-max_kp = max([k_poly1, k_poly2, k_poly3]) + 5;
+max_kp = max([k_cap1, k_cap2, k_cap3]) + 5;
 
     
 %single

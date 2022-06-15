@@ -29,7 +29,7 @@ testing = 'N';
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
 % if delivery = N, only capture is used to find polymerization rate
-delivery = 'Y';
+delivery = 'N';
 
 % How many states?
 % only applies if delivery is used
@@ -41,10 +41,9 @@ del_state = 3;
 k_paf=10; % μM^(-1)s^(-1) %binding constant for capture
 c_PA=2.5; % μM %concentration of profilin-actin
 k_pab=10; % μM^(-1)s^(-1) %binding constant for delivery (loop closure)
-k_paf_rev=800; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
-r_PF_rev=2500; % s^(-1) % courtemanche and pollard- 1.25 x 10^(6) s^(-1); vavylonis- 2500 s^(-1) %rate of ring opening (succesful delivery)
-r_paf_rev=50000; % s^(-1) % courtemanche and pollard- 50,000 s^(-1); vavylonis~ 50 s^(-1) %rate of reverse of delivery (unsuccesful delivery)
-
+k_paf_rev=140; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
+r_PF_rev=1250000; % s^(-1) % courtemanche and pollard- 1.25 x 10^(6) s^(-1); vavylonis- 2500 s^(-1) %rate of 
+r_paf_rev
 %Determining Binding Sites:
 % if interruptions = Y, binding sites are calculated allowing for non proline interruptions
 % if interruptions = N, binding sites are calculated without interruptions
