@@ -42,7 +42,7 @@ if del_state == 3
     kp1 = (1./kd1) + ((kd1 + k_paf_rev)./(kd1.*kc1)); %find kpoly for each individual PRM
 end
 if del_state == 4
-%    kp1 = (1./kd1) + ((kd1 + k_paf_rev)./(kd1.*kc1)); %find kpoly for each individual PRM
+    kp1 = (1./kd1) + ((kd1 + k_paf_rev)./(kd1.*kc1)); %find kpoly for each individual PRM
 end
 kp1 = 1./kp1; %inverse above
 k_poly1 = sum(kp1); %sum up the kpolys for all the PRMs

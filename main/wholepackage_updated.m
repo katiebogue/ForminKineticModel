@@ -29,12 +29,20 @@ testing = 'N';
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
 % if delivery = N, only capture is used to find polymerization rate
-delivery = 'N'
+delivery = 'N';
+
+% How many states?
+% only applies if delivery is used
+% del_state = 3, reverse of capture is used
+% del_state = 4, reverse of capture and reverse of delivery are both used
+del_state = 3;
 
 %set constants for rate calculations
-k_paf=10;
-c_PA=2.5;
-k_pab=10;
+k_paf=10; % μM^(-1)s^(-1)
+c_PA=2.5; % μM
+k_pab=10; % μM^(-1)s^(-1)
+k_paf_rev=140; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1)
+
 
 %Determining Binding Sites:
 % if interruptions = Y, binding sites are calculated allowing for non proline interruptions
