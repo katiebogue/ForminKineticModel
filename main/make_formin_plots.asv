@@ -792,12 +792,19 @@ close all
 
 %% Add notes page
 fig_notes= figure('Name','Notes');
-uit = uitable(fig_notes,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','Data',{min_PP_length;interruptions;delivery;del_state;ownseq;ownseqfile;c_PA;k_paf;k_pab;k_paf_rev;r_PF_rev;r_paf_rev});
-uit.RowName = {'Min PRM length','Interruptions','Delivery?','States','Using sequence file?','sequence file','Profilin-actin concentration (μM)','capture const. k_paf (μM^(-1)s^(-1))','delivery const, k_pab (μM^(-1)s^(-1))','reverse capture rate, k_paf_rev (s^(-1))','ring opening rate, r_PF_rev (s^(-1))', 'reverse delivery rate, r_paf_rev (s^(-1))'}
+uit = uitable(fig_notes,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','Data',{min_PP_length;interruptions;delivery;del_state;ownseq;ownseqfile;c_PA});
+uit.RowName = {'Min PRM length','Interruptions','Delivery?','States','Using sequence file?','sequence file','Profilin-actin concentration '
 
 saveas(gcf, append('temp.pdf'))
 append_pdfs(pdf_name, append('temp.pdf'))
 
 close all
 
+k_paf=10; % μM^(-1)s^(-1) %binding constant for capture
+c_PA=2.5; % μM %concentration of profilin-actin
+k_pab=10; % μM^(-1)s^(-1) %binding constant for delivery (loop closure)
+k_paf_rev=250000; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
+    %250000 = ideal value based on courtemanche single PRM data
+r_PF_rev=0; % s^(-1) % courtemanche and pollard- 1.25 x 10^(6) s^(-1); vavylonis- 2500 s^(-1) %rate of ring opening (succesful delivery)
+r_paf_rev=0; % s^(-1) % courtemanche and pollard- 50,000 s^(-1); vavylonis~ 50 s^(-1) %rate of reverse of delivery (unsuccesful delivery)
 

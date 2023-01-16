@@ -31,7 +31,7 @@ testing = 'N';
 
 %use sequence rather than pull from uniprot:
 ownseq = 'N'; %must be either 'Y' or 'N'
-ownseqfile = 'CourtemancheBNI1P.txt';
+ownseqfile = ''; %'CourtemancheBNI1P.txt';
 
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
