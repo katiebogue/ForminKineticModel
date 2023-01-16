@@ -10,7 +10,7 @@
 # In[35]:
 
 
-def gathering_int(query,min_PP_length,standard):
+def gathering_int(query,min_PP_length,standard,ownseq):
     from bioservices import UniProt
 
     # Import BeautifulSoup, a package specialized for interpreting xml data
@@ -25,59 +25,73 @@ def gathering_int(query,min_PP_length,standard):
     # Import numpy for efficient array/math functions
     import numpy as np
     from numpy import ceil
-
-    service = UniProt()
-    result_xml = service.search(query, frmt="xml")
-    soup = BeautifulSoup(result_xml, 'html.parser') # xml "soup" object
-
-    featureFH1 = soup.find_all('feature', description='FH1')
-    featureFH2 = soup.find_all('feature', description='FH2') #adding FH2 domain to define end of FH1 domain
-
-    soup_sequences = soup.find_all('sequence') #finding full formin amino acid sequence
-    soup_sequencee = soup_sequences[-1].get_text();
     
-    soup_sequence=[]
-   # P_index_vec=[]
-    j=0
-    while j <= len(soup_sequencee)-1:
-        if soup_sequencee[j] == 'P':
-            soup_sequence.append("P")
-         #   P_index_vec.append(float(j))
-            j+=1
-        else:
-            soup_sequence.append("X")
-            j+=1
-    #print(soup_sequence)
-    soup_sequence= ''.join(soup_sequence)
-    #print(soup_sequence)
-
-    find_1= soup_sequence.find('PXPPP')
-    find_2= soup_sequence.find('PPXPP')
-    find_3= soup_sequence.find('PPPXP')
-    find_4= soup_sequence.find('PPPP')
+    if ownseq == 'N': #set in wholepackage
+        service = UniProt()
+        result_xml = service.search(query, frmt="xml")
+        soup = BeautifulSoup(result_xml, 'html.parser') # xml "soup" object
     
-    find_all= [find_1,find_2,find_3,find_4]
-    #print(find_all)
-    for i in range(0,3):
-        if find_all[i]>0:
-            find_all[i]=find_all[i]
-        else:
-            find_all[i]= len(soup_sequence)+5
-    # note the following code assumes there is one (and only one) annoted FH1 in this structure!
-
-    if standard == 'Y': #set in wholepkg
-        beginPosition = min(find_all) #start at first P of a series of at least four Ps with a max of 1 interruption
-        endPosition = int(featureFH2[0].find('location').find('begin').get('position')) #end at FH2 domain
-    elif len(featureFH1) == 0: #if uniprot does not have fh1 domain already defined
-        beginPosition = min(find_all) #start at first P of a series of at least four Ps with a max of 1 interruption
-        endPosition = int(featureFH2[0].find('location').find('begin').get('position')) #end at FH2 domain
-    else: #if uniprot has fh1 domain already defined
-        beginPosition = int(featureFH1[0].find('location').find('begin').get('position'))
-        endPosition = int(featureFH1[0].find('location').find('end').get('position'))
-
-    #print(beginPosition)
-    #print(endPosition)
-    lengthOfFH1 = endPosition-beginPosition+1
+        featureFH1 = soup.find_all('feature', description='FH1')
+        featureFH2 = soup.find_all('feature', description='FH2') #adding FH2 domain to define end of FH1 domain
+    
+        soup_sequences = soup.find_all('sequence') #finding full formin amino acid sequence
+        soup_sequencee = soup_sequences[-1].get_text();
+        
+        soup_sequence=[]
+       # P_index_vec=[]
+        j=0
+        while j <= len(soup_sequencee)-1:
+            if soup_sequencee[j] == 'P':
+                soup_sequence.append("P")
+             #   P_index_vec.append(float(j))
+                j+=1
+            else:
+                soup_sequence.append("X")
+                j+=1
+        #print(soup_sequence)
+        soup_sequence= ''.join(soup_sequence)
+        #print(soup_sequence)
+    
+        find_1= soup_sequence.find('PXPPP')
+        find_2= soup_sequence.find('PPXPP')
+        find_3= soup_sequence.find('PPPXP')
+        find_4= soup_sequence.find('PPPP')
+        
+        find_all= [find_1,find_2,find_3,find_4]
+        #print(find_all)
+        for i in range(0,3):
+            if find_all[i]>0:
+                find_all[i]=find_all[i]
+            else:
+                find_all[i]= len(soup_sequence)+5
+        # note the following code assumes there is one (and only one) annoted FH1 in this structure!
+    
+        if standard == 'Y': #set in wholepkg
+            beginPosition = min(find_all) #start at first P of a series of at least four Ps with a max of 1 interruption
+            endPosition = int(featureFH2[0].find('location').find('begin').get('position')) #end at FH2 domain
+        elif len(featureFH1) == 0: #if uniprot does not have fh1 domain already defined
+            beginPosition = min(find_all) #start at first P of a series of at least four Ps with a max of 1 interruption
+            endPosition = int(featureFH2[0].find('location').find('begin').get('position')) #end at FH2 domain
+        else: #if uniprot has fh1 domain already defined
+            beginPosition = int(featureFH1[0].find('location').find('begin').get('position'))
+            endPosition = int(featureFH1[0].find('location').find('end').get('position'))
+    
+        #print(beginPosition)
+        #print(endPosition)
+        lengthOfFH1 = endPosition-beginPosition+1
+        
+        soup_sequence = soup_sequence.replace("\n", "").replace("\r","") # gets rid of newline and line breaks in string
+        fh1_sequence = soup_sequence[beginPosition-1:endPosition] #specifiying FH1 domain
+        fh1_sequence = fh1_sequence[::-1] #reverses string sequence
+        # print(fh1_sequence)
+    else:
+        soup_sequence = query
+        lengthOfFH1 = len(soup_sequence)
+        
+        soup_sequence = soup_sequence.replace("\n", "").replace("\r","") # gets rid of newline and line breaks in string 
+        fh1_sequence = soup_sequence 
+        fh1_sequence = fh1_sequence[::-1] #reverses string sequence
+        # print(fh1_sequence)
 
     if lengthOfFH1 == 0:
         print('error')
@@ -90,10 +104,6 @@ def gathering_int(query,min_PP_length,standard):
         #vectors containing each information for ease of plotting
 
 
-    soup_sequence = soup_sequence.replace("\n", "").replace("\r","") # gets rid of newline and line breaks in string
-    fh1_sequence = soup_sequence[beginPosition-1:endPosition] #specifiying FH1 domain
-    fh1_sequence = fh1_sequence[::-1] #reverses string sequence
-   # print(fh1_sequence)
    
     P_index_vec=[]
     j=0
@@ -203,11 +213,15 @@ def gathering_int(query,min_PP_length,standard):
 
 
 
-gathering_int('O08808',6, 'Y')
+#gathering_int('O08808',6, 'Y')
+
+#%%
+#gathering_int('LSTQSSVLSSQPPPPPPPPPPVPAKLFGESLEKEKKSEDDTVKQETTGDSPAPPPPPPPPPPPPMALFGKPKGETPPPPPLPSVLSSSTDGVIPPAPPMMPASQIKSAVTSPLLPQSPSLFEKYPRPHKKLKQLHWEKLDCTDNSIWGTGKAEKFADDLYEKGVLADLEKAFAAREIKSLASKRKEDLQKITFLSRDISQQFGINLHMYSSLSVADLVKKILNCDRDFLQTPSVVEFLSKSEIIEVSVNLARNYAPYSTDWEGVRNLEDAKPPEKDPNDLQRADQIYLQLMVNLESYWGSRMRALTVVTSYEREYNELLAKLRKVDKAVSALQESDNLRNVFNVILAVGNFMNDTSKQAQGFKLSTLQRLTFIKDTTNSMTFLNYVEKIVRLNYPSFNDFLSELEPVLDVVKVSIEQLVNDCKDFSQSIVNVERSVEIGNLSDSSKFHPLDKVLIKTLPVLPEARKKGDLLEDEVKLTIMEFESLMHTYGEDSGDKFAKISFFKKFADFINEYKKAQAQNLAAEEEERLYIKHKKIVEE',4,'Y','Y')
+
 
 #%%
 
-gathering_int('O60610',3, 'Y')
+#gathering_int('O60610',3, 'Y')
 
 
 # In[38]:

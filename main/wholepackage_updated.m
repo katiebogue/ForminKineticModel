@@ -23,8 +23,15 @@ close all
     
 
 %% (0.1) formatting options:    
+%add notes to appear at notes page
+notes= '';
+
 %test with less formins:
 testing = 'N';
+
+%use sequence rather than pull from uniprot:
+ownseq = 'N'; %must be either 'Y' or 'N'
+ownseqfile = 'CourtemancheBNI1P.txt';
 
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
@@ -41,9 +48,10 @@ del_state = 3;
 k_paf=10; % μM^(-1)s^(-1) %binding constant for capture
 c_PA=2.5; % μM %concentration of profilin-actin
 k_pab=10; % μM^(-1)s^(-1) %binding constant for delivery (loop closure)
-k_paf_rev=800; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
-r_PF_rev=2500; % s^(-1) % courtemanche and pollard- 1.25 x 10^(6) s^(-1); vavylonis- 2500 s^(-1) %rate of ring opening (succesful delivery)
-r_paf_rev=50000; % s^(-1) % courtemanche and pollard- 50,000 s^(-1); vavylonis~ 50 s^(-1) %rate of reverse of delivery (unsuccesful delivery)
+k_paf_rev=250000; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
+    %250000 = ideal value based on courtemanche single PRM data
+r_PF_rev=0; % s^(-1) % courtemanche and pollard- 1.25 x 10^(6) s^(-1); vavylonis- 2500 s^(-1) %rate of ring opening (succesful delivery)
+r_paf_rev=0; % s^(-1) % courtemanche and pollard- 50,000 s^(-1); vavylonis~ 50 s^(-1) %rate of reverse of delivery (unsuccesful delivery)
 
 %Determining Binding Sites:
 % if interruptions = Y, binding sites are calculated allowing for non proline interruptions
@@ -118,12 +126,16 @@ find_pocc
 %% (2) Further Initialization
 
 % retrives all names and uniprot queries of formin types into seperate strings
-if testing == 'Y'
-    Name_Query = char(importdata('ForminTypestest.txt')); 
+if ownseq == 'Y'
+    Name_Query = char(importdata(ownseqfile)); 
+else
+    if testing == 'Y'
+        Name_Query = char(importdata('ForminTypestest.txt')); 
+    end
+    if testing == 'N'
+        Name_Query = char(importdata('ForminTypes.txt')); 
+    end 
 end
-if testing == 'N'
-    Name_Query = char(importdata('ForminTypes.txt')); 
-end 
 Name_Query = strsplit(Name_Query);
 
 % adds current matlab path to python paths if necessary
@@ -241,12 +253,12 @@ py.importlib.import_module('bioservices')
 
 if interruptions == 'Y'
     py.importlib.import_module('PP_interruption')
-    x = py.PP_interruption.gathering_int(query,min_PP_length,standard);   %uses python function defined in PP_interruption that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
+    x = py.PP_interruption.gathering_int(query,min_PP_length,standard,ownseq);   %uses python function defined in PP_interruption that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
 end
 
 if interruptions == 'N'
     py.importlib.import_module('gather_info')
-    x = py.gather_info.gathering(query,min_PP_length,standard);   %uses python function defined in gather_info that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
+    x = py.gather_info.gathering(query,min_PP_length,standard,ownseq);   %uses python function defined in gather_info that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
 end
 
 
