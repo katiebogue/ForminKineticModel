@@ -803,9 +803,19 @@ close all
 
 
 %% Add notes page
+
+Rowtitles = {'Min PRM length';'Interruptions';'Delivery?';'States';'Using sequence file?';'sequence file';'Profilin-actin concentration (μM)';'capture const. k_paf (μM^(-1)s^(-1))';'delivery const, k_pab (μM^(-1)s^(-1))';'reverse capture rate, k_paf_rev (s^(-1))';'ring opening rate, r_PF_rev (s^(-1))'; 'reverse delivery rate, r_paf_rev (s^(-1))';'Notes'};
+Datavars = {num2str(min_PP_length);interruptions;delivery;num2str(del_state);ownseq;ownseqfile;num2str(c_PA);num2str(k_paf);num2str(k_pab);num2str(k_paf_rev);num2str(r_PF_rev);num2str(r_paf_rev);notes};
+tablematrix = [Rowtitles, Datavars];
+tabledata = cell2table(tablematrix);
+
 fig_notes= figure('Name','Notes');
-uit = uitable(fig_notes,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','Data',{min_PP_length;interruptions;delivery;del_state;ownseq;ownseqfile;c_PA;k_paf;k_pab;k_paf_rev;r_PF_rev;r_paf_rev;notes});
-uit.RowName = {'Min PRM length','Interruptions','Delivery?','States','Using sequence file?','sequence file','Profilin-actin concentration (μM)','capture const. k_paf (μM^(-1)s^(-1))','delivery const, k_pab (μM^(-1)s^(-1))','reverse capture rate, k_paf_rev (s^(-1))','ring opening rate, r_PF_rev (s^(-1))', 'reverse delivery rate, r_paf_rev (s^(-1))','Notes'}
+uit = uitable(fig_notes,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','Data',[tabledata.tablematrix1,tabledata.tablematrix2]); 
+uit.FontSize = 8;
+
+uit.ColumnWidth={150,330};
+
+set(gcf, 'Position', [0 0 530 300]);
 
 saveas(gcf, append('temp.pdf'))
 append_pdfs(pdf_name, append('temp.pdf'))

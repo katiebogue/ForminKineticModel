@@ -24,14 +24,14 @@ close all
 
 %% (0.1) formatting options:    
 %add notes to appear at notes page
-notes= '';
+notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
 
 %test with less formins:
 testing = 'N';
 
 %use sequence rather than pull from uniprot:
-ownseq = 'N'; %must be either 'Y' or 'N'
-ownseqfile = ''; %'CourtemancheBNI1P.txt';
+ownseq = 'Y'; %must be either 'Y' or 'N'
+ownseqfile = 'CourtemancheBNI1P_replcedpp all constructs.txt'; %'CourtemancheBNI1P.txt'; CourtemancheBNI1P all constructs.txt; 
 
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
