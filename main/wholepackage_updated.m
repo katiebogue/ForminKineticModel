@@ -188,6 +188,24 @@ all_kp3b = [];
 
 all_fh1_names_perPRM = [];
 
+all_p_occ1 = [];
+all_p_occ2a = [];
+all_p_occ2b = [];
+all_p_occ3a = [];
+all_p_occ3b = [];
+
+all_p_occ1_0 = [];
+all_p_occ2a_0 = [];
+all_p_occ2b_0 = [];
+all_p_occ3a_0 = [];
+all_p_occ3b_0 = [];
+
+all_p_r1 = [];
+all_p_r2a = [];
+all_p_r2b = [];
+all_p_r3a = [];
+all_p_r3b = [];
+
 if delivery == 'Y'
     all_kcap1 = [];
     all_kcap2 = [];
@@ -431,6 +449,24 @@ else
     p_r3a = FF3a(fh1_length_vec,pp_index_vec');
     p_r3b = FF3b(fh1_length_vec,pp_index_vec');
 end
+
+all_p_occ1 = [all_p_occ1; p_occ1];
+all_p_occ2a = [all_p_occ2a; p_occ2a];
+all_p_occ2b = [all_p_occ2b; p_occ2b];
+all_p_occ3a = [all_p_occ3a; p_occ3a];
+all_p_occ3b = [all_p_occ3b; p_occ3b];
+
+all_p_occ1_0 = [all_p_occ1_0; ones(length(p_occ1),1).*p_occ1_0];
+all_p_occ2a_0 = [all_p_occ2a_0; ones(length(p_occ1),1).*p_occ2a_0];
+all_p_occ2b_0 = [all_p_occ2b_0; ones(length(p_occ1),1).*p_occ2b_0];
+all_p_occ3a_0 = [all_p_occ3a_0; ones(length(p_occ1),1).*p_occ3a_0];
+all_p_occ3b_0 = [all_p_occ3b_0; ones(length(p_occ1),1).*p_occ3b_0];
+
+all_p_r1 = [all_p_r1; p_r1];
+all_p_r2a = [all_p_r2a; p_r2a];
+all_p_r2b = [all_p_r2b; p_r2b];
+all_p_r3a = [all_p_r3a; p_r3a];
+all_p_r3b = [all_p_r3b; p_r3b];
 
 % sets title containing name, length, and number of binding sites
 % used based on opt2
