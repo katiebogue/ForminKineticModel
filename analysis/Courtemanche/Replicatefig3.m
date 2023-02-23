@@ -1,4 +1,4 @@
-values=readmatrix("Courtemanche plot digitizer data.csv");
+values=readmatrix("Courtemanche plot digitizer data F3.csv");
 PConc=values(:,1);
 K_18=values(:,2);
 Er_18=values(:,3);
