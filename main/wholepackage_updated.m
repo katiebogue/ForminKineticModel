@@ -24,13 +24,15 @@ close all
 
 %% (0.1) formatting options:    
 %add notes to appear at notes page
-notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
+notes= 'testing new lookup tables';
+%notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
+
 
 %test with less formins:
 testing = 'N';
 
 %use sequence rather than pull from uniprot:
-ownseq = 'Y'; %must be either 'Y' or 'N'
+ownseq = 'N'; %must be either 'Y' or 'N'
 ownseqfile = 'CourtemancheBNI1P_replcedpp all constructs.txt'; %'CourtemancheBNI1P.txt'; CourtemancheBNI1P all constructs.txt; 
 
 %Incorperating delivery
@@ -76,10 +78,14 @@ opt2 = 1;
 
 % if opt3 = 0, minimal extrapolation; excludes fh1 with length > 200
 % extrapolation always occurs for dimerized > 122 (due to simulation run time)
-% if opt3 = 1, all 25 fh1s included; extrapolation occurs in addition for:
+% if opt3 = 1, all fh1s included; extrapolation occurs in addition for:
     % all filiments length > 300
     % double (and dimer) with length > 200 (due to large number errors)
-opt3 = 1;
+% if opt3 = 2, all fh1s included; use updated lookup tables such that
+% extrapolation only occurs for:
+    % length > 600 (single, double)
+    % length > 122 (dimer)
+opt3 = 2;
 
 % if opt4 = 0, saves pdf with each formin on a different page
 % if opt4 = 1, creates (but not saves) matlab figures with 3 fh1 per figure
@@ -117,9 +123,25 @@ folder_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' 
 
 %% (1) read output files and extract all values of p_occ
 
-m1 = dlmread('single1_300.txt');        %lookup tables from C code
-m2 = dlmread('double_200.txt');
-m3 = dlmread('dimer_122.txt');
+%set filament lengths for extrapolation in find_pocc
+if opt3==1
+    single_max_length=300;
+    double_max_length=200;
+    dimer_max_length=121;
+    m1 = dlmread('single1_300.txt');        %lookup tables from C code
+    m2 = dlmread('double_200.txt');
+    m3 = dlmread('dimer_122.txt');
+    
+end
+if opt3==2
+    single_max_length=600;
+    double_max_length=600;
+    dimer_max_length=121;
+    m1 = dlmread('single_1_600.txt');        %lookup tables from C code
+    m2 = dlmread('double_1_600.txt');
+    m3 = dlmread('dimer_122.txt');
+end
+
 
 find_pocc   
 
@@ -377,14 +399,15 @@ if iSite_tot == 0 %skips if no binding sites
     continue
 end
 
-if fh1_length <= 300
+
+if fh1_length <= single_max_length
     [row,~] = find(X1(:,1) == fh1_length & X1(:,2) == pp_index_vec); %num of row corresponding to fH1 length AND location of PP
     p_occ1 = X1(row,3); %all probabilities for that length at each PP location
     [row_0,~] = find(X1(:,1) == fh1_length & X1(:,2) == 1);
     p_occ1_0 = X1(row_0,3); %probability at position 0
     p_r1 = X1(row,4);
     
-    if fh1_length <= 200
+    if fh1_length <= double_max_length
         [row,~] = find(X2a(:,1) == fh1_length & X2a(:,2) == pp_index_vec);
         p_occ2a = X2a(row,3);
         [row_0,~] = find(X2a(:,1) == fh1_length & X2a(:,2) == 1);
@@ -408,7 +431,7 @@ if fh1_length <= 300
         
     end
     
-    if fh1_length <= 121
+    if fh1_length <= dimer_max_length
          [row,~] = find(X3a(:,1) == fh1_length & X3a(:,2) == pp_index_vec);
          p_occ3a = X3a(row,3);
          [row_0,~] = find(X3a(:,1) == fh1_length & X3a(:,2) == 1);

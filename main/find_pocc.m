@@ -22,7 +22,7 @@ numErr = 0;
 NFil1=1;
 p_occ1_all = [];
 p_r1_all = [];
-length_array1 = 1:300; %length of specific filament from sweep
+length_array1 = 1:single_max_length; %length of specific filament from sweep
 length_vec1 = [];
 iSite_vec1 = [];
 
@@ -52,7 +52,7 @@ p_occ2a_all = [];
 p_occ2b_all = [];
 p_r2a_all = [];
 p_r2b_all = [];
-length_array2 = 1:200;
+length_array2 = 1:double_max_length;
 length_vec2 = [];
 iSite_vec2 = [];
 
@@ -93,7 +93,7 @@ p_occ3a_all = [];
 p_occ3b_all = [];
 p_r3a_all = [];
 p_r3b_all = [];
-length_array3 = 1:122;
+length_array3 = 1:dimer_max_length;
 length_vec3 = [];
 iSite_vec3 = [];
 
