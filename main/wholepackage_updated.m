@@ -24,7 +24,7 @@ close all
 
 %% (0.1) formatting options:    
 %add notes to appear at notes page
-notes= 'testing new lookup tables';
+notes= 'for SRP';
 %notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
 
 
