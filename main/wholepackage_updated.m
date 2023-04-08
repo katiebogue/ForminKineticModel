@@ -24,7 +24,7 @@ close all
 
 %% (0.1) formatting options:    
 %add notes to appear at notes page
-notes= 'for SRP';
+notes= '4 states; courtemanche test';
 %notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
 
 
@@ -32,7 +32,7 @@ notes= 'for SRP';
 testing = 'N';
 
 %use sequence rather than pull from uniprot:
-ownseq = 'N'; %must be either 'Y' or 'N'
+ownseq = 'Y'; %must be either 'Y' or 'N'
 ownseqfile = 'CourtemancheBNI1P_replcedpp all constructs.txt'; %'CourtemancheBNI1P.txt'; CourtemancheBNI1P all constructs.txt; 
 
 %Incorperating delivery
@@ -47,13 +47,13 @@ delivery = 'Y';
 del_state = 3;
 
 %set constants for rate calculations
-k_paf=10; % μM^(-1)s^(-1) %binding constant for capture
+k_paf=91.4; % μM^(-1)s^(-1) %binding constant for capture
 c_PA=2.5; % μM %concentration of profilin-actin
 k_pab=10; % μM^(-1)s^(-1) %binding constant for delivery (loop closure)
-k_paf_rev=250000; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
+k_paf_rev=599066.5112; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
     %250000 = ideal value based on courtemanche single PRM data
-r_PF_rev=0; % s^(-1) % courtemanche and pollard- 1.25 x 10^(6) s^(-1); vavylonis- 2500 s^(-1) %rate of ring opening (succesful delivery)
-r_paf_rev=0; % s^(-1) % courtemanche and pollard- 50,000 s^(-1); vavylonis~ 50 s^(-1) %rate of reverse of delivery (unsuccesful delivery)
+r_PF_rev=1.25e-6; % s^(-1) % courtemanche and pollard- 1.25 x 10^(6) s^(-1); vavylonis- 2500 s^(-1) %rate of ring opening (succesful delivery)
+r_paf_rev=50000; % s^(-1) % courtemanche and pollard- 50,000 s^(-1); vavylonis~ 50 s^(-1) %rate of reverse of delivery (unsuccesful delivery)
 
 %Determining Binding Sites:
 % if interruptions = Y, binding sites are calculated allowing for non proline interruptions
