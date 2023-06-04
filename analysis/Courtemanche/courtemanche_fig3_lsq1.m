@@ -1,7 +1,7 @@
 %%Get values
 pdf_name = "Courtemanche LSQ plots.pdf"
 
-vals=readtable("Courtemanche plot digitizer data.csv");
+vals=readtable("Courtemanche plot digitizer data F3.csv");
 
 
 KPoly=[vals.K_18,vals.K_28,vals.K_37,vals.K_65];

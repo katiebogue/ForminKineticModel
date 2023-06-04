@@ -24,7 +24,7 @@ close all
 
 %% (0.1) formatting options:    
 %add notes to appear at notes page
-notes= '4 states; courtemanche test';
+notes= '4 states; courtemanche test not replaced Ps';
 %notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
 
 
@@ -33,7 +33,7 @@ testing = 'N';
 
 %use sequence rather than pull from uniprot:
 ownseq = 'Y'; %must be either 'Y' or 'N'
-ownseqfile = 'CourtemancheBNI1P_replcedpp all constructs.txt'; %'CourtemancheBNI1P.txt'; CourtemancheBNI1P all constructs.txt; 
+ownseqfile = 'CourtemancheBNI1P all constructs.txt'; %'CourtemancheBNI1P.txt'; CourtemancheBNI1P all constructs.txt; 
 
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
@@ -44,7 +44,7 @@ delivery = 'Y';
 % only applies if delivery is used
 % del_state = 3, reverse of capture is used
 % del_state = 4, reverse of capture and reverse of delivery are both used
-del_state = 3;
+del_state = 4;
 
 %set constants for rate calculations
 k_paf=91.4; % μM^(-1)s^(-1) %binding constant for capture
