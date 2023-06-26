@@ -1,0 +1,13 @@
+function figuresave(fig,file,figname)
+ax=fig;
+persistent i; 
+if isempty(i)
+    exportgraphics(ax,file);
+    mkdir("figures");
+    i = 0;
+else
+    exportgraphics(ax,file,'Append',true);
+end
+i = i+1;
+savefig(ax,figures/figname);
+end

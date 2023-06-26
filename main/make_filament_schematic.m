@@ -27,7 +27,7 @@ end
 
 hold on
 x = [1,1];
-z = [1.5,1.5]
+z = [1.5,1.5];
 y = [1,fh1_length];
 
 
@@ -46,8 +46,8 @@ end
 for i = 1:iSite_tot
     start = pp_index_vec_start(i)-0.6; 
     width = pp_length_vec(i);
-    eend = start+width+0.4
-    ly = [start,eend]
+    eend = start+width+0.4;
+    ly = [start,eend];
     plot(z,ly,'color','#EDB120','LineWidth',8) %adds highlight of PRMS
 end
 for i = 1:length(P_index_vec)

@@ -20,8 +20,7 @@ close all
  title('Polymerization Rates per Formin')
  subtitle(settings_variable)
  
- saveas(gcf, append('temp.pdf'))
- append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -36,14 +35,12 @@ close all
  set(kpoly_bar_ratio(1), 'FaceColor','m')
  xlabel('Formins')
  ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
- ylim([-1.8 0.2])
+ ylim([-1.7 0.3])
  
- title('Change in Polymerization Rates w/ Dimerization per Formin')
+ title('Change in Polymerization Rates with NTD per Formin')
  subtitle(settings_variable)
  
- saveas(gcf, append('temp.pdf'))
- append_pdfs(pdf_name, append('temp.pdf'))
-
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
  
 close all
 
@@ -70,8 +67,7 @@ ylabel('Binding sites')
 title('Number of Binding Sites per Formin')
 subtitle(settings_variable)
 
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -92,9 +88,7 @@ kpoly_diff_PRM_scatter = scatter(all_iSite_tot,all_log_kpoly3_2_nobind, 'filled'
  title('Change in Polymerization Rates vs Number of PRMs')
  subtitle(settings_variable)
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 close all
 
 %% Polymerization Rates vs Number of PRMs
@@ -115,8 +109,7 @@ labelpoints(all_iSite_tot,all_kpoly3_nobind,labels,'N',0.005,'outliers_lim', {[-
  title('Polymerization Rates vs Number of PRMs')
  subtitle(settings_variable)
 
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -131,8 +124,7 @@ labelpoints(all_fh1_length,all_log_kpoly3_2_nobind,labels,'N',0.005,'outliers_li
  title('Change in Polymerization Rates vs Length of FH1 Domain')
  subtitle(settings_variable)
 
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -155,8 +147,7 @@ labelpoints(all_fh1_length,all_kpoly3_nobind,labels,'N',0.005, 1,'outliers_lim',
  title('Polymerization Rates vs Length of FH1 Domain')
  subtitle(settings_variable)
 
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -165,15 +156,14 @@ kpoly_diff_size_scatter = scatter(all_mean_PP_length,all_log_kpoly3_2_nobind, 'f
  xlabel('Mean PRM size')
  ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
 
-labels = all_fh1_names_nobind
+labels = all_fh1_names_nobind;
 labelpoints(all_mean_PP_length,all_log_kpoly3_2_nobind,labels,'N',0.005,'outliers_lim', {[-inf inf; -0.6 0]}, 'FontSize', 7)
 
  
  title('Change in Polymerization Rates vs Mean PRM size')
  subtitle(settings_variable)
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -182,15 +172,14 @@ kpoly_diff_size_scatter = scatter(all_PP_length_x_PP_isite_tot,all_log_kpoly3_2_
  xlabel('Mean PRM size x #PRMs')
  ylabel('log_2(kpoly N terminal dimerized/kpoly double)')
 
-labels = all_fh1_names_nobind
+labels = all_fh1_names_nobind;
 labelpoints(all_PP_length_x_PP_isite_tot,all_log_kpoly3_2_nobind,labels,'N',0.005,'outliers_lim', {[-inf inf; -0.6 0]}, 'FontSize', 7)
 
  
  title('Change in Polymerization Rates vs Mean PRM size x Number of PRMs')
  subtitle(settings_variable)
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -199,7 +188,7 @@ close all
 bg = [1 1 1;0.9255 0.9412 0.9451];
 rgbmatrix = distinguishable_colors(length(all_fh1_names_nobind));
 colors = [];
-for k = 1:length(rgbmatrix)
+for k = 1:length(rgbmatrix(:,1))
     hexcode = rgb2hex(rgbmatrix(k,:));
     hexcode = convertCharsToStrings(hexcode);
     colors = [colors, hexcode];
@@ -249,8 +238,7 @@ legend('Single', 'Double-1', 'Double-2', 'N-Dimer-1', 'N-Dimer-2','Location','no
  title('Polymerization Rates per individual PRM')
  subtitle(settings_variable)
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -275,8 +263,7 @@ legend(all_fh1_names_nobind, 'Location','northeastoutside');
  title('Polymerization Rates vs. PP length per individual PRM (single)')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -312,8 +299,7 @@ end
  title('Polymerization Rates vs. PP length per individual PRM (double)')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -349,8 +335,7 @@ end
  title('Polymerization Rates vs. PP length per individual PRM (dimer)')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 %% Distance from PRM to FH2
@@ -374,9 +359,7 @@ legend('Single', 'Double-1', 'Double-2', 'N-Dimer-1', 'N-Dimer-2','Location','no
  title('Polymerization Rates vs. PP dist to FH2 per individual PRM')
  subtitle(settings_variable)
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 close all
 
 % single
@@ -400,8 +383,7 @@ legend(all_fh1_names_nobind, 'Location','northeastoutside');
  title('Polymerization Rates vs. PP dist to FH2 per individual PRM (single)')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -437,8 +419,7 @@ end
  title('Polymerization Rates vs. PP dist to FH2 per individual PRM (double)')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -474,8 +455,7 @@ end
  title('Polymerization Rates vs. PP dist to FH2 per individual PRM (dimer)')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -500,8 +480,7 @@ legend('Single', 'Double-1', 'Double-2', 'N-Dimer-1', 'N-Dimer-2','Location','no
  title('Polymerization Rates vs. PP dist to N-term per individual PRM')
  subtitle(settings_variable)
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -526,8 +505,7 @@ legend(all_fh1_names_nobind, 'Location','northeastoutside');
  title('Polymerization Rates vs. PP dist to N-term per individual PRM (single)')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -563,8 +541,7 @@ end
  title('Polymerization Rates vs. PP dist to N-term per individual PRM (double)')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -600,8 +577,7 @@ end
  title('Polymerization Rates vs. PP dist to N-term per individual PRM (dimer)')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -621,8 +597,7 @@ legend('filament a', 'filament b');
  title('Change in Polymerization Rates vs. PP length per individual PRM')
  subtitle(settings_variable)
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -658,8 +633,7 @@ end
  title('Change in Polymerization Rates vs. PP length per individual PRM')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -679,8 +653,7 @@ legend('filament a', 'filament b');
  title('Change in Polymerization Rates vs. PP dist to FH2 per individual PRM')
  subtitle(settings_variable)
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -716,8 +689,7 @@ end
  title('Change in Polymerization Rates vs. PP dist to FH2 per individual PRM')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -737,8 +709,7 @@ legend('filament a', 'filament b');
  title('Change in Polymerization Rates vs. PP dist to N-term per individual PRM')
  subtitle(settings_variable)
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 
@@ -774,8 +745,7 @@ end
  title('Change in Polymerization Rates vs. PP dist to N-term per individual PRM')
  subtitle(settings_variable) 
  
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
+figuresave(gcf,pdf_name,append(gca().Title.String,'.fig'));
 
 close all
 %% save fig with per formin data
@@ -788,7 +758,7 @@ if delivery == 'N'
     uit = uitable(fig,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','ColumnName',{'k_poly Single (log2)', 'k_poly Double (log2)', 'k_poly N-Dimer (log2)','log_2(kpoly ratio)','# Binding Sites','FH1 length', 'Mean PRM size','Mean PRM size x # Binding Sites','Profilin-Actin Concentration|μM|c_PA','Capture rate constant|μM^(-1)s^(-1)|k_paf','Delivery rate constant|μM^(-1)s^(-1)|k_pab','Reverse Capture Rate|s^(-1)|k_paf_rev'},'Data',[all_kpoly1_nobind, all_kpoly2_nobind, all_kpoly3_nobind, all_log_kpoly3_2_nobind, all_iSite_tot, all_fh1_length, all_mean_PP_length, all_PP_length_x_PP_isite_tot, ones(length(all_fh1_names_nobind),1).*c_PA,ones(length(all_fh1_names_nobind),1).*k_paf,ones(length(all_fh1_names_nobind),1).*k_pab,ones(length(all_fh1_names_nobind),1).*k_paf_rev]);
 end
 
-uit.RowName = all_fh1_names_nobind
+uit.RowName = all_fh1_names_nobind;
 
 saveas(fig,'Per Formin Data_'+fig_name);
 
@@ -804,7 +774,7 @@ end
 if delivery == 'N'
     uit = uitable(fig,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','ColumnName',{'distance from PRM to FH2','PRM length','FH1 Length','Single KPoly','Double KPoly a','Double KPoly b','Dimer KPoly a','Dimer KPoly b','log_2(KPoly Dimer/Double) a','log_2(KPoly Dimer/Double) b','Profilin-Actin Concentration|μM|c_PA','Capture rate constant|μM^(-1)s^(-1)|k_paf','Delivery rate constant|μM^(-1)s^(-1)|k_pab','Reverse Capture Rate|s^(-1)|k_paf_rev','Single Pocc|p_occ1','Double Pocc a|p_occ2a','Double Pocc b|p_occ2b','Dimer Pocc a|p_occ3a','Dimer Pocc b|p_occ3b','Single Pocc_0|p_occ1_0','Double Pocc_0 a|p_occ2a_0','Double Pocc_0 b|p_occ2b_0','Dimer Pocc_0 a|p_occ3a_0','Dimer Pocc_0 b|p_occ3b_0','Single PRM barbed end concentration|p_r1','Double PRM barbed end concentration a|p_r2a','Double PRM barbed end concentration b|p_r2b','Dimer PRM barbed end concentration a|p_r3a','Dimer PRM barbed end concentration b|p_r3b'},'Data',[all_PP_location,all_PP_length,all_fh1_length_PP,all_kp1,all_kp2a,all_kp2b,all_kp3a,all_kp3b,all_kpoly3a_2a,all_kpoly3b_2b,ones(length(all_fh1_names_perPRM),1).*c_PA,ones(length(all_fh1_names_perPRM),1).*k_paf,ones(length(all_fh1_names_perPRM),1).*k_pab,ones(length(all_fh1_names_perPRM),1).*k_paf_rev,all_p_occ1,all_p_occ2a,all_p_occ2b,all_p_occ3a,all_p_occ3b,all_p_occ1_0,all_p_occ2a_0,all_p_occ2b_0,all_p_occ3a_0,all_p_occ3b_0,all_p_r1,all_p_r2a,all_p_r2b,all_p_r3a,all_p_r3b]);
 end
-uit.RowName = all_fh1_names_perPRM
+uit.RowName = all_fh1_names_perPRM;
 
 saveas(fig,'Per PRM Data_'+fig_name);
 
@@ -812,24 +782,5 @@ saveas(fig,'Per PRM Data_'+fig_name);
 
 close all
 
-%% Add notes page
-
-Rowtitles = {'Min PRM length';'Interruptions';'Delivery?';'States';'Using sequence file?';'sequence file';'Profilin-actin concentration (μM)';'capture const. k_paf (μM^(-1)s^(-1))';'delivery const, k_pab (μM^(-1)s^(-1))';'reverse capture rate, k_paf_rev (s^(-1))';'ring opening rate, r_PF_rev (s^(-1))'; 'reverse delivery rate, r_paf_rev (s^(-1))';'Notes'};
-Datavars = {num2str(min_PP_length);interruptions;delivery;num2str(del_state);ownseq;ownseqfile;num2str(c_PA);num2str(k_paf);num2str(k_pab);num2str(k_paf_rev);num2str(r_PF_rev);num2str(r_paf_rev);notes};
-tablematrix = [Rowtitles, Datavars];
-tabledata = cell2table(tablematrix);
-
-fig_notes= figure('Name','Notes');
-uit = uitable(fig_notes,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','Data',[tabledata.tablematrix1,tabledata.tablematrix2]); 
-uit.FontSize = 8;
-
-uit.ColumnWidth={150,330};
-
-set(gcf, 'Position', [0 0 530 300]);
-
-saveas(gcf, append('temp.pdf'))
-append_pdfs(pdf_name, append('temp.pdf'))
-
-close all
 
 

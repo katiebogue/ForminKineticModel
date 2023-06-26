@@ -4,18 +4,32 @@
 % uses variables: fh1_length, pp_length_vec, p_occ1/2ab/3ab, opt1/2/3/4
 
 %% Calculations
+% r_PF_rev scaling:
+r_PF_rev_scale = r_PF_rev.*exp(-1.*pp_length_vec); 
+%r_PF_rev_scale = r_PF_rev.*exp(-1.*pp_length_vec).*pp_length_vec; 
+r_PF_rev_scale = r_PF_rev_scale';
+%r_PF_rev_scale = r_PF_rev;
+
+% kcap scaling:
+%kcap_scale=k_paf.*pp_length_vec';
+kcap_scale = k_paf;
+
+% k_paf_rev scaling:
+% k_paf_rev_scale = k_paf_rev;
+k_paf_rev_scale = k_paf_rev.*exp(-1.*pp_length_vec);
+k_paf_rev_scale = k_paf_rev_scale';
 
 %calculates kcapture for all three states
-kc1 = k_paf*c_PA*(1-p_occ1).*pp_length_vec';
+kc1 = kcap_scale.*c_PA.*(1-p_occ1);
 k_cap1 = sum(kc1);
 kc1x = kc1;
 
-kc2a = k_paf*c_PA*(1-p_occ2a).*pp_length_vec';
-kc2b = k_paf*c_PA*(1-p_occ2b).*pp_length_vec';
+kc2a = kcap_scale.*c_PA.*(1-p_occ2a);
+kc2b = kcap_scale.*c_PA.*(1-p_occ2b);
 k_cap2 = sum(kc2a) + sum(kc2b);
 
-kc3a = k_paf*c_PA*(1-p_occ3a).*pp_length_vec';
-kc3b = k_paf*c_PA*(1-p_occ3b).*pp_length_vec';
+kc3a = kcap_scale.*c_PA.*(1-p_occ3a);
+kc3b = kcap_scale.*c_PA.*(1-p_occ3b);
 k_cap3 = sum(kc3a) + sum(kc3b);
 
 %calculates kdelivery for all three states
@@ -39,10 +53,10 @@ k_del3 = sum(kd3a) + sum(kd3b);
 
 %single
 if del_state == 3
-    kp1 = (1./kd1) + ((kd1 + k_paf_rev)./(kd1.*kc1)); %find kpoly for each individual PRM
+    kp1 = (1./kd1) + ((kd1 + k_paf_rev_scale)./(kd1.*kc1)); %find kpoly for each individual PRM
 end
 if del_state == 4
-    kp1 = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd1 .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd1 .* r_PF_rev))./(kc1 .* kd1 .* r_PF_rev)); %find kpoly for each individual PRM
+    kp1 = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd1 .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd1 .* r_PF_rev_scale))./(kc1 .* kd1 .* r_PF_rev_scale)); %find kpoly for each individual PRM
 end
 kp1 = 1./kp1; %inverse above
 k_poly1 = sum(kp1); %sum up the kpolys for all the PRMs
@@ -50,12 +64,12 @@ kp1x = kp1;
 
 %double
 if del_state == 3
-    kp2a = (1./kd2a) + ((kd2a + k_paf_rev)./(kd2a.*kc2a));
-    kp2b = (1./kd2b) + ((kd2b + k_paf_rev)./(kd2b.*kc2b));
+    kp2a = (1./kd2a) + ((kd2a + k_paf_rev_scale)./(kd2a.*kc2a));
+    kp2b = (1./kd2b) + ((kd2b + k_paf_rev_scale)./(kd2b.*kc2b));
 end
 if del_state == 4
-    kp2a = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd2a .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd2a .* r_PF_rev))./(kc2a .* kd2a .* r_PF_rev)); %find kpoly for each individual PRM
-    kp2b = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd2b .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd2b .* r_PF_rev))./(kc2a .* kd2b .* r_PF_rev)); %find kpoly for each individual PRM
+    kp2a = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd2a .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd2a .* r_PF_rev_scale))./(kc2a .* kd2a .* r_PF_rev_scale)); %find kpoly for each individual PRM
+    kp2b = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd2b .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd2b .* r_PF_rev_scale))./(kc2a .* kd2b .* r_PF_rev_scale)); %find kpoly for each individual PRM
 end
 kp2a = 1./kp2a; %inverse above
 kp2b = 1./kp2b; %inverse above
@@ -63,12 +77,12 @@ k_poly2 = sum(kp2a) + sum(kp2b);  %sum up the kpolys for all the PRMs
 
 %dimer
 if del_state == 3
-    kp3a = (1./kd3a) + ((kd3a + k_paf_rev)./(kd3a.*kc3a));
-    kp3b = (1./kd3b) + ((kd3b + k_paf_rev)./(kd3b.*kc3b));
+    kp3a = (1./kd3a) + ((kd3a + k_paf_rev_scale)./(kd3a.*kc3a));
+    kp3b = (1./kd3b) + ((kd3b + k_paf_rev_scale)./(kd3b.*kc3b));
 end
 if del_state == 4
-    kp3a = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd3a .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd3a .* r_PF_rev))./(kc3a .* kd3a .* r_PF_rev)); %find kpoly for each individual PRM
-    kp3b = (1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./(kd3b .* r_PF_rev)) + (((k_paf_rev .* r_paf_rev) + (k_paf_rev .* r_PF_rev) + (kd3b .* r_PF_rev))./(kc3a .* kd3b .* r_PF_rev)); %find kpoly for each individual PRM
+    kp3a = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd3a .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd3a .* r_PF_rev_scale))./(kc3a .* kd3a .* r_PF_rev_scale)); %find kpoly for each individual PRM
+    kp3b = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd3b .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd3b .* r_PF_rev_scale))./(kc3a .* kd3b .* r_PF_rev_scale)); %find kpoly for each individual PRM
 end
 kp3a = 1./kp3a; %inverse above
 kp3b = 1./kp3b; %inverse above

@@ -1,14 +1,16 @@
 clear
+clear figuresave
 clc
 close all
+cd('/Users/Katiebogue')
 %% (0) INTRO 
 
 % saves pdf containing the following info:
 % for each formin listed in ForminTypes.txt output:
 % schematic displaying filament length and binding site location/strength
-% bar graph for calculated polymerization rate for single/double/dimerized
+% bar graph for calculated polymerssization rate for single/double/dimerized
 % also shows bar graph for # binding sites for all formins and bar graph
-% for all polymerization rates
+% for all polymerization rat es
 
 % calls the following other scripts: 
     % gather_info.py %PP_interruption.py % make_filament_schematic.m
@@ -16,24 +18,30 @@ close all
   % the following 4 from export_fig:
     % user_string.m % using_hg2.m
     % ghostscript.m % append_pdfs.m
-
+% need image processing toolbox
 % imports the following look-up tables
     % ForminTypes.txt
     % single_300.txt %double_200.txt %dimer_122.txt
     
-
+%% Ghostscript error
+% error in append_pdfs w/ ghostscript execution may occur
+% set ignore_app_err to "Y" to ignore this error (requires modified
+% append_pdfs script) and use a workaround
+%global ignore_app_err
+%ignore_app_err = 'Y';
 %% (0.1) formatting options:    
 %add notes to appear at notes page
-notes= '4 states; courtemanche test not replaced Ps';
+notes= '3 states model, testing figuresave fxn for all figures';
 %notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
 
 
 %test with less formins:
-testing = 'N';
+testing = 'Y';
 
 %use sequence rather than pull from uniprot:
-ownseq = 'Y'; %must be either 'Y' or 'N'
-ownseqfile = 'CourtemancheBNI1P all constructs.txt'; %'CourtemancheBNI1P.txt'; CourtemancheBNI1P all constructs.txt; 
+ownseq = 'N'; %must be either 'Y' or 'N'
+%ownseqfile = 'CourtemancheBNI1P all constructs.txt'; %'CourtemancheBNI1P.txt'; CourtemancheBNI1P all constructs.txt; 
+ownseqfile='Quinlan_FHODCapu.txt';
 
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
@@ -44,16 +52,19 @@ delivery = 'Y';
 % only applies if delivery is used
 % del_state = 3, reverse of capture is used
 % del_state = 4, reverse of capture and reverse of delivery are both used
-del_state = 4;
+del_state = 3;
 
 %set constants for rate calculations
 k_paf=91.4; % μM^(-1)s^(-1) %binding constant for capture
+%k_paf=457; % μM^(-1)s^(-1) %binding constant for capture
 c_PA=2.5; % μM %concentration of profilin-actin
 k_pab=10; % μM^(-1)s^(-1) %binding constant for delivery (loop closure)
 k_paf_rev=599066.5112; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
     %250000 = ideal value based on courtemanche single PRM data
-r_PF_rev=1.25e-6; % s^(-1) % courtemanche and pollard- 1.25 x 10^(6) s^(-1); vavylonis- 2500 s^(-1) %rate of ring opening (succesful delivery)
-r_paf_rev=50000; % s^(-1) % courtemanche and pollard- 50,000 s^(-1); vavylonis~ 50 s^(-1) %rate of reverse of delivery (unsuccesful delivery)
+    %599066.5112 = value from LSQ fig 3
+    %32704292
+r_PF_rev=1000000; % s^(-1) % courtemanche and pollard- 1.25 x 10^(6) s^(-1); vavylonis- 2500 s^(-1) %rate of ring opening (succesful delivery)
+r_paf_rev=5000000; % s^(-1) % courtemanche and pollard- 50,000 s^(-1); vavylonis~ 50 s^(-1) %rate of reverse of delivery (unsuccesful delivery)
 
 %Determining Binding Sites:
 % if interruptions = Y, binding sites are calculated allowing for non proline interruptions
@@ -77,15 +88,13 @@ opt1 = 1;
 opt2 = 1;
 
 % if opt3 = 0, minimal extrapolation; excludes fh1 with length > 200
-% extrapolation always occurs for dimerized > 122 (due to simulation run time)
 % if opt3 = 1, all fh1s included; extrapolation occurs in addition for:
     % all filiments length > 300
-    % double (and dimer) with length > 200 (due to large number errors)
+    % double with length > 200 (due to large number errors)
+    % dimer with length > 122
 % if opt3 = 2, all fh1s included; use updated lookup tables such that
-% extrapolation only occurs for:
-    % length > 600 (single, double)
-    % length > 122 (dimer)
-opt3 = 2;
+    % extrapolation only occurs for: length > 600
+opt3 = 1;
 
 % if opt4 = 0, saves pdf with each formin on a different page
 % if opt4 = 1, creates (but not saves) matlab figures with 3 fh1 per figure
@@ -104,12 +113,12 @@ results_filepath = 'MATLAB/GitHub/Data/ForminKineticmodel_data/Results';
 time= datestr(now, 'yyyy-mm-dd HH-MM');
 time= convertCharsToStrings(time);
 if interruptions == 'Y'
-     int_var= 'with_int'
+     int_var= 'with_int';
      settings_variable = 'Minimum PP length of ' + string(min_PP_length) + ' ' + 'with interruptions';
 end
 
 if interruptions == 'N'
-   int_var= 'without_int'
+   int_var= 'without_int';
    settings_variable = 'Minimum PP length of ' + string(min_PP_length) + ' ' + 'without interruptions';
 end
 
@@ -122,7 +131,7 @@ workspace_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '
 folder_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + int_var;
 
 %% (1) read output files and extract all values of p_occ
-
+%load('lookup_600_vars.mat');
 %set filament lengths for extrapolation in find_pocc
 if opt3==1
     single_max_length=300;
@@ -136,10 +145,10 @@ end
 if opt3==2
     single_max_length=600;
     double_max_length=600;
-    dimer_max_length=121;
+    dimer_max_length=600;
     m1 = dlmread('single_1_600.txt');        %lookup tables from C code
     m2 = dlmread('double_1_600.txt');
-    m3 = dlmread('dimer_122.txt');
+    m3 = dlmread('dimer_1_600.txt');
 end
 
 
@@ -166,7 +175,12 @@ if count(py.sys.path,'') == 0
 end
 
 % creates better color selection for plotting
-rgbmatrix = distinguishable_colors(length(Name_Query),'w');
+if(length(Name_Query)<37)
+    min=37;
+else
+    min=length(Name_Query);
+end
+rgbmatrix = distinguishable_colors(min,'w');
 colors = [];
 for k = 1:length(rgbmatrix)
     hexcode = rgb2hex(rgbmatrix(k,:));
@@ -277,7 +291,26 @@ cd(results_filepath)
 mkdir(folder_name)
 cd(folder_name)
 
+%% Add notes page
 
+Rowtitles = {'Min PRM length';'Interruptions';'Delivery?';'States';'Using sequence file?';'sequence file';'Profilin-actin concentration (μM)';'capture const. k_paf (μM^(-1)s^(-1))';'delivery const, k_pab (μM^(-1)s^(-1))';'reverse capture rate, k_paf_rev (s^(-1))';'ring opening rate, r_PF_rev (s^(-1))'; 'reverse delivery rate, r_paf_rev (s^(-1))';'Notes'};
+Datavars = {num2str(min_PP_length);interruptions;delivery;num2str(del_state);ownseq;ownseqfile;num2str(c_PA);num2str(k_paf);num2str(k_pab);num2str(k_paf_rev);num2str(r_PF_rev);num2str(r_paf_rev);notes};
+tablematrix = [Rowtitles, Datavars];
+tabledata = cell2table(tablematrix);
+
+fig_notes= figure('Name','Notes');
+uit = uitable(fig_notes,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','Data',[tabledata.tablematrix1,tabledata.tablematrix2]); 
+uit.FontSize = 8;
+
+uit.ColumnWidth={150,330};
+
+set(gcf, 'Position', [0 0 530 300]);
+
+figuresave(gcf,pdf_name,'Notes.fig');
+
+close all
+
+%%
 for LOOP = 1:length(Name_Query)/2
     
 fh1_name = convertCharsToStrings(Name_Query(2*LOOP -1));   %takes the names (every other string)
@@ -610,20 +643,18 @@ end
 
 if opt4 == 0
     if LOOP == 1
-        saveas(gcf, pdf_name) %gcf= current figure handle
+        figuresave(gcf,pdf_name,append(string(fh1_name),'.fig'));
     end
 
     if LOOP > 1
-        saveas(gcf, append('temp.pdf'))
-        append_pdfs(pdf_name, append('temp.pdf')) %add to pdf created with the first one
+        figuresave(gcf,pdf_name,append(string(fh1_name),'.fig'));
     end
 else
     if LOOP == 3
-        saveas(gcf, pdf_name) %saves after 3 figures added
+        figuresave(gcf,pdf_name,append(string(fh1_name),'.fig')); %saves after 3 figures added
     end
     if LOOP > 3 && rem(LOOP,3) == 0  %subsequent 3 figures added
-        saveas(gcf, append('temp.pdf'))
-        append_pdfs(pdf_name, append('temp.pdf')) %adds the rest to the one pdf
+        figuresave(gcf,pdf_name,append(string(fh1_name),'.fig'));
     end
 end
     
@@ -635,8 +666,7 @@ if opt4 == 1
     if rem(LOOP,3) == 0 %if the total number of formins is divisible by 3
         
     else
-        saveas(gcf, append('temp.pdf'))
-        append_pdfs(pdf_name, append('temp.pdf'))
+        figuresave(gcf,pdf_name,append(string(fh1_name),'.fig'));
     end
 end
 
@@ -666,7 +696,6 @@ save(workspace_name)
 % deletes temporary pdf and closes all matlab figures
 
 close all
-delete 'temp.pdf'
 
 
 
