@@ -22,13 +22,7 @@ cd('/Users/Katiebogue')
 % imports the following look-up tables
     % ForminTypes.txt
     % single_300.txt %double_200.txt %dimer_122.txt
-    
-%% Ghostscript error
-% error in append_pdfs w/ ghostscript execution may occur
-% set ignore_app_err to "Y" to ignore this error (requires modified
-% append_pdfs script) and use a workaround
-%global ignore_app_err
-%ignore_app_err = 'Y';
+
 %% (0.1) formatting options:    
 %add notes to appear at notes page
 notes= '3 states model, testing figuresave fxn for all figures';
@@ -291,7 +285,26 @@ cd(results_filepath)
 mkdir(folder_name)
 cd(folder_name)
 
+%% Add notes page
 
+Rowtitles = {'Min PRM length';'Interruptions';'Delivery?';'States';'Using sequence file?';'sequence file';'Profilin-actin concentration (μM)';'capture const. k_paf (μM^(-1)s^(-1))';'delivery const, k_pab (μM^(-1)s^(-1))';'reverse capture rate, k_paf_rev (s^(-1))';'ring opening rate, r_PF_rev (s^(-1))'; 'reverse delivery rate, r_paf_rev (s^(-1))';'Notes'};
+Datavars = {num2str(min_PP_length);interruptions;delivery;num2str(del_state);ownseq;ownseqfile;num2str(c_PA);num2str(k_paf);num2str(k_pab);num2str(k_paf_rev);num2str(r_PF_rev);num2str(r_paf_rev);notes};
+tablematrix = [Rowtitles, Datavars];
+tabledata = cell2table(tablematrix);
+
+fig_notes= figure('Name','Notes');
+uit = uitable(fig_notes,'Units','Normalized','Position',[0 0 1 1],'ColumnWidth','auto','Data',[tabledata.tablematrix1,tabledata.tablematrix2]); 
+uit.FontSize = 8;
+
+uit.ColumnWidth={150,330};
+
+set(gcf, 'Position', [0 0 530 300]);
+
+figuresave(gcf,pdf_name,'Notes.fig');
+
+close all
+
+%%
 for LOOP = 1:length(Name_Query)/2
     
 fh1_name = convertCharsToStrings(Name_Query(2*LOOP -1));   %takes the names (every other string)
@@ -669,6 +682,19 @@ end
 data_table_all = table(all_kpoly1_nobind, all_kpoly2_nobind, all_kpoly3_nobind, all_log_kpoly3_2_nobind, all_iSite_tot, all_fh1_length, all_mean_PP_length, all_PP_length_x_PP_isite_tot,'RowNames', all_fh1_names_nobind);
 
 %writetable(data_table_all,spreadsheet_name,'Sheet',1);
+
+% Put Data into structures to be passed into functions
+settings=struct('pdf_name',pdf_name,'settings_variable',settings_variable);
+
+Data=struct('all_log_kpoly3_2_nobind',all_log_kpoly3_2_nobind,'all_log_kpoly3_2',all_log_kpoly3_2,'all_fh1_names_nobind',all_fh1_names_nobind,'all_fh1_names',all_fh1_names,'all_iSite_tot',all_iSite_tot,'all_kpoly1_nobind',all_kpoly1_nobind,'all_kpoly2_nobind',all_kpoly2_nobind,'all_kpoly3_nobind',all_kpoly3_nobind,'all_kpoly3a_2a',all_kpoly3a_2a,'all_kpoly3b_2b',all_kpoly3b_2b,'all_kpoly1',all_kpoly1,'all_kpoly2',all_kpoly2,'all_kpoly3',all_kpoly3);
+
+Data.all_log_kp1 = log2(all_kp1);
+
+Data.all_log_kp2a = log2(all_kp2a);
+Data.all_log_kp2b = log2(all_kp2b);
+
+Data.all_log_kp3a = log2(all_kp3a);
+Data.all_log_kp3b = log2(all_kp3b);
 
 make_formin_plots
 

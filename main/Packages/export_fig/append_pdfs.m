@@ -1,5 +1,4 @@
 function append_pdfs(varargin)
-% Modified for whole_package_updated
 %APPEND_PDFS Appends/concatenates multiple PDF files
 %
 % Usage example:
@@ -43,8 +42,7 @@ function append_pdfs(varargin)
 % 29/03/20: Accept a cell-array of input files (issue #299); accept both "strings", 'chars'
 % 25/01/22: Improved handling of missing input files & folder with non-ASCII chars (issue #349)
 %}
-    global ignore_app_err
-    
+
     if nargin < 2,  return;  end  % sanity check
 
     % Convert strings => chars; strtrim extra spaces
@@ -128,12 +126,9 @@ function append_pdfs(varargin)
     delete(cmdfile);
 
     % Check for ghostscript execution errors
-    if ignore_app_err == 'Y'
-    else
-        if status
-            errMsg = strrep(errMsg,'\','\\');  % Avoid an "invalid escape-char" warning
-            error('export_fig:append_pdf:ghostscriptError',errMsg);
-        end
+    if status
+        errMsg = strrep(errMsg,'\','\\');  % Avoid an "invalid escape-char" warning
+        error('export_fig:append_pdf:ghostscriptError',errMsg);
     end
 
     % Rename the file if needed
