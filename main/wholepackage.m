@@ -25,17 +25,17 @@ cd('/Users/Katiebogue')
 
 %% (0.1) formatting options:    
 %add notes to appear at notes page
-notes= '3 states model, testing figuresave fxn for all figures';
+notes= '4 states 4- to compare models';
 %notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
 
 
 %test with less formins:
-testing = 'Y';
+testing = 'N';
 
 %use sequence rather than pull from uniprot:
-ownseq = 'N'; %must be either 'Y' or 'N'
+ownseq = 'N'; %must be either 'Y'  'N'
 %ownseqfile = 'CourtemancheBNI1P all constructs.txt'; %'CourtemancheBNI1P.txt'; CourtemancheBNI1P all constructs.txt; 
-ownseqfile='Quinlan_FHODCapu.txt';
+ownseqfile='Sequences/Quinlan_FHODCapu.txt';
 
 %Incorperating delivery
 % if delivvery = Y, delivery is calculated and plotted along with capture
@@ -46,14 +46,16 @@ delivery = 'Y';
 % only applies if delivery is used
 % del_state = 3, reverse of capture is used
 % del_state = 4, reverse of capture and reverse of delivery are both used
-del_state = 3;
+del_state = 4;
 
 %set constants for rate calculations
 k_paf=91.4; % μM^(-1)s^(-1) %binding constant for capture
+%k_paf=0.13405; 
 %k_paf=457; % μM^(-1)s^(-1) %binding constant for capture
 c_PA=2.5; % μM %concentration of profilin-actin
 k_pab=10; % μM^(-1)s^(-1) %binding constant for delivery (loop closure)
-k_paf_rev=599066.5112; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
+%k_pab=1.0668e+26;
+k_paf_rev=32704292; % s^(-1) % courtemanche and pollard- 140 s^(-1); vavylonis- 800 s^(-1) %rate of reverse of capture
     %250000 = ideal value based on courtemanche single PRM data
     %599066.5112 = value from LSQ fig 3
     %32704292
@@ -88,7 +90,12 @@ opt2 = 1;
     % dimer with length > 122
 % if opt3 = 2, all fh1s included; use updated lookup tables such that
     % extrapolation only occurs for: length > 600
-opt3 = 1;
+opt3 = 2;
+
+% if 0, read the specified lookup tables from opt3
+% if 1, load a specified file with the variables
+use_lookup_mat=1;
+lookup_file='lookup_600_vars.mat';
 
 % if opt4 = 0, saves pdf with each formin on a different page
 % if opt4 = 1, creates (but not saves) matlab figures with 3 fh1 per figure
@@ -125,28 +132,31 @@ workspace_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '
 folder_name = 'RESULTS_' + time + '_' + 'PPlnth-' + string(min_PP_length) + '_' + int_var;
 
 %% (1) read output files and extract all values of p_occ
-%load('lookup_600_vars.mat');
-%set filament lengths for extrapolation in find_pocc
-if opt3==1
-    single_max_length=300;
-    double_max_length=200;
-    dimer_max_length=121;
-    m1 = dlmread('single1_300.txt');        %lookup tables from C code
-    m2 = dlmread('double_200.txt');
-    m3 = dlmread('dimer_122.txt');
+if use_lookup_mat==1
+    load(lookup_file);
+elseif use_lookup_mat==0
+    %set filament lengths for extrapolation in find_pocc
+    if opt3==1
+        single_max_length=300;
+        double_max_length=200;
+        dimer_max_length=121;
+        m1 = dlmread('single1_300.txt');        %lookup tables from C code
+        m2 = dlmread('double_200.txt');
+        m3 = dlmread('dimer_122.txt');
+        
+    end
+    if opt3==2
+        single_max_length=600;
+        double_max_length=600;
+        dimer_max_length=600;
+        m1 = dlmread('single_1_600.txt');        %lookup tables from C code
+        m2 = dlmread('double_1_600.txt');
+        m3 = dlmread('dimer_1_600.txt');
+    end
     
+    
+    find_pocc  
 end
-if opt3==2
-    single_max_length=600;
-    double_max_length=600;
-    dimer_max_length=600;
-    m1 = dlmread('single_1_600.txt');        %lookup tables from C code
-    m2 = dlmread('double_1_600.txt');
-    m3 = dlmread('dimer_1_600.txt');
-end
-
-
-find_pocc   
 
 %% (2) Further Initialization
 

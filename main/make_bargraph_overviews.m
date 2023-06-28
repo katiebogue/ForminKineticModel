@@ -48,6 +48,8 @@ function make_bargraph_overviews(data,settings)
     % Change in Polymerization Rates w/ Dimerization per Formin
     kpoly_table_ratio = table(data.all_log_kpoly3_2, 'RowNames', data.all_fh1_names);
     sorted_kpoly_table_ratio = sortrows(kpoly_table_ratio);
+    %sorted_kpoly_table_ratio = kpoly_table_ratio;
+
     
     kpoly_bar_ratio = bar(sorted_kpoly_table_ratio{:,:});
     set(gca,'xtick',1:length(data.all_fh1_names), 'xticklabel',sorted_kpoly_table_ratio.Properties.RowNames)

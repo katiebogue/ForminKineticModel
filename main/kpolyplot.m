@@ -28,14 +28,14 @@ hold on
 kpoly2_scatter = scatter(parameter,d.all_kpoly2_nobind, 'filled','s');
 hold on
 kpoly3_scatter = scatter(parameter,d.all_kpoly3_nobind, 'filled','p');
-xlabel('Length of FH1 domain (1st PRM to FH2)')
+xlabel(xlab)
 ylabel('log_2(kpoly)')
 legend('Single', 'Double', 'N-Dimer', 'Location','northeastoutside');
 
 labels = d.all_fh1_names_nobind;
-labelpoints(parameter,d.all_kpoly1_nobind,labels,'N',0.005, 1,'outliers_lim', {[-inf lab_limit; 5 9]}, 'FontSize', 7)
-labelpoints(parameter,d.all_kpoly2_nobind,labels,'E',0.005, 1,'outliers_lim', {[-inf lab_limit; 5 9]}, 'FontSize', 7)
-labelpoints(parameter,d.all_kpoly3_nobind,labels,'N',0.005, 1,'outliers_lim', {[-inf lab_limit; 5 9]}, 'FontSize', 7)
+labelpoints(parameter,d.all_kpoly1_nobind,labels,'N',0.005, 1,'outliers_lim', {[-inf lab_limit; -inf inf]}, 'FontSize', 7)
+labelpoints(parameter,d.all_kpoly2_nobind,labels,'E',0.005, 1,'outliers_lim', {[-inf lab_limit; -inf inf]}, 'FontSize', 7)
+labelpoints(parameter,d.all_kpoly3_nobind,labels,'N',0.005, 1,'outliers_lim', {[-inf lab_limit; -inf inf]}, 'FontSize', 7)
 
 title(append('Polymerization Rates vs. ',xlab))
 subtitle(settings.settings_variable)

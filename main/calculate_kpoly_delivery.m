@@ -5,8 +5,8 @@
 
 %% Calculations
 % r_PF_rev scaling:
-r_PF_rev_scale = r_PF_rev.*exp(-1.*pp_length_vec); 
-%r_PF_rev_scale = r_PF_rev.*exp(-1.*pp_length_vec).*pp_length_vec; 
+%r_PF_rev_scale = r_PF_rev.*exp(-1.*pp_length_vec); 
+r_PF_rev_scale = r_PF_rev.*exp(-1.*pp_length_vec).*pp_length_vec; 
 r_PF_rev_scale = r_PF_rev_scale';
 %r_PF_rev_scale = r_PF_rev;
 
@@ -15,7 +15,7 @@ r_PF_rev_scale = r_PF_rev_scale';
 kcap_scale = k_paf;
 
 % k_paf_rev scaling:
-% k_paf_rev_scale = k_paf_rev;
+ %k_paf_rev_scale = k_paf_rev;
 k_paf_rev_scale = k_paf_rev.*exp(-1.*pp_length_vec);
 k_paf_rev_scale = k_paf_rev_scale';
 
