@@ -75,11 +75,11 @@ SOS4= @(kpol,n,L,k_paf,k_pab,M,R,r_paf_rev) sum(abs((Kpoly4(n,L,abs(k_paf),abs(k
 
 
 %% Table
-% sz=[0 8]; 
-% varTypes = ["double","string", "string","double","double","double","double","double"];
-% varNames = ["SOS","Model","L","k_paf","k_pab","M","R","r_paf_rev"];
-% 
-% T=table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+%   sz=[0 7]; 
+%   varTypes = ["double","double","double","double","double","double","double"];
+%   varNames = ["SOS","SOSNTD","k_paf","k_pab","k_paf_rev","r_PF_rev","r_paf_rev"];
+% % % 
+%   T2=table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 
 %% fminsearch
 

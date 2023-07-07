@@ -3,6 +3,7 @@ clear figuresave
 clc
 close all
 cd('/Users/Katiebogue')
+set(groot,'defaultfigureposition',[400 250 900 750]) % helps prevent cut offs in figs
 %% (0) INTRO 
 
 % saves pdf containing the following info:
@@ -25,7 +26,7 @@ cd('/Users/Katiebogue')
 
 %% (0.1) formatting options:    
 %add notes to appear at notes page
-notes= '4 states 4- to compare models';
+notes= '4 states 4- to get polymerstats info, using N122,200,300';
 %notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
 
 
@@ -90,11 +91,11 @@ opt2 = 1;
     % dimer with length > 122
 % if opt3 = 2, all fh1s included; use updated lookup tables such that
     % extrapolation only occurs for: length > 600
-opt3 = 2;
+opt3 = 1;
 
 % if 0, read the specified lookup tables from opt3
 % if 1, load a specified file with the variables
-use_lookup_mat=1;
+use_lookup_mat=0;
 lookup_file='lookup_600_vars.mat';
 
 % if opt4 = 0, saves pdf with each formin on a different page
@@ -696,7 +697,13 @@ data_table_all = table(all_kpoly1_nobind, all_kpoly2_nobind, all_kpoly3_nobind, 
 % Put Data into structures to be passed into functions
 settings=struct('pdf_name',pdf_name,'settings_variable',settings_variable);
 
-Data=struct('all_log_kpoly3_2_nobind',all_log_kpoly3_2_nobind,'all_log_kpoly3_2',all_log_kpoly3_2,'all_fh1_names_nobind',all_fh1_names_nobind,'all_fh1_names',all_fh1_names,'all_iSite_tot',all_iSite_tot,'all_kpoly1_nobind',all_kpoly1_nobind,'all_kpoly2_nobind',all_kpoly2_nobind,'all_kpoly3_nobind',all_kpoly3_nobind,'all_kpoly3a_2a',all_kpoly3a_2a,'all_kpoly3b_2b',all_kpoly3b_2b,'all_kpoly1',all_kpoly1,'all_kpoly2',all_kpoly2,'all_kpoly3',all_kpoly3);
+Data=struct('all_log_kpoly3_2_nobind',all_log_kpoly3_2_nobind,'all_log_kpoly3_2',all_log_kpoly3_2,...
+    'all_fh1_names_nobind',all_fh1_names_nobind,'all_fh1_names',all_fh1_names,'all_iSite_tot',all_iSite_tot,...
+    'all_kpoly1_nobind',all_kpoly1_nobind,'all_kpoly2_nobind',all_kpoly2_nobind,'all_kpoly3_nobind',all_kpoly3_nobind,...
+    'all_kpoly3a_2a',all_kpoly3a_2a,'all_kpoly3b_2b',all_kpoly3b_2b,'all_kpoly1',all_kpoly1,'all_kpoly2',all_kpoly2,...
+    'all_kpoly3',all_kpoly3,'all_p_r1',all_p_r1,'all_p_r2a',all_p_r2a,'all_p_r2b',all_p_r2b,'all_p_r3a',all_p_r3a,'all_p_r3b',all_p_r3b,...
+    'all_p_occ1',all_p_occ1,'all_p_occ2a',all_p_occ2a,'all_p_occ2b',all_p_occ2b,'all_p_occ3a',all_p_occ3a,'all_p_occ3b',all_p_occ3b,...
+    'all_p_occ1_0',all_p_occ1_0,'all_p_occ2a_0',all_p_occ2a_0,'all_p_occ2b_0',all_p_occ2b_0,'all_p_occ3a_0',all_p_occ3a_0,'all_p_occ3b_0',all_p_occ3b_0);
 
 Data.all_log_kp1 = log2(all_kp1);
 

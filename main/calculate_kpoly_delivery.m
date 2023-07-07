@@ -69,7 +69,7 @@ if del_state == 3
 end
 if del_state == 4
     kp2a = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd2a .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd2a .* r_PF_rev_scale))./(kc2a .* kd2a .* r_PF_rev_scale)); %find kpoly for each individual PRM
-    kp2b = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd2b .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd2b .* r_PF_rev_scale))./(kc2a .* kd2b .* r_PF_rev_scale)); %find kpoly for each individual PRM
+    kp2b = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd2b .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd2b .* r_PF_rev_scale))./(kc2b .* kd2b .* r_PF_rev_scale)); %find kpoly for each individual PRM
 end
 kp2a = 1./kp2a; %inverse above
 kp2b = 1./kp2b; %inverse above
@@ -82,7 +82,7 @@ if del_state == 3
 end
 if del_state == 4
     kp3a = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd3a .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd3a .* r_PF_rev_scale))./(kc3a .* kd3a .* r_PF_rev_scale)); %find kpoly for each individual PRM
-    kp3b = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd3b .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd3b .* r_PF_rev_scale))./(kc3a .* kd3b .* r_PF_rev_scale)); %find kpoly for each individual PRM
+    kp3b = (1./r_PF_rev_scale) + ((r_paf_rev + r_PF_rev_scale)./(kd3b .* r_PF_rev_scale)) + (((k_paf_rev_scale .* r_paf_rev) + (k_paf_rev_scale .* r_PF_rev_scale) + (kd3b .* r_PF_rev_scale))./(kc3b .* kd3b .* r_PF_rev_scale)); %find kpoly for each individual PRM
 end
 kp3a = 1./kp3a; %inverse above
 kp3b = 1./kp3b; %inverse above
@@ -120,7 +120,7 @@ else
     subplot(1,4,2) %1x4 grid w/ axis on 2nd cell
 end
 
-single_bar = bar(fil,kplot1,0.5, 'stacked')
+single_bar = bar(fil,kplot1,0.5, 'stacked');
 title('Single');
 %xlim([0.5 1.5]);
 xlabel('Filaments');
@@ -165,7 +165,7 @@ else
     subplot(1,4,3) %1x4 grid w/ axis on 3rd cell
 end
 
-double_bar = bar(fil, kplot2 ,0.5, 'stacked')
+double_bar = bar(fil, kplot2 ,0.5, 'stacked');
 title('Double-Filament');
 xlabel('Filaments');
 ylabel('k');
@@ -209,7 +209,7 @@ else
     subplot(1,4,4) %1x4 grid w/ axis on 4th cell
 end
 
-dimer_bar = bar(fil, kplot3 ,0.5, 'stacked')
+dimer_bar = bar(fil, kplot3 ,0.5, 'stacked');
 title('N-Dimerized');
 xlabel('Filaments');
 ylabel('k');

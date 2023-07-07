@@ -43,8 +43,20 @@ PRM_NTD_plot(all_PP_length,'Length of PRM',Data,settings)
 % Change in Polymerization Rates vs. PP dist to FH2 per individual PRM
 PRM_NTD_plot(all_PP_location,'Distance from PRM to FH2',Data,settings)
 
-% Change in Polymerization Rates vs. PP dist to FH2 per individual PRM
+% Change in Polymerization Rates vs. PP dist to NT per individual PRM
 PRM_NTD_plot(all_PP_dist_end,'Distance from PRM to N-term',Data,settings)
+
+%% Polymer stats plots
+
+% Change in polymer stats vs. FH1 length per individual PRM
+polymerstat_change_plot(all_fh1_length_PP,'FH1 length',Data,settings);
+
+% Change in polymer stats vs. PP dist to NT per individual PRM
+polymerstat_change_plot(all_PP_dist_end,'Distance from PRM to N-term',Data,settings);
+
+% Change in polymer stats vs. Fractional distance from FH2 per individual PRM
+all_frac_dist=all_PP_location./all_fh1_length_PP;
+polymerstat_change_plot(all_frac_dist,'Fractional Distance from PRM to FH2',Data,settings);
 
 %% Make overview tables
 make_formin_tables

@@ -36,7 +36,7 @@ function make_bargraph_overviews(data,settings)
     legend( 'single', 'double', 'N-term dimerized');
     xlabel('Formins');
     ylabel('log_2(kpoly)');
-    ylim([0 12]);
+    %ylim([0 12]);
     
     title('Polymerization Rates per Formin')
     subtitle(settings.settings_variable)
