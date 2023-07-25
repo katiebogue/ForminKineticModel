@@ -32,4 +32,11 @@ pp_index_vec=formin.pp_index_vec;
      o.p_occ3b_0 = lt.X3b(row_0,3)*ones([length(pp_index_vec) 1]);
      o.p_r3b = lt.X3b(row,4);
 
+     pr_db=@(pp_index_vec) (2*pi.*pp_index_vec./3).^(-3/2); % where b=1 (since we adjust into AA in kdb)
+
+     pr_dim=@(pp_index_vec,fh1_length) (2*pi.*pp_index_vec.*(2*fh1_length-pp_index_vec)./(3*2*fh1_length)).^(-3/2); % where b=1 (since we adjust into AA in kdim)
+
+     o.pr_2_calc=pr_db(pp_index_vec);
+     o.pr_3_calc=pr_dim(pp_index_vec,fh1_length);
+
 end
