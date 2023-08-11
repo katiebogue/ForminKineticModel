@@ -3,8 +3,8 @@ classdef Filament
     % construct with: filament(a_val,b_val)
 
     properties
-        a double % value for filament a
-        b double % value for filament b
+        a  % value for filament a
+        b  % value for filament b
     end
     properties(Dependent)
         avg % average of a and b values

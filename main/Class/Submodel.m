@@ -4,12 +4,12 @@ classdef Submodel
     %   See also FILAMENT
 
     properties
-        single double % contains value for single filament submodel
-        double filament % value for double filament submodel (filament class)
-        dimer  filament % value for dimer filament submodel (filament class)
+        single % contains value for single filament submodel
+        double % value for double filament submodel (filament class if 2)
+        dimer  % value for dimer filament submodel (filament class if 2)
     end
     properties (Dependent)
-        ratio filament % ratio of dimer/ double values (filament class)
+        ratio Filament % ratio of dimer/ double values (filament class)
     end
 
     methods
@@ -22,12 +22,12 @@ classdef Submodel
             %   dimer_a if no b provided)
             if nargin==5
                 obj.single=single;
-                obj.double=filament(double_a,double_b);
-                obj.dimer=filament(dimer_a,dimer_b);
+                obj.double=Filament(double_a,double_b);
+                obj.dimer=Filament(dimer_a,dimer_b);
             elseif nargin>0
                 obj.single=single;
-                obj.double=filament(double_a,double_a);
-                obj.dimer=filament(dimer_a,dimer_b);
+                obj.double=double_a;
+                obj.dimer=dimer_a;
             end
         end
 

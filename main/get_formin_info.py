@@ -41,7 +41,7 @@ from itertools import groupby # for efficient looping
 import numpy as np # efficient array/math functions
 from numpy import ceil # efficient array/math functions
 
-from sys import argv # allow argument input
+#from sys import argv # allow argument input
 
 
 def get_uniprot_info(uniprotID):
@@ -170,15 +170,23 @@ def get_PRMs(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP):
     nInt=0
     lenInt=0
     lastP=0
+    p2=0 # next P after any interruptions
     while (i+1)< len(seq):
         i+=1
+        #print(i)
         #print(seq[i])
         if seq[i]=='P':
-            P_index_vec.append(float(i)+1)
+            if (float(i)+1) not in P_index_vec:
+                P_index_vec.append(float(i)+1)
             lenInt=0
             if loc==-1:
                 loc=float(i)
                 nInt=0
+                p2=0
+            if (nInt>=1 and p2==0):
+                #print('assigned p2')
+                # if there has been an int and p2 has not been assigned
+                p2=int(i)
             nP+=1
             lastP=float(i)
             if i+1==len(seq):
@@ -204,6 +212,8 @@ def get_PRMs(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP):
                     PRM_loc=ceil(lenPRM/2) + loc
                     #print(PRM_loc)
                     pp_index_vec.append(PRM_loc)
+                elif p2!=0:
+                    i=p2-1
                 loc=-1
                 nInt=0
                 lenInt=0

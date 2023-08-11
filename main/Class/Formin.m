@@ -1,4 +1,4 @@
-classdef Formin
+classdef Formin < handle
     %FORMIN Summary of this class goes here
     %   Detailed explanation goes here
 
@@ -10,6 +10,13 @@ classdef Formin
         kcap double
         kdel double
         kpoly double
+        params Params
+        lookup Lookuptable
+    end
+
+    properties(Dependent)
+        pocc_0 Submodel
+        extrapolation Submodel
     end
 
     methods
@@ -23,6 +30,17 @@ classdef Formin
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             outputArg = obj.Property1 + inputArg;
+        end
+
+        function value = get.extrapolation(obj)
+            exsingle=isextrapolated('single');
+            exdouble=isextrapolated('double');
+            exdimer=isextrapolated('dimer');
+            value=Submodel(exsingle,exdouble,exdimer);
+
+            function out = isextrapolated(type)
+                out = obj.length > obj.lookup.max_length.(type);
+            end
         end
     end
 end
