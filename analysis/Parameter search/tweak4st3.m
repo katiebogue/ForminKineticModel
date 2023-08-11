@@ -38,6 +38,10 @@ kdb3_calc = @(o,pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) sum
 kdim3_calc = @(o,pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) sum(1./((1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./((k_pab.*(1-o.p_occ3a_0(:)).*(1.0e33.*o.pr_3_calc(:)/(27*6.022e23))) .* r_PF_rev)) + ((((k_paf_rev) .* r_paf_rev) + ((k_paf_rev) .* r_PF_rev) + ((k_pab.*(1-o.p_occ3a_0(:)).*(1.0e33.*o.pr_3_calc(:)/(27*6.022e23))).* r_PF_rev))./((k_paf.*pp_length_vec.*c_PA.*(1-o.p_occ3a(:))).* (k_pab.*(1-o.p_occ3a_0(:)).*(1.0e33.*o.pr_3_calc(:)/(27*6.022e23))) .* r_PF_rev))))...
     + sum(1./((1./r_PF_rev) + ((r_paf_rev + r_PF_rev)./((k_pab.*(1-o.p_occ3b_0(:)).*(1.0e33.*o.pr_3_calc(:)/(27*6.022e23))) .* r_PF_rev)) + ((((k_paf_rev) .* r_paf_rev) + ((k_paf_rev) .* r_PF_rev) + ((k_pab.*(1-o.p_occ3b_0(:)).*(1.0e33.*o.pr_3_calc(:)/(27*6.022e23))).* r_PF_rev))./((k_paf.*pp_length_vec.*c_PA.*(1-o.p_occ3b(:))).* (k_pab.*(1-o.p_occ3b_0(:)).*(1.0e33.*o.pr_3_calc(:)/(27*6.022e23))) .* r_PF_rev))));
 
+% the gating factors scale k_pab (delivery)
+Capu_gating=1; % from (Zweifel & Courtemanche, 2020)
+FHOD_gating=0.2; % cannot find specifically for fhodB but FHOD is listed as 0.2 in (Zweifel & Courtemanche, 2020)
+bni1_gating=0.5; % from (Zweifel & Courtemanche, 2020)
 %%
 load('lookup_ltvar.mat');
 
@@ -67,6 +71,18 @@ FHODbs20.kdob=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdb(FHODbs20.o,FHODbs2
 FHODbs20.kdim=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdim(FHODbs20.o,FHODbs20.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
 FHODbs20.kdobc=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdb_calc(FHODbs20.o,FHODbs20.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
 FHODbs20.kdimc=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdim_calc(FHODbs20.o,FHODbs20.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+
+FHODbs35.name='FHODB';
+FHODbs35.pp_length_vec=[6; 15; 4];
+FHODbs35.p_length_vec=[6; 15; 3];
+FHODbs35.pp_index_vec=[47,218,239];
+FHODbs35.fh1_length=255;
+FHODbs35.o=polymerstats(FHODbs35,lt_bs35);
+FHODbs35.kdob=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdb(FHODbs35.o,FHODbs35.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+FHODbs35.kdim=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdim(FHODbs35.o,FHODbs35.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+FHODbs35.kdobc=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdb_calc(FHODbs35.o,FHODbs35.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+FHODbs35.kdimc=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdim_calc(FHODbs35.o,FHODbs35.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+
 
 FHOD2.name='FHODB'; % allowing 2 interuptions
 FHOD2.pp_length_vec=[6; 15; 6];
@@ -157,6 +173,18 @@ Capubs20.kdob=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdb(Capubs20.o,Capubs2
 Capubs20.kdim=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdim(Capubs20.o,Capubs20.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
 Capubs20.kdobc=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdb_calc(Capubs20.o,Capubs20.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
 Capubs20.kdimc=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdim_calc(Capubs20.o,Capubs20.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+
+Capubs35.name='Capu';
+Capubs35.pp_length_vec=[6;8;9;14;9];
+Capubs35.p_length_vec=[6;7;9;14;9];
+Capubs35.pp_index_vec=[33,47,61,78,96];
+Capubs35.fh1_length=123;
+Capubs35.o=polymerstats(Capubs35,lt_bs35);
+Capubs35.kdob=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdb(Capubs35.o,Capubs35.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+Capubs35.kdim=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdim(Capubs35.o,Capubs35.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+Capubs35.kdobc=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdb_calc(Capubs35.o,Capubs35.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+Capubs35.kdimc=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) kdim_calc(Capubs35.o,Capubs35.pp_length_vec,k_paf,c_PA,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+
 
 %%
 Dlength=5;
@@ -351,6 +379,16 @@ SOSNTD_err_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
         (log2(Capubs20.kdim(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(Capubs20.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))))...
     ],ratios,ratios_err,ratios_err);
 
+SOSNTD_err_gate_bs35=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
+        (log2(FHODbs35.kdim(k_paf,k_pab*FHOD_gating,k_paf_rev,r_PF_rev,r_paf_rev)./(FHODbs35.kdob(k_paf,k_pab*FHOD_gating,k_paf_rev,r_PF_rev,r_paf_rev)))),...
+        (log2(Capubs35.kdim(k_paf,k_pab*Capu_gating,k_paf_rev,r_PF_rev,r_paf_rev)./(Capubs35.kdob(k_paf,k_pab*Capu_gating,k_paf_rev,r_PF_rev,r_paf_rev))))...
+    ],ratios,ratios_err,ratios_err);
+
+SOSNTD_err_bs35=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
+        (log2(FHODbs35.kdim(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(FHODbs35.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)))),...
+        (log2(Capubs35.kdim(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(Capubs35.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))))...
+    ],ratios,ratios_err,ratios_err);
+
 SOSNTD_err2=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
         (log2(FHOD2.kdim(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(FHOD2.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)))),...
         (log2(Capu.kdim(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(Capu.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))))...
@@ -412,7 +450,9 @@ fig3ksim_bs20={fig3sim_bs20.kdob};
 fig3ksimc_bs20={fig3sim_bs20.kdobc};
 fig3ksimf_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev), fig3ksim_bs20(:));
 fig3ksimfc_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev), fig3ksimc_bs20(:));
-fig3ksimf_r_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) fig3ksimf_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(D37bs20.kdob(1,1,1,1,1)/3);
+fig3ksimf_r_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) fig3ksimf_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(D65bs20.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)/2.471568);
+fig3ksimf_noD37_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev), fig3ksim_bs20([1 2 4]));
+fig3ksimf_r_noD37_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) fig3ksimf_noD37_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(D65bs20.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)/2.471568);
 
 
 fig3ksimfc = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev), fig3ksimc(:));
@@ -421,7 +461,7 @@ fig3ksimf = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k_p
 
 fig3ksimf_noD37 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev), fig3ksim([1 2 4]));
 
-fig3ksimf_r = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) fig3ksimf(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(D37.kdob(1,1,1,1,1)/3);
+fig3ksimf_r = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) fig3ksimf(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(D65.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)/2.471568);
 
 SOS3= @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) sum(abs(([...
         fig3ksimf(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)...
@@ -442,6 +482,18 @@ SOS3_err_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
 SOS3_err_r_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
         fig3ksimf_r_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)...
     ],fig3k,fig3_err_top,fig3_err_bot);
+
+SOS3_err_noD37_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
+        fig3ksimf_noD37_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)...
+    ],fig3k([1 2 4]),fig3_err_top([1 2 4]),fig3_err_bot([1 2 4]));
+
+SOS3_err_r_noD37_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
+        fig3ksimf_r_noD37_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)...
+    ],fig3k([1 2 4]),fig3_err_top([1 2 4]),fig3_err_bot([1 2 4]));
+
+SOS3_err_r_noD37_gate_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
+        fig3ksimf_r_noD37_bs20(k_paf,k_pab*bni1_gating,k_paf_rev,r_PF_rev,r_paf_rev)...
+    ],fig3k([1 2 4]),fig3_err_top([1 2 4]),fig3_err_bot([1 2 4]));
 
 
 SOS3_err_noD37=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
@@ -464,14 +516,14 @@ fig4aksimfc = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k
 
 fig4aksimf = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev), fig4aksim(:));
 
-fig4aksimf_r = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) fig4aksimf(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(D37.kdob(1,1,1,1,1)/3);
+fig4aksimf_r = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) fig4aksimf(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(D37.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)/3);
 
 fig4asim_bs20=[B37bs20,C37bs20,D37bs20];
 fig4aksim_bs20={fig4asim_bs20.kdob};
 fig4aksimc_bs20={fig4asim_bs20.kdobc};
 fig4aksimfc_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev), fig4aksimc_bs20(:));
 fig4aksimf_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) cellfun(@(f) f(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev), fig4aksim_bs20(:));
-fig4aksimf_r_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) fig4aksimf_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(D37bs20.kdob(1,1,1,1,1)/3);
+fig4aksimf_r_bs20 = @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) fig4aksimf_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)./(D37bs20.kdob(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)/3);
 
 
 SOS4a= @(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) sum(abs(([...
@@ -492,6 +544,10 @@ SOS4a_err_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
 
 SOS4a_err_r_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
         fig4aksimf_r_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)...
+    ],fig4ak,fig4_err_top,fig4_err_bot);
+
+SOS4a_err_r_gate_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
+        fig4aksimf_r_bs20(k_paf,k_pab*bni1_gating,k_paf_rev,r_PF_rev,r_paf_rev)...
     ],fig4ak,fig4_err_top,fig4_err_bot);
 
 SOS4a_errc=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) errSOS([...
@@ -528,6 +584,30 @@ SOS_err_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) (10*SOSNTD_err_bs20(k_p
     SOS3_err_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)+...
     SOS4a_err_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
 
+SOS_err_bs35=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) (10*SOSNTD_err_bs35(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))+...
+    SOS3_err_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)+...
+    SOS4a_err_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+
+SOS_err_r_bs35=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) (100*SOSNTD_err_bs35(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))+...
+    SOS3_err_r_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)+...
+    SOS4a_err_r_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+
+SOS_err_r_noF3D37_bs35=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) (100*SOSNTD_err_bs35(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))+...
+    SOS3_err_r_noD37_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)+...
+    SOS4a_err_r_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+
+SOS_err_r_noF3D37_gate_bs35=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) (100*SOSNTD_err_gate_bs35(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))+...
+    SOS3_err_r_noD37_bs20(k_paf,k_pab*bni1_gating,k_paf_rev,r_PF_rev,r_paf_rev)+...
+    SOS4a_err_r_bs20(k_paf,k_pab*bni1_gating,k_paf_rev,r_PF_rev,r_paf_rev);
+
+SOS_err_noF3D37_gate_bs35=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) (100*SOSNTD_err_gate_bs35(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))+...
+    SOS3_err_noD37_bs20(k_paf,k_pab*bni1_gating,k_paf_rev,r_PF_rev,r_paf_rev)+...
+    SOS4a_err_bs20(k_paf,k_pab*bni1_gating,k_paf_rev,r_PF_rev,r_paf_rev);
+
+SOS_err_noF3D37_bs35=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) (100*SOSNTD_err_bs35(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))+...
+    SOS3_err_noD37_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)+...
+    SOS4a_err_r_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
+
 SOS_err_r_bs20=@(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev) (10*SOSNTD_err_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev))+...
     SOS3_err_r_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev)+...
     SOS4a_err_r_bs20(k_paf,k_pab,k_paf_rev,r_PF_rev,r_paf_rev);
@@ -558,11 +638,11 @@ for i=1:1
 end
 
 parfor i=1:1000
-    r=6*rand(1,5)+-3;
-        [params,fval] = fminsearch(@(z) SOS_err_r_bs20(abs(z(1)),abs(z(2)),abs(z(3)),abs(z(4)),abs(z(5))),[10^r(1);10^r(2);10^r(3);10^r(4);10^r(5)],options);
+    r=6*rand(1,5)+-2;
+        [params,fval] = fminsearch(@(z) SOS_err_r_noF3D37_gate_bs35(abs(z(1)),abs(z(2)),abs(z(3)),abs(z(4)),abs(z(5))),[10^r(1);10^r(2);10^r(3);10^r(4);10^r(5)],options);
         disp(fval)
         vals=num2cell(abs(params));
-        T_err_r_bs20(i,:)=[{fval}, SOS_err_bs20(vals{:}),SOSNTD_err_bs20(vals{:}),SOS3_err_r_bs20(vals{:}),SOS4a_err_r_bs20(vals{:}), vals(:)'];
+        T_err_r_gate_F3D37_bs35(i,:)=[{fval}, SOS_err_noF3D37_gate_bs35(vals{:}),SOSNTD_err_gate_bs35(vals{:}),SOS3_err_r_noD37_gate_bs20(vals{:}),SOS4a_err_r_gate_bs20(vals{:}), vals(:)'];
 end
 
 %% NTD Bar
