@@ -2,7 +2,7 @@ clear
 clear figuresave
 clc
 close all
-cd('/Users/Katiebogue')
+cd ~
 set(groot,'defaultfigureposition',[400 250 900 750]) % helps prevent cut offs in figs
 %% (0) INTRO 
 
@@ -24,14 +24,18 @@ set(groot,'defaultfigureposition',[400 250 900 750]) % helps prevent cut offs in
     % ForminTypes.txt
     % single_300.txt %double_200.txt %dimer_122.txt
 
+% Need python with bioservices
+    % Be sure to use a virtual environment with correct dependencies (as of
+    % 2023a, MATLAB runs on x86_64)
+
 %% (0.1) formatting options:    
 %add notes to appear at notes page
-notes= '4 states 4- to get polymerstats info, using N122,200,300';
+notes= 'testing on new laptop';
 %notes= '3 states, kp={(1/d)+((d+c_rev)/d*c))}^(-1), kc=k*Cpa*(1-Pocc)*L, d=k*Pr*(1-Pocc_0)';
 
 
 %test with less formins:
-testing = 'N';
+testing = 'Y';
 
 %use sequence rather than pull from uniprot:
 ownseq = 'N'; %must be either 'Y'  'N'
@@ -106,8 +110,11 @@ opt4 = 0;
 % location of look-up tables
 path = '../../PolymerData/' ;
 
+% location of python scripts
+ppath = '~/MATLAB/GitHub/ForminKineticModel/main';
+
 %location of data files
-results_filepath = 'MATLAB/GitHub/Data/ForminKineticmodel_data/Results';
+results_filepath = '~/MATLAB/GitHub/Data/ForminKineticmodel_data/Results';
 
 
 %%
@@ -290,8 +297,13 @@ if delivery == 'Y'
     all_log_kdel3_2_nobind = [];
 
 end
-    
 
+%% Import all python modules
+cd(ppath) %location of python scripts
+py.importlib.import_module('bioservices') %py script to get polymer stats from UNIPROT
+py.importlib.import_module('PP_interruption')
+py.importlib.import_module('gather_info')
+%%
 cd(results_filepath)
 mkdir(folder_name)
 cd(folder_name)
@@ -326,16 +338,11 @@ query = convertCharsToStrings(Name_Query(2*LOOP));         %takes the lookup val
 
 %% (3) Calls Python and UNIPROT
 
-%calls py script to get polymer stats from UNIPROT
-py.importlib.import_module('bioservices')
-
 if interruptions == 'Y'
-    py.importlib.import_module('PP_interruption')
     x = py.PP_interruption.gathering_int(query,min_PP_length,standard,ownseq);   %uses python function defined in PP_interruption that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
 end
 
 if interruptions == 'N'
-    py.importlib.import_module('gather_info')
     x = py.gather_info.gathering(query,min_PP_length,standard,ownseq);   %uses python function defined in gather_info that outputs [length of FH1 domain, array of location of PP (middle), array of length of PP] 
 end
 

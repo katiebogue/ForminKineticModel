@@ -105,7 +105,6 @@ def gathering(query,min_PP_length,standard,ownseq):
     # Import itertools for efficient looping
     from itertools import groupby
     # Import numpy for efficient array/math functions
-    import numpy as np
     from numpy import floor  
     
     if ownseq == 'N': #set in wholepackage
