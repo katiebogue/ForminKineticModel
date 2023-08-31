@@ -55,6 +55,7 @@ classdef Lookuptable <handle
                 end
                 [obj.poccs.(filament), obj.prs.(filament),obj.pocc_extrapolation.(filament),obj.pr_extrapolation.(filament)]=readlookup(1,0,file,obj.max_length.(filament));
             else
+                obj.poccs.(filament)=Filament();
                 type={'a','b'};
                 for x=1:2
                     t=type{x};
