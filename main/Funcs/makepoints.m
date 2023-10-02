@@ -13,7 +13,7 @@ function [colors,shapes]= makepoints(len,background_color)
     %       1) colors : array of distinguishable colors of input length  
     %       2) shapes : array of 8 shapes repeated len+1 times
     %   
-    %   See also WHOLEPACKAGE, MAKE_FORMIN_PLOTS.
+    %   See also .
 
     %create colors matrix
     rgbmatrix = distinguishable_colors(len,background_color);

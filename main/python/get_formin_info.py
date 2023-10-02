@@ -17,7 +17,7 @@ arguments for main:
     5) Maximum interruption length
     6) Minimum number of Ps 
     7) FH1 NT definition options:
-        1 - first instance of PRM of min length 4 with max 1 interruption of length 1
+        1 - first instance of PRM with at least 4 Ps with max 1 interruption of length 1
         2 - first instance of PRM (as defined by args 3 and 4)
         3 - Uniprot defined FH1 start (or option 1 if no FH1)
         4 - Uniprot defined FH1 start (or option 2 if no FH1)
@@ -102,8 +102,8 @@ def get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP):
 
 def get_FH1_start(seq,NT_opt,min_PP_length,nInterruptions,lenInterruptions,min_nP,UP_FH1_start):
     if NT_opt==1:
-        # FH1 starts at first PRM w/ min length 4, max 1 int of length 1
-        FH1_start=get_first_PRM(seq,4,1,1,1) 
+        # FH1 starts at first PRM w/ min length 4, max 1 int of length 1, at least 4 Ps
+        FH1_start=get_first_PRM(seq,4,1,1,4) 
     elif NT_opt==2:
         FH1_start=get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP)
     elif NT_opt==3:

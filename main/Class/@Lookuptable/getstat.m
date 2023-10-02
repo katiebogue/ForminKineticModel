@@ -1,0 +1,313 @@
+function output = getstat(obj,NameValueArgs)
+    arguments
+        obj Lookuptable
+        NameValueArgs.N double =[]
+        NameValueArgs.type string {mustBeMember(NameValueArgs.type,{'single','double','dimer','ratio'})}
+        NameValueArgs.Stat string
+        NameValueArgs.iSite double=[]
+        NameValueArgs.Fil string {mustBeMember(NameValueArgs.Fil,{'a','b'})}
+    end
+    N=NameValueArgs.N;
+    if isfield(NameValueArgs,"type")
+        type=NameValueArgs.type;
+    else
+        type=[];
+    end
+    if isfield(NameValueArgs,"Stat")
+        Stat=NameValueArgs.Stat;
+    else
+        Stat=[];
+    end
+    iSite=NameValueArgs.iSite;
+    if isfield(NameValueArgs,"Fil")
+        Fil=NameValueArgs.Fil;
+    else
+        Fil=[];
+    end
+    
+    obj.holdratio=true;
+    objcopy=obj.copytable;
+    objcopy.holdratio=true;
+    
+    tempNNames=objcopy.NNames;
+    tempAddedNs=objcopy.AddedNs;
+    tempStatNames=objcopy.StatNames;
+    tempAddedStats=objcopy.AddedStats;
+
+    if ~isempty(N)
+        if ~isempty(iSite) && iSite>N
+            error("iSite is larger than FH1 length")
+        end
+        NName=strcat("N",num2str(N));
+        if isempty(Stat)
+            if ismember(NName,tempNNames)
+                if ~isempty(type)
+                    if isempty(objcopy.missingNs.(type))
+                        tempout=tempAddedNs.(NName).(type);
+                        if ~isempty(Fil) && type~="single"
+                            for i=1:length(tempStatNames)
+                                if class(tempout.(tempStatNames(i)))=="Filament"
+                                    tempout.(tempStatNames(i))=tempout.(tempStatNames(i)).(Fil);
+                                end
+                            end
+                        end
+                    else
+                        for i=1:length(tempStatNames)
+                            extrap=obj.extrapolate(tempStatNames(i));
+                            tempout.(tempStatNames(i))=generateextrapolation(type); %function already accounts for Fil
+                        end
+                    end
+                else
+                    tempout=tempAddedNs.(NName);
+                    if ~isempty(objcopy.missingNs.single)
+                        for i=1:length(tempStatNames)
+                            extrap=obj.extrapolate(tempStatNames(i));
+                            tempout.single.(tempStatNames(i))=generateextrapolation("single");
+                        end
+                    end
+                    if ~isempty(objcopy.missingNs.double)
+                        for i=1:length(tempStatNames)
+                            extrap=obj.extrapolate(tempStatNames(i));
+                            tempout.double.(tempStatNames(i))=generateextrapolation("double");
+                        end
+                    elseif ~isempty(Fil)
+                        for i=1:length(tempStatNames)
+                            if class(tempout.double.(tempStatNames(i)))=="Filament"
+                                tempout.double.(tempStatNames(i))=tempout.double.(tempStatNames(i)).(Fil);
+                            end
+                        end
+                    end
+                    if ~isempty(objcopy.missingNs.dimer)
+                        for i=1:length(tempStatNames)
+                            extrap=obj.extrapolate(tempStatNames(i));
+                            tempout.dimer.(tempStatNames(i))=generateextrapolation("dimer");
+                        end
+                    elseif ~isempty(Fil)
+                        for i=1:length(tempStatNames)
+                            if class(tempout.dimer.(tempStatNames(i)))=="Filament"
+                                tempout.dimer.(tempStatNames(i))=tempout.dimer.(tempStatNames(i)).(Fil);
+                            end
+                        end
+                    end
+                end
+            else
+                for i=1:length(tempStatNames)
+                    extrap=obj.extrapolate(tempStatNames(i));
+                    if ~isempty(type)
+                        tempout.(tempStatNames(i))=generateextrapolation(type);
+                    else
+                        if i==1
+                            tempout=FilType;
+                        end
+                        tempout.single.(tempStatNames(i))=generateextrapolation("single");
+                        tempout.double.(tempStatNames(i))=generateextrapolation("double");
+                        tempout.dimer.(tempStatNames(i))=generateextrapolation("dimer");
+                    end
+                end
+            end
+        else
+            if ismember(NName,tempNNames)
+                if isempty(type)
+                    tempout=FilType;
+                    if isempty(objcopy.missingNs.single)
+                        extrap=obj.extrapolate(Stat);
+                        tempout.single=generateextrapolation("single");
+                    else
+                        tempout.single=tempAddedStats.(Stat).single.(NName);
+                    end
+
+                    if isempty(objcopy.missingNs.double)
+                        extrap=obj.extrapolate(Stat);
+                        tempout.double=generateextrapolation("double");
+                    else
+                        tempout.double=tempAddedStats.(Stat).double.(NName);
+                        if ~isempty(Fil)
+                            if class(tempout.double)=="Filament" 
+                                tempout.double=tempout.double.(Fil);
+                            end
+                        end
+                    end
+
+                    if isempty(objcopy.missingNs.dimer)
+                        extrap=obj.extrapolate(Stat);
+                        tempout.dimer=generateextrapolation("dimer");
+                    else
+                        tempout.dimer=tempAddedStats.(Stat).dimer.(NName);
+                        if ~isempty(Fil)
+                            if class(tempout.dimer)=="Filament"
+                                tempout.dimer=tempout.dimer.(Fil);
+                            end
+                        end
+                    end
+                else
+                    if isempty(objcopy.missingNs.(type))
+                        tempout=tempAddedStats.(Stat).(type).(NName);
+                        if ~isempty(Fil)
+                            if class(tempout)=="Filament"
+                                tempout=tempout.(Fil);
+                            end
+                        end
+                    else
+                        extrap=obj.extrapolate(Stat);
+                        tempout=generateextrapolation(type);
+                    end
+                end
+            else
+                extrap=obj.extrapolate(Stat);
+                if ~isempty(type)
+                    tempout=generateextrapolation(type);
+                else
+                    tempout=FilType;
+                    tempout.single=generateextrapolation("single");
+                    tempout.double=generateextrapolation("double");
+                    tempout.dimer=generateextrapolation("dimer");
+                end
+            end
+        end
+    else
+        if isempty(Stat)
+            if isempty(type)
+                tempout=objcopy;
+                if ~isempty(Fil)
+                    tempout.double=getonefil("double");
+                    tempout.dimer=getonefil("dimer");
+                    tempout.updateAddedNs();
+                    tempout.updateAddedStats();
+                end
+            else
+                if isempty(Fil) || type=="single"
+                    tempout=objcopy.(type);
+                else
+                    tempout=getonefil(type);
+                end
+            end
+        else
+            tempout=tempAddedStats.(Stat);
+            if ~isempty(type)
+                if isempty(Fil) || type=="single"
+                    tempout=tempout.(type);
+                else
+                    tempout=getonefil(type,Stat);
+                end
+            elseif ~isempty(Fil)
+                 tempout.double=getonefil("double",Stat);
+                 tempout.dimer=getonefil("dimer",Stat);
+            end
+        end
+    end
+
+    if isempty(iSite)
+        output=tempout;
+    else
+        output=assigniSite(tempout);
+    end
+
+    obj.holdratio=false;
+
+    function out=assigniSite(input)
+        if class(input)=="struct" 
+            out=input;
+            fields=fieldnames(out);
+            for ii=1:length(fields)
+                out.(fields{ii})=assigniSite(input.(fields{ii}));
+                for j=1:iSite
+                    if fields{ii}==strcat("N",num2str(j-1))
+                        out=rmfield(out,fields{ii});
+                    end
+                end
+            end
+
+        elseif class(input)=="Lookuptable" || class(input)=="FilType" || class(input)=="Filament"
+            out=input;
+            fields=fieldnames(out);
+            props=metaclass(input).PropertyList;
+            for ii=1:length(fields)
+                if ~props(ii).Dependent
+                    out.(fields{ii})=assigniSite(input.(fields{ii}));
+                end
+                for j=1:iSite
+                    if fields{ii}==strcat("N",num2str(j-1))
+                        out=rmfield(out,fields{ii});
+                    end
+                end
+            end
+        else
+            size1=size(input,1);
+            size2=size(input,2);
+            if size1==1 && size2==1
+                out=input;
+            elseif size1==1 && size2>1
+                if size2<iSite
+                    out=input;
+                else
+                    out=input(:,iSite);
+                end
+            elseif class(input)=="string"
+                out=input;
+            else
+                error("Entries do not match iSite format")
+            end
+        end
+    end
+    
+
+    function out= getonefil(typ,instat)
+        out=struct;
+        Names=objcopy.NList.(typ);
+        for ii=1:length(Names)
+            Nnum=Names(ii);
+            Nname=strcat("N",num2str(Nnum));
+            if nargin>1
+                value=objcopy.(typ).(Nname).(instat);
+                if class(value)=="Filament"
+                        out.(Nname)=value.(Fil);
+                else
+                    out.(Nname)=value;
+                end
+            else
+                stats=fieldnames(objcopy.(typ).(Nname));
+                for jj=1:length(stats)
+                    value=objcopy.(typ).(Nname).(stats{jj});
+                    if class(value)=="Filament"
+                        out.(Nname).(stats{jj})=value.(Fil);
+                    else
+                        out.(Nname).(stats{jj})=value;
+                    end
+                end
+            end
+        end
+    end
+
+    function out= generateextrapolation(typ)
+        exttype=extrap.(typ);
+        if class(exttype)=="scatteredInterpolant"
+            out=zeros(1,N);
+            for jj=1:N
+                out(1,jj)=exttype(N,jj);
+            end
+        elseif class(exttype)=="Filament"
+            if isempty(Fil)
+                if class(exttype.a)=="scatteredInterpolant"
+                    out=Filament(zeros(1,N),zeros(1,N));
+                    for jj=1:N
+                        out.a(1,jj)=exttype.a(N,jj);
+                        out.b(1,jj)=exttype.b(N,jj);
+                    end
+                else
+                    out=Filament(exttype.a(N),exttype.b(N));
+                end
+            else
+                if class(exttype.a)=="scatteredInterpolant"
+                    out=zeros(1,N);
+                    for jj=1:N
+                        out(1,jj)=exttype.(Fil)(N,jj);
+                    end
+                else
+                    out=exttype.(Fil)(N);
+                end
+            end
+        else
+             out=exttype(N);
+        end
+    end
+end
