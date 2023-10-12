@@ -128,7 +128,11 @@ classdef Formin < handle
                     rate_sum=rate_sum+obj.PRMList(i).(rate);
                 end
             end
-            r=rate_sum.add_fils;
+            if class(rate_sum)=="FilType"
+                r=rate_sum.add_fils;
+            else
+                r=rate_sum;
+            end
         end
 
         function value=get.PRMCount(obj)

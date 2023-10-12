@@ -57,16 +57,12 @@ function fig=PRMplot(forminList,parameter,xlab,settings,save)
     kpoly3a_individual_scatter = scatter(xdata,[kpolydimer.a], 'filled','p');
     hold on
     kpoly3b_individual_scatter = scatter(xdata,[kpolydimer.b], 'filled','p');
-    
+
     xlabel(xlab)
     ylabel('(kpoly)')
     legend('Single', 'Double-1', 'Double-2', 'N-Dimer-1', 'N-Dimer-2','Location','northeastoutside');
-    
+
     title(title_)
-    
-    if save
-        figuresave(gcf,settings.pdf_name,append(gca().Title.String,'.fig'));
-    end
     
     
     %% Plot individual submodels
@@ -84,8 +80,8 @@ function fig=PRMplot(forminList,parameter,xlab,settings,save)
             y=[forminList(i).PRMList.kpoly];
             y=[y.(type)];
             if type~="single"
-                y=[[y.a];[y.b]];
-                x=[x;x];
+                y=[y.a,y.b];
+                x=[x,x];
             end
             kpoly_individual_scatter = scatter(x,y,'filled',settings.shapes(i),'MarkerFaceColor', settings.colors(i),'MarkerEdgeColor','k');
             hold on
@@ -99,7 +95,7 @@ function fig=PRMplot(forminList,parameter,xlab,settings,save)
         title(append(title_,' (',type,')'))
          
         if save
-            figuresave(gcf,settings.pdf_name,append(gca().Title.String,'.fig'));
+            figuresave(gcf,settings,append(gca().Title.String,'.fig'));
         end
         
     end

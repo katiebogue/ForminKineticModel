@@ -109,14 +109,14 @@ function output = getstat(obj,NameValueArgs)
             if ismember(NName,tempNNames)
                 if isempty(type)
                     tempout=FilType;
-                    if isempty(objcopy.missingNs.single)
+                    if ~isempty(objcopy.missingNs.single)
                         extrap=obj.extrapolate(Stat);
                         tempout.single=generateextrapolation("single");
                     else
                         tempout.single=tempAddedStats.(Stat).single.(NName);
                     end
 
-                    if isempty(objcopy.missingNs.double)
+                    if ~isempty(objcopy.missingNs.double)
                         extrap=obj.extrapolate(Stat);
                         tempout.double=generateextrapolation("double");
                     else
@@ -128,7 +128,7 @@ function output = getstat(obj,NameValueArgs)
                         end
                     end
 
-                    if isempty(objcopy.missingNs.dimer)
+                    if ~isempty(objcopy.missingNs.dimer)
                         extrap=obj.extrapolate(Stat);
                         tempout.dimer=generateextrapolation("dimer");
                     else
@@ -140,7 +140,7 @@ function output = getstat(obj,NameValueArgs)
                         end
                     end
                 else
-                    if isempty(objcopy.missingNs.(type))
+                    if ~isempty(objcopy.missingNs.(type))
                         tempout=tempAddedStats.(Stat).(type).(NName);
                         if ~isempty(Fil)
                             if class(tempout)=="Filament"
@@ -211,7 +211,7 @@ function output = getstat(obj,NameValueArgs)
             for ii=1:length(fields)
                 out.(fields{ii})=assigniSite(input.(fields{ii}));
                 for j=1:iSite
-                    if fields{ii}==strcat("N",num2str(j-1))
+                    if all(size(fields{ii}(2:end))==size(num2str(j-1))) && all(fields{ii}(2:end)==num2str(j-1))
                         out=rmfield(out,fields{ii});
                     end
                 end
@@ -226,7 +226,7 @@ function output = getstat(obj,NameValueArgs)
                     out.(fields{ii})=assigniSite(input.(fields{ii}));
                 end
                 for j=1:iSite
-                    if fields{ii}==strcat("N",num2str(j-1))
+                    if all(size(fields{ii}(2:end))==size(num2str(j-1))) && all(fields{ii}(2:end)==num2str(j-1))
                         out=rmfield(out,fields{ii});
                     end
                 end

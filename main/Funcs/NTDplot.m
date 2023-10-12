@@ -28,10 +28,6 @@ function fig=NTDplot(forminList,parameter,xlab,title_,settings,save)
         settings Options
         save logical=false
     end
-
-    if save
-        set(groot,'defaultfigureposition',[400 250 900 750])
-    end
     
     fig=figure;
     xdata=[forminList.(parameter)];
@@ -48,6 +44,6 @@ function fig=NTDplot(forminList,parameter,xlab,title_,settings,save)
 
     title(title_)
     if save
-        figuresave(gcf,settings.pdf_name,append(title_,'.fig'));
+        figuresave(gcf,settings,append(title_,'.fig'));
     end
 end

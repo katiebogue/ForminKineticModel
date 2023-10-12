@@ -84,6 +84,7 @@ def get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP):
             nP+=1
             lenPRM+=1
             if(nP>=min_nP and lenPRM>=min_PP_length):
+                #print(nP)
                 #print(lenPRM)
                 return loc
         else:
@@ -96,6 +97,7 @@ def get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP):
                 nInt=0
                 lenInt=0
                 lenPRM=0
+                nP=0
             else:
                 lenPRM+=1
     return loc            
@@ -110,7 +112,7 @@ def get_FH1_start(seq,NT_opt,min_PP_length,nInterruptions,lenInterruptions,min_n
         if UP_FH1_start!=-1:
             FH1_start==UP_FH1_start
         else:
-            FH1_start=get_first_PRM(seq,4,1,1,1) 
+            FH1_start=get_first_PRM(seq,4,1,1,4) 
     elif NT_opt==4:
         if UP_FH1_start!=-1:
             FH1_start==UP_FH1_start
@@ -217,6 +219,7 @@ def get_PRMs(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP):
                 loc=-1
                 nInt=0
                 lenInt=0
+                nP=0
             
     return pp_index_vec, pp_length_vec, pp_index_vec_start, P_index_vec
     

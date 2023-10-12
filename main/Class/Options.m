@@ -19,16 +19,27 @@ classdef Options <handle
 
         colors (:,1) % list of hexcodes to be used for plotting
         shapes (:,1) % list of shape symbols to be used for plotting
-        pdf_name % name of pdf to save any figures to
+        resultsdir % location of folder to save results folder to
+        resultsfolder % results folder name
+
+        equationstext struct % string for each equation 
     end
 
     methods
-        function obj = Options(python_path,kpoly_type)
+        function obj = Options(python_path,kpoly_type,resultsdir)
             %UNTITLED2 Construct an instance of this class
             %   Detailed explanation goes here
             obj.python_path=python_path;
             obj.kpoly_type=kpoly_type;
             obj.update_points;
+            obj.resultsdir=resultsdir;
+            obj.update_results_folder;
+        end
+
+        function update_results_folder(obj)
+            time= datetime('now', 'Format','yyyy-MM-dd HH-mm');
+            time= string(time);
+            obj.resultsfolder= 'RESULTS_' + time;
         end
 
         function set_equation(obj,preset,step,vars)
@@ -44,16 +55,23 @@ classdef Options <handle
             if isempty(obj.equations)
                 obj.equations=struct;
             end
+            if isempty(obj.equationstext)
+                obj.equationstext=struct;
+            end
             if preset==0
                 invars=vars;
                 obj.equations.(step)=makeeq();
+                obj.equationstext.(step)=[sprintf('%s,',invars{1:end})];
             elseif preset==1
                 invars={"POcclude","1-","c_PA","linear"};
                 obj.equations.kcap=makeeq();
+                obj.equationstext.kcap=[sprintf('%s,',invars{1:end})];
                 invars={"POcclude","1-base","Prvec0","amino"};
                 obj.equations.kdel=makeeq();
+                obj.equationstext.kdel=[sprintf('%s,',invars{1:end})];
                 invars={"size","negexp","gating","linear"};
                 obj.equations.rcap=makeeq();
+                obj.equationstext.rcap=[sprintf('%s,',invars{1:end})];
             end
             
             steps={"kcap","kdel","rcap","rdel","krel"};

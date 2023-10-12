@@ -15,6 +15,7 @@ classdef PRM < handle & dynamicprops
         gating double % gating factor
         c_PA double % concentration of profilin-actin | μM
         kpoly FilType % rate of polymerization by FilType
+        fh1length double
         
         % Parameters all by filament and FilType:
         kcap FilType % rate of PRM + profilin-actin binding (capture)| s^(-1)
@@ -84,6 +85,10 @@ classdef PRM < handle & dynamicprops
             r=kpolymerization(kpoly_type,obj.kcap,obj.kdel,obj.rcap,obj.rdel,obj.krel);
         end
 
+        function value=get.fh1length(obj)
+            value=obj.formin.length;
+        end
+
         function obj = addStat(obj,stat)
             if ~isprop(obj,stat)
                 prop=obj.addprop(stat);
@@ -115,6 +120,36 @@ classdef PRM < handle & dynamicprops
            end
         end
 
+        function names=getfields(obj)
+            if length(obj)==1
+                names=fieldnames(obj);
+            else
+                fields1=fieldnames(obj);
+                fields2=fieldnames([obj.stat_props]);
+                names=[fields1;fields2];
+            end
+        end
+
+        function out=getprop(obj,prop)
+            if length(obj)==1
+                out=obj.(prop);
+            else
+                out=[];
+                for i=1:length(obj)
+                    out=[out,obj(i).(prop)];
+                end
+            end
+        end
+
     end
+
+    methods (Static)
+        function obj = loadobj(s)
+         obj=s;
+         obj.updateStats;
+         addlistener(obj.formin.lookup,'StatNames','PostSet',@obj.updateStats);
+      end
+    end
+    
 
 end

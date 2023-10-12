@@ -28,10 +28,6 @@ function fig = kpolyplot(forminList, parameter,xlab,lab_limit,settings,save)
         save logical=false
     end
 
-    if save
-        set(groot,'defaultfigureposition',[400 250 900 750])
-    end
-
     fig=figure;
     xdata=[forminList.(parameter)];
     kpoly=[forminList.kpoly];
@@ -52,6 +48,6 @@ function fig = kpolyplot(forminList, parameter,xlab,lab_limit,settings,save)
     title(append('Polymerization Rates vs. ',xlab))
     
     if save
-        figuresave(gcf,settings.pdf_name,append(gca().Title.String,'.fig'));
+        figuresave(gcf,settings,append(gca().Title.String,'.fig'));
     end
 end

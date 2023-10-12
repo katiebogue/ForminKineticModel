@@ -95,15 +95,16 @@ classdef Lookuptable <handle
             end
         end
 
-        function value = get.missingNs(obj)
+        function obj = getmissingNs(obj)
             addNs("single");
             addNs("double");
             addNs("dimer");
             function addNs(type)
-                value.(type)=[];
+                obj.missingNs.(type)=[];
                 for i=1:obj.max_length.(type)
-                    if ~isfield(obj.(type),strcat("N",num2str(i)))
-                        value.(type)=[value.(type);strcat("N",num2str(i))];
+                    Nlabel=strcat("N",num2str(i));
+                    if ~isfield(obj.(type),Nlabel)
+                        obj.missingNs.(type)=[obj.missingNs.(type);Nlabel];
                     end
                 end
             end
@@ -112,6 +113,7 @@ classdef Lookuptable <handle
         function updateNList(obj)
             obj.NList=FilType(find_N("single"),find_N("double"),find_N("dimer"));
             obj.NList.intersectratio=true;
+            obj.getmissingNs;
             function Nlist=find_N(type)
                 Ns=fieldnames(obj.(type));
                 Nlist=zeros(1,length(Ns));
@@ -215,6 +217,7 @@ classdef Lookuptable <handle
             out.AddedNs=obj.AddedNs;
             out.NList=obj.NList;
             out.interpolant=obj.interpolant;
+            out.missingNs=obj.missingNs;
         end
 
         function out=stattable(obj,stat,type)
