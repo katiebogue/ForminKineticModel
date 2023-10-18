@@ -64,6 +64,7 @@ function fig = expdatabar(datastruct,settings,scale,save,NameValueArgs)
         expdata=[newdatastruct.value];
         minloc=expdata==min(expdata);
         scaler=newsimdata(minloc)/min(expdata);
+        makescaler=true;
 
         newsave=false;
         if save
@@ -74,20 +75,25 @@ function fig = expdatabar(datastruct,settings,scale,save,NameValueArgs)
         if length(unique([newdatastruct.type]))==1
             type=newdatastruct(1).type;
             ylabel(strcat(ylab," K_{poly} ",type));
+            if type=="ratio"
+                makescaler=false;
+            end
         end
         title(group)
         if newsave
             figuresave(gcf,settings,append('experimental data bar--',group,'.fig'));
         end
-
-        makeplot("all",newdatastruct,newsimdata,scaler);
-        if length(unique([newdatastruct.type]))==1
-            type=newdatastruct(1).type;
-            ylabel(strcat(ylab," K_{poly} ",type," scaled"));
-        end
-        title(strcat(group," scaled"))
-        if newsave
-            figuresave(gcf,settings,append('experimental data bar--',group,'.fig'));
+        
+        if makescaler
+            makeplot("all",newdatastruct,newsimdata,scaler);
+            if length(unique([newdatastruct.type]))==1
+                type=newdatastruct(1).type;
+                ylabel(strcat(ylab," K_{poly} ",type," scaled"));
+            end
+            title(strcat(group," scaled"))
+            if newsave
+                figuresave(gcf,settings,append('experimental data bar--',group,'.fig'));
+            end
         end
     end
     function makeplot(type,datastruct,simdata,scaler)

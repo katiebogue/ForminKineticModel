@@ -103,10 +103,10 @@ classdef Options <handle
                 invars={"POcclude","1-","c_PA","linear"};
                 obj.equations.kcap=makeeq();
                 obj.equationstext.kcap_eq=[sprintf("%s(%s),",invars{1:end})];
-                invars={"POcclude","1-base","Prvec0","amino"};
+                invars={"POcclude","1-base","Prvec0","amino","gating","linear"};
                 obj.equations.kdel=makeeq();
                 obj.equationstext.kdel_eq=[sprintf("%s(%s),",invars{1:end})];
-                invars={"size","negexp","gating","linear"};
+                invars={"size","negexp"};
                 obj.equations.rcap=makeeq();
                 obj.equationstext.rcap_eq=[sprintf("%s(%s),",invars{1:end})];
             end
