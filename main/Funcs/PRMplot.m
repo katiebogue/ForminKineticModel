@@ -1,9 +1,16 @@
-function fig=PRMplot(forminList,parameter,xlab,settings,save)
-% PRMplot  Creates and saves 4 scatterplots of polymerization vs. a
-% parameter for each PRM.
+function fig=PRMplot(forminList,parameter,xlab,scale,settings,save)
+% PRMplot  Creates 4 scatterplots of polymerization vs. a parameter for
+% each PRM.
     %
-    %   PRMPLOT(x,'xlab',Data,settings) creates and saves 4
-    %   scatterplots of polymerization vs. x for each PRM
+    %   fig = PRMPLOT(formins,x,'xlab','scale',settings) creates 4
+    %   scatterplots of polymerization (scaled as specified) vs. x
+    %
+    %   fig = PRMPLOT(formins,x,'xlab','scale',settings,true) creates and 
+    %   saves 4 scatterplots of polymerization (scaled as specified) vs. x
+    %
+    %   if saving, it is recomended to set groot 'defaultfigureposition' to 
+    %   [400 250 900 750] in order to avoid the figure being cut off when 
+    %   saving as a pdf.
     %   
     %   Creates 4 scatterplots:
     %       1. All PRM data, labeled by submodel
@@ -14,30 +21,38 @@ function fig=PRMplot(forminList,parameter,xlab,settings,save)
     %   Inputs:
     %       forminList  : array of Formins to gather data from
     %       parameter   : name of parameter containing values to plot against
-    %                     polymerization
+    %                     polymerization (must be a property in the PRM
+    %                     class)
     %       xlab        : x-axis (parameter) label (string)
-    %       d           : structure containing data
-    %                     must include: 
-    %                     all_log_kp1, all_log_kp2a, all_log_kp2b,
-    %                     all_log_kp3a, all_log_kp3b, all_iSite_tot,
-    %                     all_fh1_names_nobind 
+    %       scale       : kpoly axis scale (can be none, log2, log10, ln)
     %       settings    : Options class
     %       save        : whether or not to save the plot to the results
     %                     pdf in settings (true/false); deafult is false
     %   
     %   Calls figuresave
     %
-    %   See also .
+    %   See also FIGURESAVE, FORMIN, PRM, OPTIONS, EXPERIMENT, KPOLYPLOT, KPOLYMERIZATION.
     arguments
         forminList Formin
         parameter string
         xlab string
+        scale string {mustBeMember(scale,{'none','log2','log10','ln'})} % scale for kpoly
         settings Options
         save logical=false
     end
 
-    if save
-        set(groot,'defaultfigureposition',[400 250 900 750])
+    if scale=="none"
+        yscale=@(x) x;
+        ylab="k_{poly}";
+    elseif scale=="log2"
+        ylab="log_{2}(k_{poly})";
+        yscale=@(x) log2(x);
+    elseif scale=="log10"
+        ylab="log_{10}(k_{poly})";
+        yscale=@(x) log10(x);
+    elseif scale=="ln"
+        ylab="ln(k_{poly})";
+        yscale=@(x) log(x);
     end
 
     title_=append('Polymerization Rates vs. ',xlab,' per individual PRM');
@@ -48,21 +63,25 @@ function fig=PRMplot(forminList,parameter,xlab,settings,save)
     kpolydouble=[kpoly.double];
     kpolydimer=[kpoly.dimer];
     xdata=[PRMList.(parameter)];
-    kpoly1_individual_scatter = scatter(xdata,[kpoly.single], 'filled','o');
+    kpoly1_individual_scatter = scatter(xdata,yscale([kpoly.single]), 'filled','o');
     hold on
-    kpoly2a_individual_scatter = scatter(xdata,[kpolydouble.a], 'filled','s');
+    kpoly2a_individual_scatter = scatter(xdata,yscale([kpolydouble.a]), 'filled','s');
     hold on
-    kpoly2b_individual_scatter = scatter(xdata,[kpolydouble.b], 'filled','s');
+    kpoly2b_individual_scatter = scatter(xdata,yscale([kpolydouble.b]), 'filled','s');
     hold on
-    kpoly3a_individual_scatter = scatter(xdata,[kpolydimer.a], 'filled','p');
+    kpoly3a_individual_scatter = scatter(xdata,yscale([kpolydimer.a]), 'filled','p');
     hold on
-    kpoly3b_individual_scatter = scatter(xdata,[kpolydimer.b], 'filled','p');
+    kpoly3b_individual_scatter = scatter(xdata,yscale([kpolydimer.b]), 'filled','p');
 
     xlabel(xlab)
-    ylabel('(kpoly)')
+    ylabel(ylab)
     legend('Single', 'Double-1', 'Double-2', 'N-Dimer-1', 'N-Dimer-2','Location','northeastoutside');
 
     title(title_)
+
+    if save
+        figuresave(gcf,settings,append(gca().Title.String,'.fig'));
+    end
     
     
     %% Plot individual submodels
@@ -83,12 +102,12 @@ function fig=PRMplot(forminList,parameter,xlab,settings,save)
                 y=[y.a,y.b];
                 x=[x,x];
             end
-            kpoly_individual_scatter = scatter(x,y,'filled',settings.shapes(i),'MarkerFaceColor', settings.colors(i),'MarkerEdgeColor','k');
+            kpoly_individual_scatter = scatter(x,yscale(y),'filled',settings.shapes(i),'MarkerFaceColor', settings.colors(i),'MarkerEdgeColor','k');
             hold on
         end
     
         xlabel(xlab)
-        ylabel('(kpoly)')
+        ylabel(ylab)
         
         legend([forminList.name], 'Location','northeastoutside');
         

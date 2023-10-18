@@ -7,7 +7,6 @@ classdef Formin < handle
         gating double=1
         length double
         c_PA double=1 % concentration of profilin-actin | μM
-        params Params
         opts Options
     end
 
@@ -34,12 +33,11 @@ classdef Formin < handle
     end
 
     methods
-        function obj = Formin(name,params,opts,NameValueArgs)
+        function obj = Formin(name,opts,NameValueArgs)
             %UNTITLED5 Construct an instance of this class
             %   Detailed explanation goes here
             arguments
                 name string
-                params Params
                 opts Options
                 NameValueArgs.c_PA double
                 NameValueArgs.gating double
@@ -48,7 +46,6 @@ classdef Formin < handle
             end
             if nargin>0
                 obj.name=name;
-                obj.params=params;
                 obj.opts=opts;
                 if isfield(NameValueArgs,"c_PA")
                     obj.c_PA=NameValueArgs.c_PA;
@@ -228,8 +225,55 @@ classdef Formin < handle
             fig=filamentSchematic(obj);
         end
 
-        function fig=makeKpolyBar(obj)
-            fig=forminkpolybar(obj);
+        function fig=makeKpolyBar(obj,scale)
+            arguments
+                obj Formin
+                scale string="none"
+            end
+            fig=forminkpolybar(obj,scale);
+        end
+
+        function fig=formingraphic(obj,save)
+            arguments
+                obj Formin
+                save logical=false
+            end
+            f1=obj.makeSchematic;
+            f2=obj.makeKpolyBar;
+            fig=figure;
+            tiles=tiledlayout(1,length(f2.Children)+1);
+            ax1=f1.Children;
+            ax1.Parent=tiles;
+            ax1.Layout.Tile=1;
+            j=1;
+            for i=length(f2.Children):-1:1
+                j=j+1;
+                ax=f2.Children(i);
+                ax.Parent=tiles;
+                ax.Layout.Tile=j;
+            end
+            title(tiles,obj.name)
+            close(f1)
+            close(f2)
+
+            if save
+                figuresave(gcf,obj.opts,append(obj.name,'.fig'));
+            end
+
+        end
+    end
+
+    methods (Static)
+        function obj = loadobj(s)
+            obj=s;
+            addlistener(obj.opts,'min_lenPRM','PostSet',@obj.update_FH1);
+            addlistener(obj.opts,'nInt','PostSet',@obj.update_FH1);
+            addlistener(obj.opts,'max_lenInt','PostSet',@obj.update_FH1);
+            addlistener(obj.opts,'min_nP','PostSet',@obj.update_FH1);
+            addlistener(obj.opts,'NTopt','PostSet',@obj.update_FH1);
+            addlistener(obj.opts,'CTopt','PostSet',@obj.update_FH1);
+            addlistener(obj.opts,'PRMscanopt','PostSet',@obj.update_FH1);
+            addlistener(obj.opts,'lookup','PostSet',@obj.update_FH1);
         end
     end
 end

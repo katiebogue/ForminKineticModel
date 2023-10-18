@@ -16,6 +16,7 @@ classdef PRM < handle & dynamicprops
         c_PA double % concentration of profilin-actin | μM
         kpoly FilType % rate of polymerization by FilType
         fh1length double
+        FH2dist_frac double % fractional distance from center of PRM to FH2
         
         % Parameters all by filament and FilType:
         kcap FilType % rate of PRM + profilin-actin binding (capture)| s^(-1)
@@ -53,23 +54,23 @@ classdef PRM < handle & dynamicprops
         end
 
         function value=get.kcap(obj)
-            value=obj.formin.params.k_cap*obj.formin.opts.equations.kcap(obj);
+            value=obj.formin.opts.k_cap*obj.formin.opts.equations.kcap(obj);
         end
 
         function value=get.kdel(obj)
-            value=obj.formin.params.k_del*obj.formin.opts.equations.kdel(obj);
+            value=obj.formin.opts.k_del*obj.formin.opts.equations.kdel(obj);
         end
 
         function value=get.rcap(obj)
-            value=obj.formin.params.r_cap*obj.formin.opts.equations.rcap(obj);
+            value=obj.formin.opts.r_cap*obj.formin.opts.equations.rcap(obj);
         end
 
         function value=get.rdel(obj)
-            value=obj.formin.params.r_del*obj.formin.opts.equations.rdel(obj);
+            value=obj.formin.opts.r_del*obj.formin.opts.equations.rdel(obj);
         end
 
         function value=get.krel(obj)
-            value=obj.formin.params.k_rel*obj.formin.opts.equations.krel(obj);
+            value=obj.formin.opts.k_rel*obj.formin.opts.equations.krel(obj);
         end
 
         function value=get.kpoly(obj)
@@ -87,6 +88,10 @@ classdef PRM < handle & dynamicprops
 
         function value=get.fh1length(obj)
             value=obj.formin.length;
+        end
+
+        function value=get.FH2dist_frac(obj)
+            value=obj.dist_FH2./obj.formin.length;
         end
 
         function obj = addStat(obj,stat)

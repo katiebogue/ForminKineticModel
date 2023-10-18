@@ -1,8 +1,23 @@
-function fig = forminkpolybar(formin)
-%UNTITLED3 Summary of this function goes here
-%   Detailed explanation goes here
+function fig = forminkpolybar(formin,scale)
+% FORMINKPOLYBAR  creates bargraphs of the rates of each step in and of 
+% polymerization for the formin.
+    %   fig = FORMINKPOLYBAR(formin) creates figure with subplot for the 
+    %   rate of each step calculated for formin. 
+    %
+    %   fig = FORMINBAR(formin,'scale') creates figure with subplot for the
+    %   rate of each step (scaled as specified) calculated for formin. 
+    %
+    %   Determines the steps from formin.opts.equations
+    %   Bargraph is stacked, colored by PRM
+    %
+    %   Inputs:
+    %       formin : Formin object
+    %       scale  : kpoly axis scale (can be none, log2, log10, ln)
+    %   
+    %   See also FORMIN, PRM, EXPERIMENT, OPTIONS.
 arguments
     formin Formin
+    scale {mustBeMember(scale,{'none','log2','log10','ln'})}="none"
 end
 % creates polymerization bar charts for all three states
 
@@ -10,22 +25,46 @@ end
 
     fig=figure; 
 
-    rateplot("kcap",1,"k_{cap}");
-    rateplot("kdel",2,"k_{del}");
-    rateplot("kpoly",3,"k_{poly}");
+    if scale=="none"
+        yscale=@(x) x;
+        ylab="rate (s^{-1})";
+    elseif scale=="log2"
+        ylab="log_{2}(rate (s^{-1}))";
+        yscale=@(x) log2(x);
+    elseif scale=="log10"
+        ylab="log_{10}(rate (s^{-1}))";
+        yscale=@(x) log10(x);
+    elseif scale=="ln"
+        ylab="ln(rate (s^{-1}))";
+        yscale=@(x) log(x);
+    end
+
+    ratenames=fieldnames(formin.opts.equations);
+    numrates=length(ratenames);
+    numsubplots=numrates+1;
+    for j=1:numrates
+        rateplot(ratenames{j},j,strcat(insertAfter(ratenames{j},1,"_{"),"}"))
+    end
+    rateplot("kpoly",numsubplots,"k_{poly}");
     
     function rateplot(rate,plotn,title_)
         rates=[formin.PRMList.(rate)];
-        ratedouble=[rates.double];
-        ratedimer=[rates.dimer];
-        rateplot=[[rates.single];[ratedouble.a]+[ratedouble.b];[ratedimer.a]+[ratedimer.b]];
+        if class(rates)=="FilType"
+            ratedouble=[rates.double];
+            ratedimer=[rates.dimer];
+            rateplot=[yscale([rates.single]);yscale([ratedouble.a]+[ratedouble.b]);yscale([ratedimer.a]+[ratedimer.b])];
+        else
+            rateplot=[yscale(rates);yscale(rates);yscale(rates)];
+        end
         fil=[1 2 3];
         
-        subplot(1,3,plotn) %1x3 grid w/ axis on 1st cell
+        subplot(1,numsubplots,plotn) %1x3 grid w/ axis on 1st cell
         
         rate_bar = bar(fil,rateplot,0.5, 'stacked');
         title(title_);
-        ylabel('rate (s^{-1})');
+        if plotn==1
+            ylabel(ylab);
+        end
         xticklabels({'single', 'double' , 'dimer'});
         xtickangle(45);
         

@@ -1,7 +1,20 @@
 function fig = filamentSchematic(formin)
-arguments
-    formin Formin
-end
+% FILAMENTSCHEMATIC  creates schematic of the formin filament.
+    %   fig = FILAMENTSCHEMATIC(formin) creates schematic of formin. 
+    %
+    %   Schematic is 2 lines representing the entire length of an fh1
+    %   filament. 1 line has a colored dot for the center of each binding 
+    %   site; 1 line has blue dots for each proline, with binding sites 
+    %   highlighted in yellow. 
+    %
+    %   Inputs:
+    %       formin : Formin object
+    %   
+    %   See also FORMIN, PRM, EXPERIMENT, OPTIONS.
+
+    arguments
+        formin Formin
+    end
     % outputs line and circle graph displaying binding site location (circles)
     % across the entire length of an fh1 filament (line)
     

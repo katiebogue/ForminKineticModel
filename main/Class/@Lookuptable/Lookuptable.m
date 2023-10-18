@@ -100,7 +100,7 @@ classdef Lookuptable <handle
             addNs("double");
             addNs("dimer");
             function addNs(type)
-                obj.missingNs.(type)=[];
+                obj.missingNs(1).(type)=[];
                 for i=1:obj.max_length.(type)
                     Nlabel=strcat("N",num2str(i));
                     if ~isfield(obj.(type),Nlabel)

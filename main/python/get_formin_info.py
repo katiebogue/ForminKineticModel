@@ -31,6 +31,14 @@ arguments for main:
         1 - Search for PRMs starting from the FH2 (CT) (default)
         2 - Search for PRMs starting from the FH1 NT
 
+Outputs:
+    1) length of FH1 (int)
+    2) distance from FH2 to the center of each PRM (list)
+    3) size of each PRM (list)
+    4) distance from FH2 to each proline (list) 
+    5) distance from FH2 to the C-terminal proline of each PRM (list) 
+
+
 These packages need to be installed. If you have pip, then use
      $ pip install beautifulsoup
      $ pip install bioservices
