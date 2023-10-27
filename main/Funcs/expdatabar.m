@@ -1,6 +1,62 @@
 function fig = expdatabar(datastruct,settings,scale,save,NameValueArgs)
-%UNTITLED4 Summary of this function goes here
-%   Detailed explanation goes here
+% EXPDATABAR creates side by side bargraphs of simulated and experimental 
+% rates.
+    %   fig = EXPDATABAR(datastruct,settings) creates side by side
+    %   bargraphs of simulated and experimental data in datastruct. Making
+    %   all 6 plots.
+    %
+    %   fig = EXPDATABAR(datastruct,settings,'scale') creates side by side
+    %   bargraphs of simulated and experimental data (scaled as specified) 
+    %   in datastruct. Making all 6 plots. 
+    %
+    %   fig = EXPDATABAR(datastruct,settings,'scale',true) creates and 
+    %   saves side by side bargraphs of simulated and experimental data 
+    %   (scaled as specified) in datastruct. Making all 6 plots.
+    %
+    %   fig = EXPDATABAR(datastruct,settings,group='grp') creates side by 
+    %   side bargraphs of simulated and experimental data in datastruct 
+    %   with the specified group. Makes 2 plots (see below) unless all 
+    %   entries have type="ratio".
+    %
+    %   fig = EXPDATABAR(datastruct,settings,'scale',group='grp') creates 
+    %   side by side bargraphs of simulated and experimental data (scaled
+    %   as specified) in datastruct with the specified group. Makes 2 plots
+    %   (see below) unless all entries have type="ratio".
+    %
+    %   fig = EXPDATABAR(datastruct,settings,'scale',true,group='grp')
+    %   creates and saves side by side bargraphs of simulated and 
+    %   experimental data (scaled as specified) in datastruct with the 
+    %   specified group. Makes 2 plots (see below) unless all entries have type="ratio".
+    %   
+    %   Unless a group is specified, will generate plots for the following:
+    %       1. All entries in input datastruct
+    %       2. All entries in input datastruct with type="single"
+    %       3. All entries in input datastruct with type="double"
+    %       4. All entries in input datastruct with type="dimer"
+    %       5. All entries in input datastruct with type="ratio"
+    %       6. All entries in input datastruct with the same group (2 plots
+    %          per group as below)
+    %
+    %   Will generate 2 plots for every "group" (unless the type="ratio")
+    %       1. raw values of experiment and simulation
+    %       2. raw experimental values and scaled simulation values
+    %           (scaled so the smallest experimental value in the group is
+    %           equal to the simulated value)
+    %
+    %   Calls figuresave
+    %
+    %   Inputs:
+    %       datastruct : structure array with properties type, formin,
+    %                    value, groups, errtop, and errbot
+    %       settings   : Options class
+    %       scale      : method of scaling the polymerization values. Can
+    %                    be 'none','log2','log10','ln' (default is 'none')
+    %       save       : whether or not to save the plot to the results
+    %                    pdf in settings (true/false); deafult is false
+    %       group      : value for the "groups" property of objects in 
+    %                    datastruct to plot (Name-value argument)
+    %   
+    %   See also EXPERIMENT, FORMIN, PRM, OPTIONS, FIGURESAVE.
     arguments
         datastruct struct
         settings Options

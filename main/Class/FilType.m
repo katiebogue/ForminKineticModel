@@ -109,24 +109,62 @@ classdef FilType
     methods(Access = protected)
         function r = use_operator(obj1,obj2,operator)
             arguments
-                obj1 {mustBeA(obj1,["double","FilType"])}
-                obj2 {mustBeA(obj2,["double","FilType"])}
+                obj1 
+                obj2 
                 operator function_handle
             end
-            if class(obj1)=="double"
-                singler=operator(obj1,obj2.single);
-                doubler=operator(obj1,obj2.double);
-                dimerr=operator(obj1,obj2.dimer);
-            elseif class(obj2)=="FilType"
-                singler=operator(obj1.single,obj2.single);
-                doubler=operator(obj1.double,obj2.double);
-                dimerr=operator(obj1.dimer,obj2.dimer);
-            elseif class(obj2)=="double"
-                singler=operator(obj1.single,obj2);
-                doubler=operator(obj1.double,obj2);
-                dimerr=operator(obj1.dimer,obj2);
+            class1=class(obj1);
+            class2=class(obj2);
+            if class1=="double" && class2=="FilType"
+                r=obj2;
+                r.single=operator(obj1,obj2.single);
+                if class(obj2.double)=="Filament"
+                    r.double.a=operator(obj1,obj2.double.a);
+                    r.double.b=operator(obj1,obj2.double.b);
+                else
+                    r.double=operator(obj1,obj2.double);
+                end
+                if class(obj2.dimer)=="Filament"
+                    r.dimer.a=operator(obj1,obj2.dimer.a);
+                    r.dimer.b=operator(obj1,obj2.dimer.b);
+                else
+                    r.dimer=operator(obj1,obj2.dimer);
+                end
+                return
+            elseif class2=="FilType" && class1=="FilType"
+                r=obj2;
+                r.single=operator(obj1.single,obj2.single);
+                if class(r.double)=="Filament" && class(obj1.double)=="Filament"
+                    r.double.a=operator(obj1.double.a,obj2.double.a);
+                    r.double.b=operator(obj1.double.b,obj2.double.b);
+                else
+                    r.double=operator(obj1.double,obj2.double);
+                end
+                if class(r.dimer)=="Filament" && class(obj1.dimer)=="Filament"
+                    r.dimer.a=operator(obj1.dimer.a,obj2.dimer.a);
+                    r.dimer.b=operator(obj1.dimer.b,obj2.dimer.b);
+                else
+                    r.dimer=operator(obj1.dimer,obj2.dimer);
+                end
+                return
+            elseif class2=="double" && class1=="FilType"
+                r=obj1;
+                r.single=operator(obj1.single,obj2);
+                if class(obj1.double)=="Filament"
+                    r.double.a=operator(obj1.double.a,obj2);
+                    r.double.b=operator(obj1.double.b,obj2);
+                else
+                    r.double=operator(obj1.double,obj2);
+                end
+                if class(obj1.dimer)=="Filament"
+                    r.dimer.a=operator(obj1.dimer.a,obj2);
+                    r.dimer.b=operator(obj1.dimer.b,obj2);
+                else
+                    r.dimer=operator(obj1.dimer,obj2);
+                end
+            else
+                error("inputs must be of type FilType or double")
             end
-            r=FilType(singler,doubler,dimerr);
         end
     end
 

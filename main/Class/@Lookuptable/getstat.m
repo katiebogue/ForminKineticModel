@@ -24,15 +24,13 @@ function output = getstat(obj,NameValueArgs)
     else
         Fil=[];
     end
-    
+
     obj.holdratio=true;
-    objcopy=obj.copytable;
-    objcopy.holdratio=true;
     
-    tempNNames=objcopy.NNames;
-    tempAddedNs=objcopy.AddedNs;
-    tempStatNames=objcopy.StatNames;
-    tempAddedStats=objcopy.AddedStats;
+    tempNNames=obj.NNames;
+    tempAddedNs=obj.AddedNs;
+    tempStatNames=obj.StatNames;
+    tempAddedStats=obj.AddedStats;
 
     if ~isempty(N)
         if ~isempty(iSite) && iSite>N
@@ -40,6 +38,9 @@ function output = getstat(obj,NameValueArgs)
         end
         NName=strcat("N",num2str(N));
         if isempty(Stat)
+            objcopy=obj.copytable;
+            objcopy.holdratio=true;
+            
             if ismember(NName,tempNNames)
                 if ~isempty(type)
                     if isempty(objcopy.missingNs.(type))
@@ -109,14 +110,14 @@ function output = getstat(obj,NameValueArgs)
             if ismember(NName,tempNNames)
                 if isempty(type)
                     tempout=FilType;
-                    if ~isempty(objcopy.missingNs.single)
+                    if ~isempty(obj.missingNs.single)
                         extrap=obj.extrapolate(Stat);
                         tempout.single=generateextrapolation("single");
                     else
                         tempout.single=tempAddedStats.(Stat).single.(NName);
                     end
 
-                    if ~isempty(objcopy.missingNs.double)
+                    if ~isempty(obj.missingNs.double)
                         extrap=obj.extrapolate(Stat);
                         tempout.double=generateextrapolation("double");
                     else
@@ -128,7 +129,7 @@ function output = getstat(obj,NameValueArgs)
                         end
                     end
 
-                    if ~isempty(objcopy.missingNs.dimer)
+                    if ~isempty(obj.missingNs.dimer)
                         extrap=obj.extrapolate(Stat);
                         tempout.dimer=generateextrapolation("dimer");
                     else
@@ -140,7 +141,7 @@ function output = getstat(obj,NameValueArgs)
                         end
                     end
                 else
-                    if ~isempty(objcopy.missingNs.(type))
+                    if ~isempty(obj.missingNs.(type))
                         tempout=tempAddedStats.(Stat).(type).(NName);
                         if ~isempty(Fil)
                             if class(tempout)=="Filament"
@@ -165,6 +166,9 @@ function output = getstat(obj,NameValueArgs)
             end
         end
     else
+        objcopy=obj.copytable;
+        objcopy.holdratio=true;
+
         if isempty(Stat)
             if isempty(type)
                 tempout=objcopy;
@@ -205,19 +209,32 @@ function output = getstat(obj,NameValueArgs)
     obj.holdratio=false;
 
     function out=assigniSite(input)
-        if class(input)=="struct" 
+        inclass=class(input);
+        if inclass=="struct" 
             out=input;
             fields=fieldnames(out);
             for ii=1:length(fields)
                 out.(fields{ii})=assigniSite(input.(fields{ii}));
-                for j=1:iSite
-                    if all(size(fields{ii}(2:end))==size(num2str(j-1))) && all(fields{ii}(2:end)==num2str(j-1))
-                        out=rmfield(out,fields{ii});
+                if fields{ii}(1)=="N"
+                    [fieldnum,tf] = str2num(fields{ii}(2:end));
+                    if tf
+                        if fieldnum<iSite
+                            out=rmfield(out,fields{ii});
+                        end
                     end
                 end
             end
 
-        elseif class(input)=="Lookuptable" || class(input)=="FilType" || class(input)=="Filament"
+        elseif inclass=="FilType" 
+            out=input;
+            out.single=assigniSite(input.single);
+            out.double=assigniSite(input.double);
+            out.dimer=assigniSite(input.dimer);
+        elseif inclass=="Filament"
+            out=input;
+            out.a=assigniSite(input.a);
+            out.b=assigniSite(input.b);
+        elseif inclass=="Lookuptable"
             out=input;
             fields=fieldnames(out);
             props=metaclass(input).PropertyList;
@@ -225,9 +242,12 @@ function output = getstat(obj,NameValueArgs)
                 if ~props(ii).Dependent
                     out.(fields{ii})=assigniSite(input.(fields{ii}));
                 end
-                for j=1:iSite
-                    if all(size(fields{ii}(2:end))==size(num2str(j-1))) && all(fields{ii}(2:end)==num2str(j-1))
-                        out=rmfield(out,fields{ii});
+                if fields{ii}(1)=="N"
+                    [fieldnum,tf] = str2num(fields{ii}(2:end));
+                    if tf
+                        if fieldnum<iSite
+                            out=rmfield(out,fields{ii});
+                        end
                     end
                 end
             end

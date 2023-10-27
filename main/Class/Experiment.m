@@ -412,5 +412,240 @@ classdef Experiment
             end
             formin.gating=gating;
         end
+
+
+        function out=SOSlist(obj,scaled,NameValueArgs)
+            arguments
+                obj Experiment
+                scaled logical=false %only applies if group is specified
+                NameValueArgs.formin string
+                NameValueArgs.group string
+                NameValueArgs.recalc logical=true
+            end
+            if isfield(NameValueArgs,"formin")
+                for i=1:length(obj.data)
+                    if obj.data(i).formin.name==NameValueArgs.formin
+                        out=getSOS(obj.data(i),1);
+                        return
+                    end
+                end
+            end
+            out=-1;
+
+            if NameValueArgs.recalc
+                kpolys=obj.ForminList.kpoly;
+            end
+            if isfield(NameValueArgs,"group")
+                groupdata=obj.data;
+                for i=length(groupdata):-1:1
+                    if ~ismember(NameValueArgs.group,groupdata(i).groups)
+                        groupdata(i)=[];
+                    end
+                end
+                if scaled
+                    if groupdata(1).type=="ratio"
+                        scaler=1;
+                    else
+                        expdata=[groupdata.value];
+                        minloc=expdata==min(expdata);
+                        scaler=groupdata(minloc).formin.lastkpoly.(groupdata(minloc).type)/min(expdata);
+                    end
+                else
+                    scaler=1;
+                end
+                for i=1:length(groupdata)
+                    tstruct.name=groupdata(i).formin.name;
+                    tstruct.value=getSOS(groupdata(i),scaler);
+                    if class(out)~="struct"
+                        out=tstruct;
+                    else
+                        out(1,end+1)=tstruct;
+                    end
+                end
+            else
+                for i=1:length(obj.data)
+                    tstruct.name=obj.data(i).formin.name;
+                    tstruct.value=getSOS(obj.data(i),1);
+                    if class(out)~="struct"
+                        out=tstruct;
+                    else
+                        out(1,end+1)=tstruct;
+                    end
+                end
+            end
+
+            function val=getSOS(datastruct,scaler)
+                simvalue=datastruct.formin.lastkpoly.(datastruct.type)./scaler;
+                max=datastruct.value+datastruct.errtop;
+                min=datastruct.value-datastruct.errbot;
+                if (simvalue<=max) && (simvalue>=min)
+                    val=0;
+                else
+                    val=abs((simvalue-datastruct.value)^2);
+                end
+            end
+        end
+
+        function out=SOS(obj,scaled,NameValueArgs)
+            arguments
+                obj Experiment
+                scaled logical=false %only applies if group is specified
+                NameValueArgs.formin string
+                NameValueArgs.group string
+                NameValueArgs.recalc logical=true
+            end
+            if isfield(NameValueArgs,"formin")
+                out=obj.SOSlist(formin=NameValueArgs.formin,recalc=NameValueArgs.recalc);
+                return
+            end
+            if isfield(NameValueArgs,"group")
+                list=obj.SOSlist(scaled,group=NameValueArgs.group,recalc=NameValueArgs.recalc);
+            else
+                list=obj.SOSlist(scaled,recalc=NameValueArgs.recalc);
+            end
+
+            out=sum([list.value]);
+        end
+
+        function T=runfminsearch(obj,NameValueArgs)
+            arguments
+                obj Experiment
+                NameValueArgs.options struct=optimset('MaxFunEvals',10000,'MaxIter',10000,'TolX',10^(-6),'TolFun',10^(-6))  % optimset for fminsearch
+                NameValueArgs.groups cell ={"n/a"}
+                NameValueArgs.rbot double=-2
+                NameValueArgs.rtop double=4
+                NameValueArgs.iterations double=1
+            end
+
+            options=NameValueArgs.options;
+            groups=NameValueArgs.groups;
+            rbot=NameValueArgs.rbot;
+            rtop=NameValueArgs.rtop;
+            iterations=NameValueArgs.iterations;
+        
+
+            vals={obj.opts.k_cap,obj.opts.k_del,obj.opts.r_cap,obj.opts.r_del,obj.opts.k_rel};
+            fval=getSOS(vals{:},false);
+            ogtable=maketable();
+            T=ogtable;
+            return
+            T = table('Size',[2*iterations length(ogtable.Properties.VariableNames)],'VariableNames',ogtable.Properties.VariableNames,'VariableTypes',varfun(@class,ogtable,'OutputFormat','cell'));
+            index=0;
+
+            for i=1:iterations
+                disp(i)
+                r=(rtop-rbot)*rand(1,5)+rbot;
+
+                % not using scaled
+                [params,fval] = fminsearch(@(z) getSOS(abs(10^(z(1))),abs(10^(z(2))),abs(10^(z(3))),abs(10^(z(4))),abs(10^(z(5))),false),[r(1);r(2);r(3);r(4);r(5)],options); 
+                vals=num2cell(abs(10.^(params)));
+                disp(vals)
+                disp(params)
+                disp(getSOS(abs(z(1)),abs(10^(z(2))),abs(10^(z(3))),abs(10^(z(4))),abs(10^(z(5))),false))
+                T(index+1,:)=maketable();
+                index=index+1;
+
+                % using scaled
+                [params,fval] = fminsearch(@(z) getSOS(abs(10^(z(1))),abs(10^(z(2))),abs(10^(z(3))),abs(10^(z(4))),abs(10^(z(5))),true),[r(1);r(2);r(3);r(4);r(5)],options); 
+                vals=num2cell(abs(10.^(params)));
+                T(index+1,:)=maketable();
+                index=index+1;
+            end
+
+            % return to OG opts
+            obj.opts.k_cap=ogtable.k_cap;
+            obj.opts.k_del=ogtable.k_del;
+            obj.opts.r_cap=ogtable.r_cap;
+            obj.opts.r_del=ogtable.r_del;
+            obj.opts.k_rel=ogtable.k_rel;
+            
+            function val=getSOS(k_cap,k_del,r_cap,r_del,k_rel,scaled)
+                obj.opts.k_cap=k_cap;
+                obj.opts.k_del=k_del;
+                obj.opts.r_cap=r_cap;
+                obj.opts.r_del=r_del;
+                obj.opts.k_rel=k_rel;
+                
+                if groups{1}=="n/a"
+                    val=obj.SOS();
+                else
+                    val=0;
+                    for j=1:length(groups)
+                        if j==1
+                            val=val+obj.SOS(scaled,group=groups{j});
+                        else
+                            val=val+obj.SOS(scaled,group=groups{j},recalc=false);
+                        end
+                    end
+                end
+
+            end
+
+            function tab=maketable()
+                tab=table;
+                tab.fval=fval;
+                [tab.k_cap,tab.k_del,tab.r_cap,tab.r_del,tab.k_rel]=vals{:};
+                grouplist=unique([obj.data.groups]);
+                grouptitle=strcat(grouplist," scaled");
+                tab.all=obj.SOS();
+                allscaled=0;
+                for j=1:length(grouplist)
+                    tab.(grouplist(j))=obj.SOS(group=grouplist(j),recalc=false);
+                    tab.(grouptitle(j))=obj.SOS(true,group=grouplist(j),recalc=false);
+                    allscaled=allscaled+tab.(grouptitle(j));
+                end
+
+                tab.all_scaled=allscaled;
+                
+                formins=[obj.data.formin];
+                forminnames=[formins.name];
+                forminname_gating=strcat(forminnames,"-gating");
+                forminname_c_PA=strcat(forminnames,"-c_PA");
+                for j=1:length(obj.data)
+                    tab.(forminnames(j))=obj.SOS(formin=forminnames(j),recalc=false);
+                    tab.(forminname_gating(j))=formins(j).gating;
+                    tab.(forminname_c_PA(j))=formins(j).c_PA;
+                end
+                
+                optstable=rows2vars(obj.opts.optionstable);
+                optstable=removevars(optstable,{'resultsdir','resultsfolder','python_path','k_cap','k_del','r_cap','r_del','k_rel','OriginalVariableNames'});
+                tab=[tab,optstable];
+            end
+        end
+
+        function applytable(obj,row)
+            arguments
+                obj Experiment
+                row table
+            end
+            vars=row.Properties.VariableNames;
+            optsvar=obj.opts;
+            for i=1:length(vars)
+                value=row.(vars{i});
+                if ismember(vars{i},fieldnames(optsvar))
+                    if class(optsvar.(vars{i}))=="double" && class(value)=="string"
+                        value=str2double(value);
+                    end
+                    if optsvar.(vars{i})~=value
+                        optsvar.(vars{i})=value;
+                    end
+                    continue
+                end
+                if ismember(vars{i},fieldnames(optsvar.equationstext))
+                    if optsvar.equationstext.(vars{i})~=value
+                        optsvar.set_equation(0,vars{i}(1:end-3),cellfun(@string,strsplit(char(value),{',','(',')'}),"UniformOutput",false))
+                    end
+                    continue
+                end
+                formins=[obj.ForminList.name];
+                splitformin=strsplit(vars{i},{'-'});
+                if length(splitformin)==2
+                    if ismember(splitformin{1},formins)
+                        j=find(formins==splitformin{1});
+                        obj.ForminList(j).(splitformin{2})=value;
+                    end
+                end
+            end
+        end
     end
 end

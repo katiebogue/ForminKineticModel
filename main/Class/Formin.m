@@ -16,6 +16,7 @@ classdef Formin < handle
         opts_over % overriden sequence options
         PRMList (1,:) PRM
         Ploc (1,:) double % locations of all Ps in sequence (relative to FH2)
+        lastkpoly FilType
     end
 
     properties(Dependent)
@@ -114,6 +115,7 @@ classdef Formin < handle
 
         function value=get.kpoly(obj)
             value=get_rate(obj,"kpoly");
+            obj.lastkpoly=value;
         end
 
         function r=get_rate(obj,rate)
