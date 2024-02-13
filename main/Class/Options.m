@@ -38,6 +38,7 @@ classdef Options <handle
         function obj = Options(lookup,python_path,kpoly_type,resultsdir,k_cap,k_del,r_cap,r_del,k_rel)
             %UNTITLED2 Construct an instance of this class
             %   Detailed explanation goes here
+            if nargin>0
             obj.lookup=lookup;
             obj.python_path=python_path;
             obj.kpoly_type=kpoly_type;
@@ -50,6 +51,7 @@ classdef Options <handle
             obj.r_del = r_del;
             obj.k_rel = k_rel;
             obj.set_FH1();
+            end
         
         end
 
@@ -85,9 +87,11 @@ classdef Options <handle
                 preset double {mustBeMember(preset,[0,1])}
             end
             arguments (Repeating)
-                step (1,1) string {mustBeMember(step,{"kcap","kdel","rcap","rdel","krel"})}
-                vars cell {validvars(vars)}
+                step string {mustBeMember(step,{'kcap','kdel','rcap','rdel','krel'})}
+                vars (1,:) cell 
             end
+            
+                
             
             if isempty(obj.equations)
                 obj.equations=struct;
@@ -96,9 +100,45 @@ classdef Options <handle
                 obj.equationstext=struct;
             end
             if preset==0
+                vars=vars{:};
+                if logical(mod(length(vars),2))
+                    if vars{end}==""
+                        vars=vars(1:end-1);
+                    else
+                        eid = 'validvars:sizeNotEven';
+                        msg = 'An even number of inputs must be provided to vars.';
+                        throwAsCaller(MException(eid,msg))
+                    end
+                end
+                valid_vars=obj.lookup.StatNames;
+                scale_types={'linear','negexp','exp','1-','amino','1-base'};
+                for k=1:2:length(vars)
+                    if ~ismember(vars{k},valid_vars) && ~ismember(vars{k},{'dist_FH2','dist_NT', 'size','gating','c_PA','dist_FH2_start'})
+                        eid = 'validvars:varNotValid';
+                        msg = 'Variables to include in equations must either be in the reference lookuptable or "dist_FH2","dist_NT","size".';
+                        throwAsCaller(MException(eid,msg))
+                    end
+                    if ~ismember(vars{k+1},scale_types)
+                        valid_scale_string="";
+                        for j=1:length(scale_types)
+                            if j==length(scale_types)
+                                valid_scale_string=strcat(valid_scale_string,scale_types{k});
+                            else
+                                valid_scale_string=strcat(valid_scale_string,scale_types{k},", ");
+                            end
+                        end
+    
+                        eid = 'validvars:scaleTypeNotValid';
+                        msg = strcat('Sacle type must be one of the following: ',valid_scale_string,".");
+                        throwAsCaller(MException(eid,msg))
+                    end
+                end
                 invars=vars;
-                obj.equations.(step)=makeeq();
-                obj.equationstext.(strcat(step,"_eq"))=[sprintf("%s(%s),",invars{1:end})];
+                if invars{end}==""
+                    invars=invars(1:end-1);
+                end
+                obj.equations.(step{:})=makeeq();
+                obj.equationstext.(strcat(step{:},"_eq"))=[sprintf("%s(%s),",invars{1:end})];
             elseif preset==1
                 invars={"POcclude","1-","c_PA","linear"};
                 obj.equations.kcap=makeeq();
@@ -138,6 +178,17 @@ classdef Options <handle
                 end
             end
             
+        end
+
+        function cleareq(obj)
+            eqfields=fieldnames(obj.equationstext);
+            for i=1:length(eqfields)
+                obj.equationstext=rmfield(obj.equationstext,eqfields{i});
+            end
+            eqfields=fieldnames(obj.equations);
+            for i=1:length(eqfields)
+                obj.equations.(eqfields{i})=@(PRM) 1;
+            end
         end
 
         function update_points(obj,input,overwrite)
@@ -197,42 +248,31 @@ classdef Options <handle
             end
         end
 
-    end
-
-    methods (Access=private)
-        function validvars(a)
-                % Must have valid variable names and scale types and be
-                % even
-                if logical(mod(length(a),2))
-                    eid = 'validvars:sizeNotEven';
-                    msg = 'An even number of inputs must be provided to vars.';
-                    throwAsCaller(MException(eid,msg))
-                end
-                valid_vars=obj.lookup.StatNames;
-                scale_types={"linear","negexp","exp","1-","amino","1-base"};
-                for i=1:2:length(a)
-                    if ~ismember(a{i},valid_vars) && ~ismember(a{i},{"dist_FH2","dist_NT", "size","gating","c_PA","dist_FH2_start"})
-                        eid = 'validvars:varNotValid';
-                        msg = 'Variables to include in equations must either be in the reference lookuptable or "dist_FH2","dist_NT","size".';
-                        throwAsCaller(MException(eid,msg))
-                    end
-                    if ~ismember(a{i+1},scale_types)
-                        valid_scale_string="";
-                        for j=1:length(scale_types)
-                            if j==length(scale_types)
-                                valid_scale_string=strcat(valid_scale_string,scale_types{i});
-                            else
-                                valid_scale_string=strcat(valid_scale_string,scale_types{i},", ");
-                            end
-                        end
-
-                        eid = 'validvars:scaleTypeNotValid';
-                        msg = strcat('Sacle type must be one of the following: ',valid_scale_string,".");
-                        throwAsCaller(MException(eid,msg))
-                    end
-                end
-                
+        function applytable(obj,row)
+            arguments
+                obj Options
+                row table
             end
+            vars=row.Properties.VariableNames;
+            obj.cleareq;
+            for i=1:length(vars)
+                value=row.(vars{i});
+                if ismember(vars{i},fieldnames(obj))
+                    if class(obj.(vars{i}))=="double" && class(value)=="string"
+                        value=str2double(value);
+                    end
+                    if obj.(vars{i})~=value
+                        obj.(vars{i})=value;
+                    end
+                    continue
+                end
+                if ismember(vars{i},strcat([fieldnames(obj.equations)],"_eq"))
+                    obj.set_equation(0,vars{i}(1:end-3),cellfun(@string,strsplit(char(value),{',','(',')'}),"UniformOutput",false))
+                    continue
+                end
+            end
+        end
+
     end
 
 end

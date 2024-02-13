@@ -1,6 +1,6 @@
 function output = kpolymerization(type,kcap,kdel,rcap,rdel,krel)
 %KPOLYMERIZATION Computes the rate of elongation for a single PRM
-    %   kpoly=
+    % kpoly=
     %   KPOLYMERIZATION(type,kcap,kdel,rcap,rdel,krel) computes the rate of
     %   elongation
     %

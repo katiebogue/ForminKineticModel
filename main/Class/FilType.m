@@ -1,16 +1,23 @@
 classdef FilType
-    %FILTYPE Contains values for single, double, and dimer filament types
-    %   construct with: FilType(single,double_a,double_b,dimer_a,dimer_b)
-    %   See also FILAMENT
+%FILTYPE Contains values for single, double, and dimer filament types
+    %
+    %   Construction:
+    %       val=FILTYPE(single,double_a,dimer_a,double_b,dimer_b)
+    %
+    %       val=FILTYPE(single,double_a,dimer_a)
+    %
+    %   Multiple operators have been overloaded for this class (see methods).
+    %
+    %   See also FILAMENT.
 
     properties
         single % contains value for single filament type
         double % value for double filament type (filament class if 2)
         dimer  % value for dimer filament type (filament class if 2)
-        intersectratio logical=false % if true, ratio will instead be overlapping value between double and dimer
+        intersectratio logical=false % if true, ratio will instead be overlapping values between double and dimer
     end
     properties (Dependent)
-        ratio Filament % ratio of dimer/ double values (filament class)
+        ratio Filament % ratio of dimer/ double values (filament class; Dependent)
     end
 
     methods
@@ -55,9 +62,21 @@ classdef FilType
                     out=Filament(outa,outb);
                 elseif class(input.dimer)=="string"
                     out="n/a";
+                elseif length(input.double)>1 && length(input.double)==length(input.dimer)
+                    if obj.intersectratio
+                            out=intersect(input.dimer,input.double);
+                    else
+                        out=input.double;
+                        for i=1:length(input.double)
+                            fil=FilType(0,input.double(i),input.dimer(i));
+                            out(i)=fil.ratio;
+                        end
+                    end
                 else
-                    if input.double==0
-                        out=NaN;
+                    if all(input.double==0) && all(input.dimer==0)
+                        out=1;
+                    elseif input.double==0
+                        out=0;
                     elseif input.dimer==0
                         out=0;
                     else
@@ -90,6 +109,7 @@ classdef FilType
             operator=@mtimes;
             r=use_operator(obj1,obj2,operator);
         end
+        
 
         function r = mpower(obj1,obj2)
             operator=@mpower;

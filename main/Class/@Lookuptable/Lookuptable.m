@@ -175,7 +175,7 @@ classdef Lookuptable <handle
             obj.(Ntype).(strcat("N",N))=Nstruct;
             if ismember(Ntype,{'double','dimer'})
                fields2=strcat("N",N);
-               obj.(Ntype).(fields2).N=N;
+               obj.(Ntype).(fields2).N=str2double(N);
                fields3=fieldnames(obj.(Ntype).(fields2));
                for k=1:length(fields3)
                    value=obj.(Ntype).(fields2).(fields3{k});

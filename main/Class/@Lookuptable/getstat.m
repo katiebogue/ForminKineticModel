@@ -6,6 +6,7 @@ function output = getstat(obj,NameValueArgs)
         NameValueArgs.Stat string
         NameValueArgs.iSite double=[]
         NameValueArgs.Fil string {mustBeMember(NameValueArgs.Fil,{'a','b'})}
+        NameValueArgs.NName string
     end
     N=NameValueArgs.N;
     if isfield(NameValueArgs,"type")
@@ -36,7 +37,11 @@ function output = getstat(obj,NameValueArgs)
         if ~isempty(iSite) && iSite>N
             error("iSite is larger than FH1 length")
         end
-        NName=strcat("N",num2str(N));
+        if isfield(NameValueArgs,"NName")
+            NName=NameValueArgs.NName;
+        else
+            NName=strcat("N",num2str(N));
+        end
         if isempty(Stat)
             objcopy=obj.copytable;
             objcopy.holdratio=true;
@@ -110,14 +115,14 @@ function output = getstat(obj,NameValueArgs)
             if ismember(NName,tempNNames)
                 if isempty(type)
                     tempout=FilType;
-                    if ~isempty(obj.missingNs.single)
+                    if ~isempty(obj.missingNs.single) && ismember(NName,obj.missingNs.single)
                         extrap=obj.extrapolate(Stat);
                         tempout.single=generateextrapolation("single");
                     else
                         tempout.single=tempAddedStats.(Stat).single.(NName);
                     end
 
-                    if ~isempty(obj.missingNs.double)
+                    if ~isempty(obj.missingNs.double) && ismember(NName,obj.missingNs.double)
                         extrap=obj.extrapolate(Stat);
                         tempout.double=generateextrapolation("double");
                     else
@@ -129,7 +134,7 @@ function output = getstat(obj,NameValueArgs)
                         end
                     end
 
-                    if ~isempty(obj.missingNs.dimer)
+                    if ~isempty(obj.missingNs.dimer) && ismember(NName,obj.missingNs.dimer)
                         extrap=obj.extrapolate(Stat);
                         tempout.dimer=generateextrapolation("dimer");
                     else

@@ -425,6 +425,9 @@ classdef Experiment
             if isfield(NameValueArgs,"formin")
                 for i=1:length(obj.data)
                     if obj.data(i).formin.name==NameValueArgs.formin
+                        if NameValueArgs.recalc
+                            kpolys=obj.data(i).formin.kpoly;
+                        end
                         out=getSOS(obj.data(i),1);
                         return
                     end
@@ -475,11 +478,16 @@ classdef Experiment
             end
 
             function val=getSOS(datastruct,scaler)
+                if scaler==0
+                    scaler=1;
+                end
                 simvalue=datastruct.formin.lastkpoly.(datastruct.type)./scaler;
                 max=datastruct.value+datastruct.errtop;
                 min=datastruct.value-datastruct.errbot;
                 if (simvalue<=max) && (simvalue>=min)
                     val=0;
+                elseif isnan(simvalue)
+                    val=10000;
                 else
                     val=abs((simvalue-datastruct.value)^2);
                 end
@@ -510,11 +518,13 @@ classdef Experiment
         function T=runfminsearch(obj,NameValueArgs)
             arguments
                 obj Experiment
-                NameValueArgs.options struct=optimset('MaxFunEvals',10000,'MaxIter',10000,'TolX',10^(-6),'TolFun',10^(-6))  % optimset for fminsearch
+                NameValueArgs.options struct=optimset('MaxFunEvals',5000,'MaxIter',5000,'TolX',10^(-4),'TolFun',10^(-4))  % optimset for fminsearch
                 NameValueArgs.groups cell ={"n/a"}
                 NameValueArgs.rbot double=-2
                 NameValueArgs.rtop double=4
                 NameValueArgs.iterations double=1
+                NameValueArgs.weight % group to have SOS multiplied by 10
+                NameValueArgs.ogtable logical =false % if true, just return a table with the current settings
             end
 
             options=NameValueArgs.options;
@@ -527,8 +537,10 @@ classdef Experiment
             vals={obj.opts.k_cap,obj.opts.k_del,obj.opts.r_cap,obj.opts.r_del,obj.opts.k_rel};
             fval=getSOS(vals{:},false);
             ogtable=maketable();
-            T=ogtable;
-            return
+            if NameValueArgs.ogtable
+                T=ogtable;
+                return
+            end
             T = table('Size',[2*iterations length(ogtable.Properties.VariableNames)],'VariableNames',ogtable.Properties.VariableNames,'VariableTypes',varfun(@class,ogtable,'OutputFormat','cell'));
             index=0;
 
@@ -539,9 +551,6 @@ classdef Experiment
                 % not using scaled
                 [params,fval] = fminsearch(@(z) getSOS(abs(10^(z(1))),abs(10^(z(2))),abs(10^(z(3))),abs(10^(z(4))),abs(10^(z(5))),false),[r(1);r(2);r(3);r(4);r(5)],options); 
                 vals=num2cell(abs(10.^(params)));
-                disp(vals)
-                disp(params)
-                disp(getSOS(abs(z(1)),abs(10^(z(2))),abs(10^(z(3))),abs(10^(z(4))),abs(10^(z(5))),false))
                 T(index+1,:)=maketable();
                 index=index+1;
 
@@ -571,10 +580,16 @@ classdef Experiment
                 else
                     val=0;
                     for j=1:length(groups)
+                        weight=1;
+                        if isfield(NameValueArgs,"weight")
+                            if groups{j}==NameValueArgs.weight
+                                weight=10;
+                            end
+                        end
                         if j==1
-                            val=val+obj.SOS(scaled,group=groups{j});
+                            val=val+(weight*obj.SOS(scaled,group=groups{j}));
                         else
-                            val=val+obj.SOS(scaled,group=groups{j},recalc=false);
+                            val=val+(weight*obj.SOS(scaled,group=groups{j},recalc=false));
                         end
                     end
                 end
@@ -620,6 +635,7 @@ classdef Experiment
             end
             vars=row.Properties.VariableNames;
             optsvar=obj.opts;
+            optsvar.cleareq;
             for i=1:length(vars)
                 value=row.(vars{i});
                 if ismember(vars{i},fieldnames(optsvar))
@@ -631,10 +647,8 @@ classdef Experiment
                     end
                     continue
                 end
-                if ismember(vars{i},fieldnames(optsvar.equationstext))
-                    if optsvar.equationstext.(vars{i})~=value
-                        optsvar.set_equation(0,vars{i}(1:end-3),cellfun(@string,strsplit(char(value),{',','(',')'}),"UniformOutput",false))
-                    end
+                if ismember(vars{i},strcat([fieldnames(optsvar.equations)],"_eq"))
+                    optsvar.set_equation(0,vars{i}(1:end-3),cellfun(@string,strsplit(char(value),{',','(',')'}),"UniformOutput",false))
                     continue
                 end
                 formins=[obj.ForminList.name];

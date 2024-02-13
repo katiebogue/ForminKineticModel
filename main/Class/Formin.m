@@ -17,6 +17,7 @@ classdef Formin < handle
         PRMList (1,:) PRM
         Ploc (1,:) double % locations of all Ps in sequence (relative to FH2)
         lastkpoly FilType
+        NName string
     end
 
     properties(Dependent)
@@ -44,6 +45,10 @@ classdef Formin < handle
                 NameValueArgs.gating double
                 NameValueArgs.sequence string
                 NameValueArgs.uniprotID string
+                NameValueArgs.length double
+                NameValueArgs.PRMloc double
+                NameValueArgs.PRMsize double
+               
             end
             if nargin>0
                 obj.name=name;
@@ -54,7 +59,24 @@ classdef Formin < handle
                 if isfield(NameValueArgs,"gating")
                     obj.gating=NameValueArgs.gating;
                 end
-                if isfield(NameValueArgs,"sequence") && isfield(NameValueArgs,"uniprotID")
+
+                if isfield(NameValueArgs,"length")
+                    if isfield(NameValueArgs,"sequence") || isfield(NameValueArgs,"uniprotID")
+                        error("must either provide input values or input sequence/uniprot, not both")
+                    end
+                    if ~isfield(NameValueArgs,"PRMloc")
+                        error("must provide PRMloc if using input values")
+                    elseif ~isfield(NameValueArgs,"PRMsize")
+                         error("must provide PRMsize if using input values")
+                    else
+                        obj.length=NameValueArgs.length;
+                        obj.NName=strcat("N",num2str(obj.length));
+                        obj.PRMList=PRM.empty;
+                        PRMstartloc=NameValueArgs.PRMloc-ceil(NameValueArgs.PRMsize/2)+1;
+                        obj.PRMList(1,1)=PRM(obj,NameValueArgs.PRMloc,(obj.length-NameValueArgs.PRMloc),NameValueArgs.PRMsize,PRMstartloc);
+                        obj.Ploc=PRMstartloc:(PRMstartloc+NameValueArgs.PRMsize);
+                    end
+                elseif isfield(NameValueArgs,"sequence") && isfield(NameValueArgs,"uniprotID")
                     error("cannot provide both an input sequence and a uniprotID")
                 elseif isfield(NameValueArgs,"sequence")
                     obj.sequence=NameValueArgs.sequence;
@@ -154,6 +176,16 @@ classdef Formin < handle
             value=obj.PRMCount * obj.meanPRMsize;
         end
         
+        function add_length(obj,added_length)
+            obj.length=obj.length+added_length;
+            obj.NName=strcat("N",num2str(obj.length));
+            for i=1:length(obj.PRMList)
+                PRM=obj.PRMList(1,i);
+                PRM.dist_NT=PRM.dist_NT+added_length;
+                PRM.dist_FH2_start=PRM.dist_FH2_start+added_length;
+                %PRM.updateStats;
+            end
+        end
         function update_FH1(obj,src,evnt, NameValueArgs)
             arguments
                 obj Formin
@@ -192,6 +224,7 @@ classdef Formin < handle
 
             output=runpyfunction(obj.opts,{'bioservices'},'get_formin_info','main',{obj.uniprotID, obj.sequence, min_lenPRM, nInt, max_lenInt, min_nP, NTopt, CTopt, PRMscanopt});
             obj.length=double(output(1));
+            obj.NName=strcat("N",num2str(obj.length));
             obj.Ploc=double(output{4});
             
             pp_index_vec=double(output{2});

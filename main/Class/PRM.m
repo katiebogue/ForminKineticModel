@@ -98,7 +98,7 @@ classdef PRM < handle & dynamicprops
             if ~isprop(obj,stat)
                 prop=obj.addprop(stat);
                 prop.Dependent=true;
-                prop.GetMethod = @(obj) obj.formin.lookup.getstat(iSite=obj.dist_FH2,N=obj.formin.length,Stat=stat);
+                prop.GetMethod = @(obj) obj.formin.lookup.getstat(iSite=obj.dist_FH2,N=obj.formin.length,Stat=stat,NName=obj.formin.NName);
                 obj.stat_props.(stat)=prop;
             end
             obj.addBaseStat(stat);
@@ -108,7 +108,7 @@ classdef PRM < handle & dynamicprops
             if ~isprop(obj,strcat(stat,"_Base"))
                 prop=obj.addprop(strcat(stat,"_Base"));
                 prop.Dependent=true;
-                prop.GetMethod = @(obj) obj.formin.lookup.getstat(iSite=1,N=obj.formin.length,Stat=stat);
+                prop.GetMethod = @(obj) obj.formin.lookup.getstat(iSite=1,N=obj.formin.length,Stat=stat,NName=obj.formin.NName);
                 obj.stat_props.(strcat(stat,"_Base"))=prop;
             end
         end

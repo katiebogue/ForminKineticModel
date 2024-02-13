@@ -1,4 +1,4 @@
-function figuresave(fig,options,figname)
+function figuresave(fig,options,figname,saveeps)
 % FIGURESAVE  Save figures to main pdf and as individual .pngs and .figs.
     %
     %   FIGURESAVE(fig,options,figname) saves fig as a .fig and .png called 
@@ -19,6 +19,7 @@ function figuresave(fig,options,figname)
     %       fig     : figure to save
     %       options : Options class
     %       figname : .fig file name to save as 
+    %       saveeps : whether or not to also save an .eps file for each fig (default is false) 
     %
     %   See also OPTIONS.
    
@@ -26,6 +27,7 @@ function figuresave(fig,options,figname)
         fig
         options Options
         figname string
+        saveeps logical = false
     end
     ax=fig;
     if ~exist(fullfile(options.resultsdir,options.resultsfolder),'dir')
@@ -47,7 +49,9 @@ function figuresave(fig,options,figname)
     end
     savefig(ax,fullfile(options.resultsdir,options.resultsfolder,"figures",figname));
     saveas(ax,fullfile(options.resultsdir,options.resultsfolder,"figures",append(extractBefore(figname,strlength(figname)-3),'.png')));
-
+    if saveeps
+        exportgraphics(ax,fullfile(options.resultsdir,options.resultsfolder,"figures",append(extractBefore(figname,strlength(figname)-3),'.eps')),'BackgroundColor','none','ContentType','vector');
+    end
     function savesnotes()
         import mlreportgen.dom.*;
         import mlreportgen.report.*;
