@@ -1,4 +1,4 @@
-function [fig,h]=kpolyheatmap(options,sweep_type,col,smooth,save)
+function [fig,h]=kpolyheatmap(options,sweep_type,col,smooth,smoothfac,save)
 % KPOLYHEATMAP  ...
     %
     %   KPOLYHEATMAP() ...
@@ -14,6 +14,7 @@ arguments
     sweep_type string
     col double
     smooth logical=true
+    smoothfac double =0.58
     save logical=false
 end
 fig=figure;
@@ -60,9 +61,9 @@ if sweep_type=="NT dist v r_cap"
     if smooth
         for n=1:length(param_vals)
             index=paramvals_matrix==param_vals(n);
-            kpolyratios(index)=smoothdata(kpolyratios(index),"lowess","SmoothingFactor",.58);
+            kpolyratios(index)=smoothdata(kpolyratios(index),"lowess","SmoothingFactor",smoothfac);
         end
-        kpoly_lab=strcat(kpoly_lab," (smoothed)");
+        kpoly_lab=strcat(kpoly_lab," (smoothed:",num2str(smoothfac),")");
     end
 
     tbl=table(xvals_matrix,log10(paramvals_matrix),log2(kpolyratios));
@@ -114,7 +115,7 @@ if sweep_type=="NT dist v r_cap"
 end
 
 if save
-    figuresave(gcf,options,append("heatmapsweep_",sweep_type,'.fig'));
+    figuresave(gcf,options,append("heatmapsweep_",sweep_type,'.fig'),true);
 end
 end
 

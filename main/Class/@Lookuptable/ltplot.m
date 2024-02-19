@@ -1,8 +1,9 @@
-function fig=ltplot(obj,xval,stat,NameValueArgs)
+function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
     arguments
         obj Lookuptable
         xval string {mustBeMember(xval,{'length','NTdist','CTdist'})}
         stat string %need to figure out validation
+        skip double =1 % will plots points from 1:skip:end
         NameValueArgs.type string {mustBeMember(NameValueArgs.type,{'single','dimer','double','ratio'})}
         NameValueArgs.ratioscale string {mustBeMember(NameValueArgs.ratioscale,{'none','log2','log10','ln'})} % scale for ratio plot
         NameValueArgs.scale string {mustBeMember(NameValueArgs.scale,{'none','log2','log10','ln'})} % will set scale for all plots (including ratio if no ratioscale is set)
@@ -86,7 +87,8 @@ function fig=ltplot(obj,xval,stat,NameValueArgs)
                 ratioline=0;
             end
             
-            scatter(x,y, 'filled','DisplayName',label);
+            
+            scatter(x(1:skip:end),y(1:skip:end), 'filled','DisplayName',label);
             if type=="ratio"
                 lne=yline(ratioline,'LineWidth',2);
                 lne.Annotation.LegendInformation.IconDisplayStyle='off';

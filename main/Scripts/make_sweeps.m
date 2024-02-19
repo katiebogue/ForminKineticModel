@@ -33,21 +33,23 @@ end
 
 %% Make and save polymerstat sweep figures
 opts.update_results_folder
+skip=20;
 opts.resultsfolder=strcat(opts.resultsfolder," polymerstat sweep");
-fig=opts.lookup.ltplot("NTdist","Prvec0",type="ratio",ratioscale="log2");
-figuresave(fig,opts,"Sweep_Change in Prvec0 vs. distance to NT.fig",true);
+fig=opts.lookup.ltplot("NTdist","Prvec0",skip,type="ratio",ratioscale="log2");
+figuresave(fig,opts,strcat("Sweep_Change in Prvec0 vs. distance to NT_skip",num2str(skip),".fig"),true);
 
-fig=opts.lookup.ltplot("length","Prvec0",type="ratio",ratioscale="log2");
-figuresave(fig,opts,"Sweep_Change in Prvec0 vs. FH1 length.fig",true);
+fig=opts.lookup.ltplot("length","Prvec0",skip,type="ratio",ratioscale="log2");
+figuresave(fig,opts,strcat("Sweep_Change in Prvec0 vs. FH1 length_skip",num2str(skip),".fig"),true);
 
-fig=opts.lookup.ltplot("CTdist","Prvec0",type="ratio",ratioscale="log2");
-figuresave(fig,opts,"Sweep_Change in Prvec0 vs. distance to FH2.fig",true);
+fig=opts.lookup.ltplot("CTdist","Prvec0",skip,type="ratio",ratioscale="log2");
+figuresave(fig,opts,strcat("Sweep_Change in Prvec0 vs. distance to FH2_skip",num2str(skip),".fig"),true);
 
-fig=opts.lookup.ltplot("NTdist","POcclude",type="ratio",ratioscale="log2");
-figuresave(fig,opts,"Sweep_Change in POcclude vs. distance to NT.fig",true);
+skip=5;
+fig=opts.lookup.ltplot("NTdist","POcclude",skip,type="ratio",ratioscale="log2");
+figuresave(fig,opts,strcat("Sweep_Change in POcclude vs. distance to NT_skip",num2str(skip),".fig"),true);
 
-fig=opts.lookup.ltplot("length","POcclude",type="ratio",ratioscale="log2");
-figuresave(fig,opts,"Sweep_Change in POcclude vs. FH1 length.fig",true);
+fig=opts.lookup.ltplot("length","POcclude",skip,type="ratio",ratioscale="log2");
+figuresave(fig,opts,strcat("Sweep_Change in POcclude vs. FH1 length_skip",num2str(skip),".fig"),true);
 
-fig=opts.lookup.ltplot("CTdist","POcclude",type="ratio",ratioscale="log2");
-figuresave(fig,opts,"Sweep_Change in POcclude vs. distance to FH2.fig",true);
+fig=opts.lookup.ltplot("CTdist","POcclude",skip,type="ratio",ratioscale="log2");
+figuresave(fig,opts,strcat("Sweep_Change in POcclude vs. distance to FH2_skip",num2str(skip),".fig"),true);
