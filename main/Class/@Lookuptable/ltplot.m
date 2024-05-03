@@ -51,13 +51,13 @@ function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
     function typscatter(type,scale)
         mat=obj.stattable(stat,type);
         if class(mat)=="Filament"
-            filscatter(mat.a,strcat(type," a"))
-            filscatter(mat.b,strcat(type," b"))
+            filscatter(mat.a,strcat(type," a"),'#29ABE2')
+            filscatter(mat.b,strcat(type," b"),'#F15A22')
         else
-            filscatter(mat,type)
+            filscatter(mat,type,'#F15A22')
         end
 
-        function filscatter(mat,label)
+        function filscatter(mat,label,color)
             hold on
             if xval=="length"
                 x=mat(:,1);
@@ -88,11 +88,12 @@ function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
             end
             
             
-            scatter(x(1:skip:end),y(1:skip:end), 'filled','DisplayName',label);
+            s=scatter(x(1:skip:end),y(1:skip:end), 'filled','DisplayName',label);
             if type=="ratio"
                 lne=yline(ratioline,'LineWidth',2);
                 lne.Annotation.LegendInformation.IconDisplayStyle='off';
             end
+            s.MarkerFaceColor=color;
     
             xlabel(xlab)
             ylabel(ylab)

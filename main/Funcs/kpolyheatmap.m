@@ -71,6 +71,7 @@ if sweep_type=="NT dist v r_cap"
     h = heatmap(tbl,'xvals_matrix','Var2','ColorVariable','Var3');
     h.XLabel = x_label;
     h.ColorMethod = 'none';
+    h.GridVisible="off";
     h.NodeChildren(3).YDir='normal'; 
     if col==1
         h.Colormap=[jet];
@@ -82,6 +83,10 @@ if sweep_type=="NT dist v r_cap"
             h.Colormap=[parula;red];
             h.ColorLimits = [min(log2(kpolyratios)) 0];
         end
+    elseif length(col)==2
+        load('customcolorbar_red_blue.mat');
+        h.Colormap=CustomColormap;
+        h.ColorLimits=col;
     end
 
     strchar=char(param);
@@ -103,15 +108,17 @@ if sweep_type=="NT dist v r_cap"
     h.Title = {kpoly_lab,PRM_lab,lab};
 
     % Convert each number in the array into a string
-    CustomXLabels = string(xvals);
+    CustomXLabels = string(xvals-400);
     CustomYLabels = string(log10(param_vals));
     % Replace all but the fifth elements by spaces
-    CustomXLabels(mod(xvals,5) ~= 0) = " ";
-    CustomYLabels(mod(log10(param_vals),2) ~= 0) = " ";
+    CustomXLabels(mod(xvals-400,20) ~= 0) = " ";
+    CustomYLabels(mod(log10(param_vals),4) ~= 0) = " ";
     % Set the 'XDisplayLabels' property of the heatmap 
     % object 'h' to the custom x-axis tick labels
     h.XDisplayLabels = CustomXLabels;
     h.YDisplayLabels = CustomYLabels;
+    s = struct(h); 
+    s.XAxis.TickLabelRotation = 0;   % horizontal
 end
 
 if save

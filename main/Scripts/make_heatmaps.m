@@ -39,5 +39,5 @@ function newheatmap(opts,kcap,kdel,rcap,smooth,smoothfac)
     opts.k_cap=kcap;
     opts.k_del=kdel;
     opts.r_cap=rcap;
-    kpolyheatmap(opts,"NT dist v r_cap",1,smooth,smoothfac,true);
+    kpolyheatmap(opts,"NT dist v r_cap",[-2,2],smooth,smoothfac,true);
 end
