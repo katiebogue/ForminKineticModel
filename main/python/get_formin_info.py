@@ -17,8 +17,8 @@ arguments for main:
     5) Maximum interruption length
     6) Minimum number of Ps 
     7) FH1 NT definition options:
-        1 - first instance of PRM with at least 4 Ps with max 1 interruption of length 1
-        2 - first instance of PRM (as defined by args 3 and 4)
+        1 - first instance of PRM with at least 4 Ps with max 1 interruption of length 1 (in sequence of at least 3 PRMs no father than 100 amino acids apart)
+        2 - first instance of PRM (as defined by args 3 and 4) (uin sequence of at least 3 PRMs no father than 100 amino acids apart)
         3 - Uniprot defined FH1 start (or option 1 if no FH1)
         4 - Uniprot defined FH1 start (or option 2 if no FH1)
         5 - Start of sequence (for input sequences)
@@ -73,59 +73,40 @@ def get_uniprot_info(uniprotID):
 
     return soup_sequence.upper(), FH1_start,FH1_end,FH2_start
 
-def get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP):
-    seq=seq.upper()
-    i=-1
-    loc=-1
-    nP=0
-    lenPRM=0
-    nInt=0
-    lenInt=0
-    while (i+1)< len(seq):
+
+def get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP,i=-1,count=0):
+    pp_index_vecr, pp_length_vec, pp_index_vec_startr, P_index_vecr = get_PRMs(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP)
+    #print(pp_index_vec_startr)
+    #print(len(pp_index_vec_startr))
+    while (i+1)< len(pp_index_vec_startr):
         i+=1
-        #print(seq[i])
-        if seq[i]=='P':
-            lenInt=0
-            if loc==-1:
-                loc=float(i)
-                nInt=0
-            nP+=1
-            lenPRM+=1
-            if(nP>=min_nP and lenPRM>=min_PP_length):
-                #print(nP)
-                #print(lenPRM)
-                return loc
-        else:
-            if loc ==-1:
-                continue
-            nInt+=1
-            lenInt+=1
-            if(nInt>nInterruptions or lenInt>lenInterruptions):
-                loc=-1
-                nInt=0
-                lenInt=0
-                lenPRM=0
-                nP=0
-            else:
-                lenPRM+=1
-    return loc            
+        #print(pp_index_vec_startr[i])
+        #print(i)
+        if i+1==len(pp_index_vec_startr):
+            return pp_index_vec_startr[i]
+        elif i+2==len(pp_index_vec_startr):
+            if pp_index_vec_startr[i+1]-pp_index_vec_startr[i]<100:
+                return pp_index_vec_startr[i]
+        elif pp_index_vec_startr[i+1]-pp_index_vec_startr[i]<100 and pp_index_vec_startr[i+2]-pp_index_vec_startr[i+1]<100:
+            return pp_index_vec_startr[i]
+           
 
 def get_FH1_start(seq,NT_opt,min_PP_length,nInterruptions,lenInterruptions,min_nP,UP_FH1_start):
     if NT_opt==1:
         # FH1 starts at first PRM w/ min length 4, max 1 int of length 1, at least 4 Ps
-        FH1_start=get_first_PRM(seq,4,1,1,4) 
+        FH1_start=get_first_PRM(seq,4,1,1,4,-1) 
     elif NT_opt==2:
-        FH1_start=get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP)
+        FH1_start=get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP,-1)
     elif NT_opt==3:
         if UP_FH1_start!=-1:
             FH1_start==UP_FH1_start
         else:
-            FH1_start=get_first_PRM(seq,4,1,1,4) 
+            FH1_start=get_first_PRM(seq,4,1,1,4,-1) 
     elif NT_opt==4:
         if UP_FH1_start!=-1:
             FH1_start==UP_FH1_start
         else:
-            FH1_start=get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP)
+            FH1_start=get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP,-1)
     elif NT_opt==5:
         FH1_start=1
     
@@ -152,6 +133,7 @@ def get_FH1_seq(seq,NT_opt,CT_opt,\
     FH1_end=get_FH1_end(seq,CT_opt,UP_FH1_end,UP_FH2_start)
     FH1_sequence=seq[int(FH1_start-1):int(FH1_end)]
     
+    #print(FH1_sequence)
     return FH1_sequence
     
 def get_Ps(seq):
@@ -184,7 +166,7 @@ def get_PRMs(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP):
     while (i+1)< len(seq):
         i+=1
         #print(i)
-        #print(seq[i])
+        #print(seq[i],end="")
         if seq[i]=='P':
             if (float(i)+1) not in P_index_vec:
                 P_index_vec.append(float(i)+1)
@@ -213,8 +195,9 @@ def get_PRMs(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP):
                 continue
             nInt+=1
             lenInt+=1
-            if(nInt>nInterruptions or lenInt>lenInterruptions):
+            if(nInt>nInterruptions or lenInt>lenInterruptions or i+1==len(seq)):
                 lenPRM=lastP-loc+1
+                #print(lenPRM)
                 if(nP>=min_nP and lenPRM>=min_PP_length):
                     pp_index_vec_start.append(1+loc)
                     pp_length_vec.append(lenPRM)

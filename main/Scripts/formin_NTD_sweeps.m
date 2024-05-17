@@ -27,7 +27,7 @@ opts=Options(lt,pythonpath,...
     8*10^(10));     % k_rel
 
 opts.set_equation(1); % using preset #1 (see Options class)
-opts.NTopt=1; % for input sequences
+opts.NTopt=2; 
 
 %% create experiment object
 Experiment1=Experiment(opts,forminfile,"uniprot",2.5); % using the input sequence option and concentration of profilin actin of 2.5
@@ -39,27 +39,37 @@ fit_3st(:,{'NTopt', 'CTopt'}) = [];
 fit_4st(:,{'NTopt', 'CTopt'}) = [];
 fit_4st_krel(:,{'NTopt', 'CTopt'}) = [];
 
-Experiment1.applytable(fit_4st)
-NTDtable_4st=makeNTDtable(Experiment1);
-
-Experiment1.applytable(fit_3st)
-NTDtable_3st=makeNTDtable(Experiment1);
-
-Experiment1.applytable(fit_4st_krel)
-NTDtable_4st_krel=makeNTDtable(Experiment1);
-
 %% Make heatmaps
 set(groot,'defaultfigureposition',[400 250 900 750]) % helps prevent cut offs in figs
-titles="k_{poly} N terminal dimerized/k_{poly} double";
+titles="log_2(k_{poly} N terminal dimerized/k_{poly} double)";
+
+Experiment1.applytable(fit_4st)
+NTDtable_4st=makeNTDtable(Experiment1);
 figure
 h1=makeheatmap(NTDtable_4st);
 h1.Title = {titles,"4st"};
+opts.update_results_folder
+opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","4st");
+figuresave(gcf,opts,append('NTDsweep_','4st','.fig'),true);
+
+
+Experiment1.applytable(fit_3st)
+NTDtable_3st=makeNTDtable(Experiment1);
 figure
 h2=makeheatmap(NTDtable_3st);
 h2.Title = {titles,"3st"};
+opts.update_results_folder
+opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","3st");
+figuresave(gcf,opts,append('NTDsweep_','3st','.fig'),true);
+
+Experiment1.applytable(fit_4st_krel)
+NTDtable_4st_krel=makeNTDtable(Experiment1);
 figure
 h3=makeheatmap(NTDtable_4st_krel);
 h3.Title = {titles,"4st_krel"};
+opts.update_results_folder
+opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","4st_krel");
+figuresave(gcf,opts,append('NTDsweep_','4st_krel','.fig'),true);
 
 function NTDtable=makeNTDtable(exp)
     numformins=length(exp.ForminList);
@@ -87,7 +97,7 @@ function [doubles,dimers,ratios,NTD_dists]=NTD_predictions(formin)
             NTD_dist=formin.PRMList(1,formin.PRMCount).dist_NT;
             doubles(NTD_dist)=kpoly.double;
             dimers(NTD_dist)=kpoly.dimer;
-            ratios(NTD_dist)=kpoly.ratio;
+            ratios(NTD_dist)=log2(kpoly.ratio);
             formin.add_length(1)
         else
             formin.add_length(-i)
@@ -100,7 +110,10 @@ function h=makeheatmap(tab)
     h = heatmap(tab,'formin_name','NTD_dists','ColorVariable','ratios');
     h.ColorMethod = 'none';
     h.NodeChildren(3).YDir='normal';
-    h.Colormap=parula;
+    load('customcolorbar_red_blue_large.mat');
+    h.Colormap=CustomColormap;
+    maxratio=max(abs(tab.ratios));  
+    h.ColorLimits=[-maxratio,maxratio];
     yvals=[1:600];
     CustomYLabels = string(yvals);
     CustomYLabels(mod(yvals,20) ~= 0) = " ";

@@ -73,7 +73,7 @@ elseif sweep=="FH1 length"
                 kpolyratios(i,1)=formin1.kpoly.ratio;
             end
             scatn=scatn+1;
-            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
+            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(k),'MarkerFaceColor',options.colors(scatn));
             plt=plot(xvals',yscale(kpolyratios),'Color',options.colors(scatn));
             plt.Annotation.LegendInformation.IconDisplayStyle='off';
             scat.DisplayName=sprintf("PRM size=%d; FH2 dist=%d",PRM_size,PRM_loc);
