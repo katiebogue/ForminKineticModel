@@ -383,7 +383,9 @@ classdef Experiment
             obj.polymerstat_change_plot("FH2dist_frac","Prvec0",'Fractional Distance from PRM to FH2','Concentration at the Barbed End',"log2",false,true);
             
             % fit to experimental data 
-            obj.expdatabar("none",true);
+            if ~isempty(Experiment1.data)
+                obj.expdatabar("none",true);
+            end
 
             % Make overview tables
             obj.formintable(true);

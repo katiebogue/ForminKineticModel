@@ -51,25 +51,42 @@ h1.Title = {titles,"4st"};
 opts.update_results_folder
 opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","4st");
 figuresave(gcf,opts,append('NTDsweep_','4st','.fig'),true);
+NTDmaxmin_4st=max_min_table(NTDtable_4st);
+figure
+b=make_barplot(NTDmaxmin_4st);
+title([titles,"4st"]);
+figuresave(gcf,opts,append('NTDsweep_bar_','4st','.fig'),true);
 
 
 Experiment1.applytable(fit_3st)
 NTDtable_3st=makeNTDtable(Experiment1);
+NTDmaxmin_3st=max_min_table(NTDtable_3st);
 figure
 h2=makeheatmap(NTDtable_3st);
 h2.Title = {titles,"3st"};
 opts.update_results_folder
 opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","3st");
 figuresave(gcf,opts,append('NTDsweep_','3st','.fig'),true);
+NTDmaxmin_3st=max_min_table(NTDtable_3st);
+figure
+b=make_barplot(NTDmaxmin_3st);
+title([titles,"3st"]);
+figuresave(gcf,opts,append('NTDsweep_bar_','3st','.fig'),true);
 
 Experiment1.applytable(fit_4st_krel)
 NTDtable_4st_krel=makeNTDtable(Experiment1);
+NTDmaxmin_4st_krel=max_min_table(NTDtable_4st_krel);
 figure
 h3=makeheatmap(NTDtable_4st_krel);
 h3.Title = {titles,"4st_krel"};
 opts.update_results_folder
 opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","4st_krel");
 figuresave(gcf,opts,append('NTDsweep_','4st_krel','.fig'),true);
+NTDmaxmin_4st_krel=max_min_table(NTDtable_4st_krel);
+figure
+b=make_barplot(NTDmaxmin_4st_krel);
+title([titles,"4st_krel"]);
+figuresave(gcf,opts,append('NTDsweep_bar_','4st_krel','.fig'),true);
 
 function NTDtable=makeNTDtable(exp)
     numformins=length(exp.ForminList);
@@ -120,4 +137,28 @@ function h=makeheatmap(tab)
     h.YDisplayLabels = CustomYLabels;
     h.GridVisible = 'off';
 
+end
+function mmtab=max_min_table(tab)
+    formins=unique(tab.formin_name);
+    numformins=length(formins);
+    mmtab=table('Size',[numformins 3],'VariableTypes',["double","double","string"],'VariableNames',{'max','min','formin_name'});
+    mmtab.formin_name=formins;
+    for i=1:numformins
+        formin_name=mmtab.formin_name(i);
+        ext=get_max_min(tab,formin_name);
+        mmtab{i,'max'}=ext(1);
+        mmtab{i,'min'}=ext(2);
+    end
+end
+function ext=get_max_min(tab,formin_name)
+    rows=matches(tab.formin_name,formin_name);
+    vals=tab{rows,'ratios'};
+    ext=[max(vals), min(vals)];
+end 
+function b=make_barplot(mmtab)
+    b=bar(categorical(mmtab.('formin_name')'),[mmtab.('min')';mmtab.('max')'],'stacked');
+    xtickangle(90)
+    legend({'minimum','maximum'})
+    b(1).FaceColor='blue';
+    b(2).FaceColor='red';
 end
