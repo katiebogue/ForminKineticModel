@@ -188,7 +188,7 @@ classdef FilType
         end
     end
 
-    methods(Access={?Formin})
+    methods
         function obj=add_fils(obj)
             obj.double=obj.double.a+obj.double.b;
             obj.dimer=obj.dimer.a+obj.dimer.b;
