@@ -1,0 +1,1 @@
+y=MCMCParamfit(Experiment1,"4st",1);

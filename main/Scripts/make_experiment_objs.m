@@ -20,13 +20,16 @@ forminfile="Experimental constructs.txt"; % file containing sequences
 %forminfile="Quinlan_FHODB variations.txt"; % file containing sequences
 
 %ltfile2="basesep_35.5_output.mat"; % need to use base sep 35.5 runs for capu and fhod dimer
-%ltfile2="dimerdisttest.mat"; % test with larger dimerdist runs for capu and fhod dimer
+ltfile2="dimerdisttest.mat"; % test with larger dimerdist runs for capu and fhod dimer
 
+% for FhodB and Capu, should we use SD or SEM for the error bars?
+ertype='SEM';
+%ertype='SD';
 %% create lookuptable
 lt=(load(ltfile,'lookuptable').lookuptable);
 lt=Lookuptable(lt);
- %lt2=(load(ltfile2,'lookuptable').lookuptable);
- %lt.addN(lt2.dimer.N123);
+ lt2=(load(ltfile2,'lookuptable').lookuptable);
+ lt.addN(lt2.dimer.N123);
 % lt.addN(lt2.dimer.N255);
 
 %% create options object
@@ -60,8 +63,13 @@ Experiment1.set_gating("BNI1P(pPC18)",0.5);
 
 %% add experimental data
 % format: (formin name, experimental value, type, name-value args)
-Experiment1=Experiment1.add_data("FHODB",0.6519,'ratio',errminus=0.1168,errplus=0.1168,groups=["NTD data"]);
-Experiment1=Experiment1.add_data("CAPU",1,'ratio',errminus=0.1168,errplus=0.1168,groups=["NTD data"]); % these error bars are a guess!
+if ertype=='SEM'
+    Experiment1=Experiment1.add_data("FHODB",0.6519,'ratio',errminus=0.04767829547,errplus=0.04767829547,groups=["NTD data"]);
+    Experiment1=Experiment1.add_data("CAPU",1,'ratio',errminus=0.04767829547,errplus=0.04767829547,groups=["NTD data"]); % these error bars are a guess!
+elseif ertype=='SD' 
+    Experiment1=Experiment1.add_data("FHODB",0.6519,'ratio',errminus=0.1168,errplus=0.1168,groups=["NTD data"]);
+    Experiment1=Experiment1.add_data("CAPU",1,'ratio',errminus=0.1168,errplus=0.1168,groups=["NTD data"]); % these error bars are a guess!
+end
 Experiment1=Experiment1.add_data("BNI1P(pPD18)",9.554461,'double',errminus=0.46825234,errplus=0.46829044,groups=["Fig 3","Fig 4c"]);
 Experiment1=Experiment1.add_data("BNI1P(pPD28)",7.642275,'double',errminus=0.68292357,errplus=0.72194778,groups=["Fig 3"]);
 Experiment1=Experiment1.add_data("BNI1P(pPB37)",9.617512,'double',errminus=1.17073171,errplus=0.60709018,groups=["Fig 4a"]);

@@ -1,6 +1,5 @@
-function params_all=MCMCParamfit(Exp,type)
-% FORMINBAR  Makes and saves overview bargraphs for a collection of
-% formins.
+function params_out=MCMCParamfit(Exp,type,errtype)
+% 
     %   out = MCMCParamfit(Exp) 
     %   
     %   Inputs:
@@ -13,74 +12,110 @@ function params_all=MCMCParamfit(Exp,type)
     arguments
         Exp
         type
+        errtype % 1= use separate sigma values, 2= divide each by SEM
     end
 
     NTMAX = 1e8;
-    NTCHECK = 1000;
+    NTCHECK = 2000;
     KSCRITICAL = 0.01;
-    NTADAPT = 100;
+    NTADAPT = 50;
+
+    % set up place to store data
+    Exp.opts.update_results_folder
+    Exp.opts.resultsfolder=strcat("MCMC_",Exp.opts.resultsfolder);
+    mkdir (Exp.opts.resultsdir,Exp.opts.resultsfolder)
+    wkspc=fullfile(Exp.opts.resultsdir,Exp.opts.resultsfolder,"mcmc_results.mat");
     
     [data,rates.k_capbase,rates.k_delbase,rates.r_capbase,rates.r_delbase,rates.k_relbase]=readinExp(Exp);
     
+    if errtype==1
+        nsigma=length(unique(struct2table(data).type));
+    elseif errtype==2
+        nsigma=1;
+    else
+        error("invalid error type")
+    end
+    nparams=6+nsigma;
+
     % Pick initial guess 
     rng("shuffle")
-    params=randi([1 10000],1,7);
-    params(7)=rand;
-    dx=ones(7);
+    params=randi([1 10000],1,nparams);
+    params(7:nparams)=rand(1,nparams-6);
+    dx=ones(nparams,1);
 
-    accepts=zeros(7);
-    proposals=zeros(7);
-
-    params_all=zeros(NTMAX,7);
+    accepts=zeros(nparams,1);
+    proposals=zeros(nparams,1);
 
     nt=0;
+    params_all=zeros(NTMAX,nparams);
+    save(wkspc,'-v7.3')
+    m = matfile(wkspc,'Writable',true);
+    clear params_all
+    params_temp=zeros(NTCHECK,nparams);
+
+   
+    nt_temp=0;
+    last_nt=0;
     currentntcheck=NTCHECK;
-    [kpolys_nt,logll_nt]=loglikelihood(type,data,rates,proposals(1:6),proposals(7));
+    [kpolys_nt,logll_nt]=loglikelihood(type,data,rates,params(1:6),params(7:nparams),errtype);
     while(nt<NTMAX)
         nt=nt+1;
+        nt_temp=nt_temp+1;
         
-       
+        if (nt<NTCHECK)&&(rem(nt,NTADAPT)==0)
+            p_accept=accepts./proposals;
+            dx=dx.*p_accept/0.44;
+        end
 
         %randomly perturb one parameter
-        [proposals,index]=generateproposal(params,dx);
+        [proposal,index]=generateproposal(params,dx);
         proposals(index)=proposals(index)+1;
 
         %calculate logll of proposal
-        [kpolys_prop,logll_prop]=loglikelihood(type,data,rates,proposals(1:6),proposals(7));
+        [kpolys_prop,logll_prop]=loglikelihood(type,data,rates,proposal(1:6),proposal(7:nparams),errtype);
         
         %Accept or reject proposal
         if logll_prop>logll_nt
             % Accept if new likelihood is greater
-            params=proposals;
+            params=proposal;
             logll_nt=logll_prop;
-            kpolys_nt=kpolys_prop;
+            %kpolys_nt=kpolys_prop;
             accepts(index)=accepts(index)+1;
         elseif rand < exp(logll_prop-logll_nt)
-            % Boltzmann test
-            params=proposals;
+            % Boltzmann test, Accept 
+            params=proposal;
             logll_nt=logll_prop;
-            kpolys_nt=kpolys_prop;
+            %kpolys_nt=kpolys_prop;
             accepts(index)=accepts(index)+1;
         end
-        params_all(nt,:)=params;
+        params_temp(nt_temp,:)=params;
+
+        if nt_temp==NTCHECK
+            m.nt=nt;
+            m.params_all(last_nt+1:nt,:)=params_temp;
+            last_nt=nt;
+            nt_temp=0;
+            params_temp(:)=0;
+        end
 
         if nt==3*currentntcheck
-            ks=arrayfun(@(x) kstest2(x(currentntcheck:2*currentntcheck),x(2*currentntcheck:3*currentntcheck),'Alpha',KSCRITICAL),params_all); % will this work on matrix???
-            if ks
+            ks=kstest2(m.params_all(currentntcheck:2*currentntcheck,3),m.params_all(2*currentntcheck:3*currentntcheck,3),'Alpha',KSCRITICAL); 
+            if ~ks
+                params_out=m.params_all(currentntcheck:3*currentntcheck,:);
+                m.params_out=params_out;
                 return
             else
                 currentntcheck=currentntcheck*9;
+                m.currentntcheck=currentntcheck;
+                fprintf('nt: %d\n',nt)
             end
         end
     end
-    
-    % Still to do: at every NTAdpat before NTCHECK, see if p(accept)= 0.44, set
-    % dx=dx(p(accept)/0.44)
-
+    params_out=m.params_all;
+    save(m,'params_out')
 end
 function [data,k_capbase,k_delbase,r_capbase,r_delbase,k_relbase]=readinExp(Exp)
-    % do something to read in formin info and stuff to take it out of
-    % struct format
+    % read in formin info 
     ogtable=struct('k_cap',Exp.opts.k_cap,'k_del',Exp.opts.k_del,'r_cap',Exp.opts.r_cap,'r_del',Exp.opts.r_del,'k_rel',Exp.opts.k_rel);
     Exp.opts.k_cap= 1;
     Exp.opts.k_del=1; 
@@ -119,9 +154,6 @@ function [data,k_capbase,k_delbase,r_capbase,r_delbase,k_relbase]=readinExp(Exp)
         k_relbase{i,1}=krels;
     end
     % get values with all parameters set to 1
-        % then you can just take the final values and times them by the
-        % constants
-        % and for rcap=C1*e^(-C2n), you can do rcap(C1,C2)=C1*(rcap(1,1))^C2
 
     % Return to original opts values 
     Exp.opts.k_cap=ogtable.k_cap;
@@ -130,7 +162,7 @@ function [data,k_capbase,k_delbase,r_capbase,r_delbase,k_relbase]=readinExp(Exp)
     Exp.opts.r_del=ogtable.r_del;
     Exp.opts.k_rel=ogtable.k_rel;
 end
-function [kpolys,logll]=loglikelihood(type,data,rates,params,sigma)
+function [kpolys,logll]=loglikelihood(type,data,rates,params,sigma,errtype)
     kpolys=calckpolys(type,rates,params);    
     
     data=struct2table(data);
@@ -150,8 +182,30 @@ function [kpolys,logll]=loglikelihood(type,data,rates,params,sigma)
             error('Error. \nNo valid experimental data type.')
         end
     end
-    singleloglikelihoods=log(normpdf(expdata,simdata,sigma));
-    logll=sum(singleloglikelihoods);
+    logll=0;
+    if errtype==1
+        types=unique(data.type);
+        if ~length(types)==length(sigma)
+            error("Number of unique data types not the same as number of sigmas")
+        end
+        for i=1:length(sigma)
+            rows = matches(data.type,types(i));
+            SSE=sum((expdata(rows)-simdata(rows)).^2);
+            sigma2=sigma(i)^2;
+            logll_i=(-SSE/(2*sigma2))-(0.5*length(expdata(rows))*log(2*pi*sigma2));
+            logll=logll+logll_i;
+        end
+    elseif errtype==2
+        for i=1:length(expdata)
+            SEM=(data.errtop(i)+data.errbot(i))/2;
+            SSE=((expdata(i)-simdata(i)).^2)/SEM;
+            sigma2=sigma^2;
+            logll_i=(-SSE/(2*sigma2))-(0.5*log(2*pi*sigma2));
+            logll=logll+logll_i;
+        end
+    else
+        error("invalid error type")
+    end
 end
 
 function out=calckpolys(type,rates,params)
