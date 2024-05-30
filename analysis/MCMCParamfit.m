@@ -1,4 +1,4 @@
-function params_out=MCMCParamfit(Exp,type,errtype)
+function params_out=MCMCParamfit(Exp,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
 % 
     %   out = MCMCParamfit(Exp) 
     %   
@@ -13,12 +13,12 @@ function params_out=MCMCParamfit(Exp,type,errtype)
         Exp
         type
         errtype % 1= use separate sigma values, 2= divide each by SEM
+        logtf % whether or not to have step sizes in log space
+        NTCHECK = 1000
+        NTADAPT =50
+        NTMAX =1e8
+        KSCRITICAL =0.01
     end
-
-    NTMAX = 1e8;
-    NTCHECK = 2000;
-    KSCRITICAL = 0.01;
-    NTADAPT = 50;
 
     % set up place to store data
     Exp.opts.update_results_folder
@@ -41,8 +41,15 @@ function params_out=MCMCParamfit(Exp,type,errtype)
     rng("shuffle")
     params=randi([1 10000],1,nparams);
     params(7:nparams)=rand(1,nparams-6);
-    dx=ones(nparams,1);
-
+    params(4)=randi([1 10],1,1);
+    if logtf
+        dx=zeros(nparams,1);
+        dx(1:6)=[5,5,15,0,10,5];
+    else
+        dx=ones(nparams,1);
+        dx(1:6)=[10^5,10^5,10^15,1,10^10,10^5];
+    end
+    
     accepts=zeros(nparams,1);
     proposals=zeros(nparams,1);
 
@@ -51,6 +58,7 @@ function params_out=MCMCParamfit(Exp,type,errtype)
     save(wkspc,'-v7.3')
     m = matfile(wkspc,'Writable',true);
     clear params_all
+    clear Exp
     params_temp=zeros(NTCHECK,nparams);
 
    
@@ -64,11 +72,13 @@ function params_out=MCMCParamfit(Exp,type,errtype)
         
         if (nt<NTCHECK)&&(rem(nt,NTADAPT)==0)
             p_accept=accepts./proposals;
+            p_accept(p_accept==0)=0.01;
             dx=dx.*p_accept/0.44;
+            m.dx=dx;
         end
 
         %randomly perturb one parameter
-        [proposal,index]=generateproposal(params,dx);
+        [proposal,index]=generateproposal(params,dx,logtf);
         proposals(index)=proposals(index)+1;
 
         %calculate logll of proposal
@@ -105,6 +115,8 @@ function params_out=MCMCParamfit(Exp,type,errtype)
                 m.params_out=params_out;
                 return
             else
+                m.proposals=proposals;
+                m.accepts=accepts;
                 currentntcheck=currentntcheck*9;
                 m.currentntcheck=currentntcheck;
                 fprintf('nt: %d\n',nt)
@@ -237,8 +249,12 @@ function out=calckpolys(type,rates,params)
     out.double=arrayfun(@(x) x.double,kpolys);
     out.dimer=arrayfun(@(x) x.dimer,kpolys);
 end
-function [proposals,i]=generateproposal(params,dx)
+function [proposals,i]=generateproposal(params,dx,logtf)
     i=randi([1 length(params)]);
     proposals=params;
-    proposals(i)=proposals(i)+(dx(i)*(2*rand-1));
+    if logtf
+        proposals(i)=proposals(i)+(10^(dx(i))*(2*rand-1));
+    else
+        proposals(i)=proposals(i)+(dx(i)*(2*rand-1));
+    end
 end
