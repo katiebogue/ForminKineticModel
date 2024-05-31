@@ -55,19 +55,30 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
     else
         error("invalid error type")
     end
-    nparams=6+nsigma;
+    if type=="3st"
+        nkpolyparams=4;
+    elseif type=="4st"
+        nkpolyparams=6;
+    end
+    nparams=nkpolyparams+nsigma;
 
     % Pick initial guess 
     rng("shuffle")
     params=randi([1 10000],1,nparams);
-    params(7:nparams)=rand(1,nparams-6);
-    params(4)=randi([1 10],1,1);
+    params(nkpolyparams+1:nparams)=rand(1,nparams-nkpolyparams);
+    params(4)=randi([1 5],1,1);
     if logtf
-        dx=zeros(nparams,1);
-        dx(1:6)=[5,5,15,0,10,5];
+        dx=ones(nparams,1)./100;
+        dx(1:3)=[5,5,5];
+        if type=="4st"
+            dx(5:6)=[10,5];
+        end
     else
         dx=ones(nparams,1);
-        dx(1:6)=[10^5,10^5,10^15,1,10^10,10^5];
+        dx(1:3)=[10^5,10^5,10^15];
+        if type=="4st"
+            dx(5:6)=[10^10,10^5];
+        end
     end
     
     accepts=zeros(nparams,1);
@@ -87,7 +98,7 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
     nt_temp=0;
     last_nt=0;
     currentntcheck=NTCHECK;
-    [kpolys_nt,logll_nt]=loglikelihood(type,data,rates,params(1:6),params(7:nparams),errtype);
+    [kpolys_nt,logll_nt]=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype);
     disp("starting MCMC loop")
     while(nt<NTMAX)
         nt=nt+1;
@@ -104,8 +115,11 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
         [proposal,index]=generateproposal(params,dx,logtf);
         proposals(index)=proposals(index)+1;
 
+        %dont allow negative values
+        proposal(proposal<0)=eps(0);
+
         %calculate logll of proposal
-        [kpolys_prop,logll_prop]=loglikelihood(type,data,rates,proposal(1:6),proposal(7:nparams),errtype);
+        [kpolys_prop,logll_prop]=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype);
         
         %Accept or reject proposal
         if logll_prop>logll_nt
@@ -203,8 +217,13 @@ function out=calckpolys(type,rates,params)
     kcaps=cellfun(@(x) arrayfun(@(z) z*params(1),x), rates.k_capbase,'UniformOutput',false);
     kdels=cellfun(@(x) arrayfun(@(z) z*params(2),x), rates.k_delbase,'UniformOutput',false);
     rcaps=cellfun(@(x) arrayfun(@(z) ((z)^params(4))*params(3),x), rates.r_capbase,'UniformOutput',false);
-    rdels=cellfun(@(x) arrayfun(@(z) z*params(5),x), rates.r_delbase,'UniformOutput',false);
-    krels=cellfun(@(x) arrayfun(@(z) z*params(6),x), rates.k_relbase,'UniformOutput',false);
+    if type=="4st"
+        rdels=cellfun(@(x) arrayfun(@(z) z*params(5),x), rates.r_delbase,'UniformOutput',false);
+        krels=cellfun(@(x) arrayfun(@(z) z*params(6),x), rates.k_relbase,'UniformOutput',false);
+    elseif type=="3st"
+        rdels=kcaps;
+        krels=kcaps;
+    end
     kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) arrayfun(@(kcap,kdel,rcap,rdel,krel)kpolymerization(type,kcap,kdel,rcap,rdel,krel),kcap,kdel,rcap,rdel,krel),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
 
     % sum up PRMs
