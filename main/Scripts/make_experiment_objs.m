@@ -76,8 +76,8 @@ Experiment1=Experiment1.add_data("BNI1P(pPB37)",9.617512,'double',errminus=1.170
 Experiment1=Experiment1.add_data("BNI1P(pPC37)",6.885804,'double',errminus=0.88888889,errplus=0.9105691,groups=["Fig 4a"]);
 Experiment1=Experiment1.add_data("BNI1P(pPD37)",2.70152246,'double',errminus=0.5203252,errplus=0.49864499,groups=["Fig 3","Fig 4a"]);
 Experiment1=Experiment1.add_data("BNI1P(pPD65)",2.471568,'double',errminus=0.33170574,errplus=0.33170573,groups=["Fig 3"]);
-%Experiment1=Experiment1.add_data("BNI1P(pPB18)",1.486034,'double',errminus=0.9907,errplus=1.0019,groups=["Fig 4c"]);
-%Experiment1=Experiment1.add_data("BNI1P(pPC18)",4.294227,'double',errminus=0.5773,errplus=0.6145,groups=["Fig 4c"]);
+Experiment1=Experiment1.add_data("BNI1P(pPB18)",1.486034,'double',errminus=0.9907,errplus=1.0019,groups=["Fig 4c"]);
+Experiment1=Experiment1.add_data("BNI1P(pPC18)",4.294227,'double',errminus=0.5773,errplus=0.6145,groups=["Fig 4c"]);
 
 Experiment1=Experiment1.add_data("BNI1P(pPD18)",8.17234102,'double',errminus=0.917030689999999,errplus=0.897556700000001,groups=["Fig 3 5"]);
 Experiment1=Experiment1.add_data("BNI1P(pPD28)",7.48941745,'double',errminus=1.0926777,errplus=1.11218982,groups=["Fig 3 5"]);

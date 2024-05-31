@@ -1,4 +1,4 @@
-function params_out=MCMCParamfit(Exp,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
+function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
 % 
     %   out = MCMCParamfit(Exp) 
     %   
@@ -11,6 +11,7 @@ function params_out=MCMCParamfit(Exp,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KS
 
     arguments
         Exp
+        exptype % 1= is an experiment, 2= is a struct with rates, data, and opts
         type
         errtype % 1= use separate sigma values, 2= divide each by SEM
         logtf % whether or not to have step sizes in log space
@@ -20,13 +21,28 @@ function params_out=MCMCParamfit(Exp,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KS
         KSCRITICAL =0.01
     end
 
+    disp("MCMCParamfit.m starting") 
+
     % set up place to store data
-    Exp.opts.update_results_folder
-    Exp.opts.resultsfolder=strcat("MCMC_",Exp.opts.resultsfolder);
-    mkdir (Exp.opts.resultsdir,Exp.opts.resultsfolder)
-    wkspc=fullfile(Exp.opts.resultsdir,Exp.opts.resultsfolder,"mcmc_results.mat");
-    
-    [data,rates.k_capbase,rates.k_delbase,rates.r_capbase,rates.r_delbase,rates.k_relbase]=readinExp(Exp);
+    if exptype==1
+        opts=Exp.opts;
+        out_struct=readinExp(Exp);
+        rates=out_struct.rates;
+        data=out_struct.data;
+        disp("Read in information from Experiment object")
+    elseif exptype==2
+        opts=Exp.opts;
+        rates=Exp.rates;
+        data=Exp.data;
+        disp("Loaded in pre-determined rates, data, and opts")
+    else
+        error("invalid exptype")
+    end
+
+    opts.update_results_folder
+    opts.resultsfolder=strcat("MCMC_",opts.resultsfolder);
+    mkdir (opts.resultsdir,opts.resultsfolder)
+    wkspc=fullfile(opts.resultsdir,opts.resultsfolder,"mcmc_results.mat");
     
     if errtype==1
         nsigma=length(unique(struct2table(data).type));
@@ -125,54 +141,6 @@ function params_out=MCMCParamfit(Exp,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KS
     end
     params_out=m.params_all;
     save(m,'params_out')
-end
-function [data,k_capbase,k_delbase,r_capbase,r_delbase,k_relbase]=readinExp(Exp)
-    % read in formin info 
-    ogtable=struct('k_cap',Exp.opts.k_cap,'k_del',Exp.opts.k_del,'r_cap',Exp.opts.r_cap,'r_del',Exp.opts.r_del,'k_rel',Exp.opts.k_rel);
-    Exp.opts.k_cap= 1;
-    Exp.opts.k_del=1; 
-    Exp.opts.r_cap=1; 
-    Exp.opts.r_del=1; 
-    Exp.opts.k_rel=1;
-
-    data=Exp.data;
-    L=length(data);
-
-    k_capbase=cell([L 1]);
-    k_delbase=cell([L 1]);
-    r_capbase=cell([L 1]);
-    r_delbase=cell([L 1]);
-    k_relbase=cell([L 1]);
-
-    for i=1:length(data)
-        formin=data(i).formin;
-        kcaps=FilType.empty(formin.PRMCount,0);
-        kdels=FilType.empty(formin.PRMCount,0);
-        rcaps=FilType.empty(formin.PRMCount,0);
-        rdels=FilType.empty(formin.PRMCount,0);
-        krels=FilType.empty(formin.PRMCount,0);
-        for j=1:formin.PRMCount
-            prm1=formin.PRMList(1,j);
-            kcaps(j)=prm1.kcap;
-            kdels(j)=prm1.kdel;
-            rcaps(j)=prm1.rcap;
-            rdels(j)=prm1.rdel;
-            krels(j)=prm1.krel;
-        end
-        k_capbase{i,1}=kcaps;
-        k_delbase{i,1}=kdels;
-        r_capbase{i,1}=rcaps;
-        r_delbase{i,1}=rdels;
-        k_relbase{i,1}=krels;
-    end
-    % get values with all parameters set to 1
-
-    % Return to original opts values 
-    Exp.opts.k_cap=ogtable.k_cap;
-    Exp.opts.k_del=ogtable.k_del;
-    Exp.opts.r_cap=ogtable.r_cap;
-    Exp.opts.r_del=ogtable.r_del;
-    Exp.opts.k_rel=ogtable.k_rel;
 end
 function [kpolys,logll]=loglikelihood(type,data,rates,params,sigma,errtype)
     kpolys=calckpolys(type,rates,params);    
