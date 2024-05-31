@@ -47,6 +47,7 @@ function out_struct=readinExp(Exp)
     Exp.opts.k_rel=ogtable.k_rel;
 
     out_struct.data=data;
+    out_struct.data = rmfield(out_struct.data, 'formin');
 
     rates.k_capbase=k_capbase;
     rates.k_delbase=k_delbase;

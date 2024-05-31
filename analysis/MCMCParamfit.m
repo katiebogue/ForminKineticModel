@@ -42,6 +42,7 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
     opts.update_results_folder
     opts.resultsfolder=strcat("MCMC_",opts.resultsfolder);
     mkdir (opts.resultsdir,opts.resultsfolder)
+    disp("created output directory")
     wkspc=fullfile(opts.resultsdir,opts.resultsfolder,"mcmc_results.mat");
     
     if errtype==1
@@ -70,11 +71,13 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
     proposals=zeros(nparams,1);
 
     nt=0;
-    params_all=zeros(NTMAX,nparams);
     save(wkspc,'-v7.3')
+    disp("saved workspace")
     m = matfile(wkspc,'Writable',true);
-    clear params_all
+    disp("created matfile")
     clear Exp
+    m.params_all=zeros(NTMAX,nparams);
+    disp("created params_all matrix")
     params_temp=zeros(NTCHECK,nparams);
 
    
@@ -82,6 +85,7 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
     last_nt=0;
     currentntcheck=NTCHECK;
     [kpolys_nt,logll_nt]=loglikelihood(type,data,rates,params(1:6),params(7:nparams),errtype);
+    disp("starting MCMC loop")
     while(nt<NTMAX)
         nt=nt+1;
         nt_temp=nt_temp+1;
