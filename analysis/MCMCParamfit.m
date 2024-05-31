@@ -11,7 +11,7 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
 
     arguments
         Exp
-        exptype % 1= is an experiment, 2= is a struct with rates, data, and opts
+        exptype % 1= is an experiment, 2= is a struct with rates, data, and resultsfolder and resultsdir
         type
         errtype % 1= use separate sigma values, 2= divide each by SEM
         logtf % whether or not to have step sizes in log space
@@ -29,18 +29,21 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
         out_struct=readinExp(Exp);
         rates=out_struct.rates;
         data=out_struct.data;
+        opts.update_results_folder
+        opts.resultsfolder=strcat("MCMC_",opts.resultsfolder);
+        clear Exp
         disp("Read in information from Experiment object")
     elseif exptype==2
-        opts=Exp.opts;
+        opts.resultsdir=Exp.resultsdir;
+        opts.resultsfolder=strcat("MCMC_",Exp.resultsfolder);
         rates=Exp.rates;
         data=Exp.data;
+        clear Exp
         disp("Loaded in pre-determined rates, data, and opts")
     else
         error("invalid exptype")
     end
 
-    opts.update_results_folder
-    opts.resultsfolder=strcat("MCMC_",opts.resultsfolder);
     mkdir (opts.resultsdir,opts.resultsfolder)
     disp("created output directory")
     wkspc=fullfile(opts.resultsdir,opts.resultsfolder,"mcmc_results.mat");
@@ -71,12 +74,12 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
     proposals=zeros(nparams,1);
 
     nt=0;
+    disp("saving workspace...")
     save(wkspc,'-v7.3')
     disp("saved workspace")
     m = matfile(wkspc,'Writable',true);
     disp("created matfile")
-    clear Exp
-    m.params_all=zeros(NTMAX,nparams);
+    m.params_all(NTMAX,nparams)=0;
     disp("created params_all matrix")
     params_temp=zeros(NTCHECK,nparams);
 
@@ -126,6 +129,7 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
             last_nt=nt;
             nt_temp=0;
             params_temp(:)=0;
+            fprintf('appended params_all at nt: %d\n',nt)
         end
 
         if nt==3*currentntcheck
@@ -143,7 +147,7 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
             end
         end
     end
-    params_out=m.params_all;
+    params_out=0;
     save(m,'params_out')
 end
 function [kpolys,logll]=loglikelihood(type,data,rates,params,sigma,errtype)
