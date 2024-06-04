@@ -1,4 +1,4 @@
-function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
+function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
 % 
     %   out = MCMCParamfit(Exp) 
     %   
@@ -20,6 +20,8 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
         NTMAX =1e8
         KSCRITICAL =0.01
     end
+
+    NBINS = 500;
 
     disp("MCMCParamfit.m starting") 
 
@@ -64,9 +66,10 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
 
     % Pick initial guess 
     rng("shuffle")
-    params=randi([1 10000],1,nparams);
+    params=randi([1 1000],1,nparams);
     params(nkpolyparams+1:nparams)=rand(1,nparams-nkpolyparams);
-    params(4)=randi([1 5],1,1);
+    params(4)=1;
+    %params(4)=randi([1 5],1,1);
     if logtf
         dx=ones(nparams,1)./100;
         dx(1:3)=[5,5,5];
@@ -98,7 +101,9 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
     nt_temp=0;
     last_nt=0;
     currentntcheck=NTCHECK;
-    [kpolys_nt,logll_nt]=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype);
+    paramHistCounts = zeros(n_params,NBINS);
+    paramHistCountsPrevious = zeros(n_params,NBINS);
+    logll_nt=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype);
     disp("starting MCMC loop")
     while(nt<NTMAX)
         nt=nt+1;
@@ -107,7 +112,9 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
         if (nt<NTCHECK)&&(rem(nt,NTADAPT)==0)
             p_accept=accepts./proposals;
             p_accept(p_accept==0)=0.01;
-            dx=dx.*p_accept/0.44;
+            p_accept(proposals==0)=0.44;
+            in=(dx>0.58 || dx<0.3);
+            dx(in)=dx(in).*(p_accept(in)./0.44);
             m.dx=dx;
         end
 
@@ -119,7 +126,7 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
         proposal(proposal<0)=eps(0);
 
         %calculate logll of proposal
-        [kpolys_prop,logll_prop]=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype);
+        logll_prop=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype);
         
         %Accept or reject proposal
         if logll_prop>logll_nt
@@ -128,6 +135,8 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
             logll_nt=logll_prop;
             %kpolys_nt=kpolys_prop;
             accepts(index)=accepts(index)+1;
+            m.minlogll=logll_nt;
+            m.minlogll_params=params;
         elseif rand < exp(logll_prop-logll_nt)
             % Boltzmann test, Accept 
             params=proposal;
@@ -146,25 +155,57 @@ function params_out=MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,
             fprintf('appended params_all at nt: %d\n',nt)
         end
 
+        if nt==NTCHECK
+            binEdges=zeros(nparams,1);
+            for i=1:nparams
+                [Y,binEdges(i,1)]=discretize(params_temp(:,i),NBINS);
+            end
+            clear Y
+        end
+        if nt<=currentntcheck
+        elseif nt<=2*currentntcheck
+            for i=1:nparams
+                index=discretize(params(i),binEdges(i));
+                paramHistCountsPrevious(i,index)=paramHistCountsPrevious(i,index)+1;
+            end
+            disp('Updated bins for 2nd segment')
+        elseif nt<=3*currentntcheck
+            for i=1:nparams
+                index=discretize(params(i),binEdges(i));
+                paramHistCounts(i,index)=paramHistCounts(i,index)+1;
+            end
+            disp('Updated bins for 3rd segment')
+        end
+
         if nt==3*currentntcheck
-            ks=kstest2(m.params_all(currentntcheck:2*currentntcheck,3),m.params_all(2*currentntcheck:3*currentntcheck,3),'Alpha',KSCRITICAL); 
-            if ~ks
-                params_out=m.params_all(currentntcheck:3*currentntcheck,:);
-                m.params_out=params_out;
+            disp('Begining KS test')
+            ks=zeros(nparams,1);
+            for i=1:nparams
+                [ks(i),p,ks2stat]=kstest2(paramHistCountsPrevious(i,:)./currentntcheck,paramHistCounts(i,:)./currentntcheck,'Alpha',KSCRITICAL); 
+                fprintf('%d ks: %d p: %d ks2stat: %d\n',i,ks(i),p,ks2stat)
+            end
+            %ks=kstest2(m.params_all(currentntcheck:2*currentntcheck,3),m.params_all(2*currentntcheck:3*currentntcheck,3),'Alpha',KSCRITICAL); 
+            if ~all(ks)
+                disp('KS test successful')
+                m.params_out=m.params_all(currentntcheck:3*currentntcheck,:);
+                visualizePosteriors(opts.resultsdir,1)
                 return
             else
+                disp('KS test unsuccessful')
                 m.proposals=proposals;
                 m.accepts=accepts;
                 currentntcheck=currentntcheck*9;
                 m.currentntcheck=currentntcheck;
+                paramHistCounts = zeros(n_params,NBINS);
+                paramHistCountsPrevious = zeros(n_params,NBINS);
                 fprintf('nt: %d\n',nt)
             end
         end
     end
-    params_out=0;
-    save(m,'params_out')
+    m.params_out=0;
+    visualizePosteriors(opts.resultsdir,1)
 end
-function [kpolys,logll]=loglikelihood(type,data,rates,params,sigma,errtype)
+function logll=loglikelihood(type,data,rates,params,sigma,errtype)
     kpolys=calckpolys(type,rates,params);    
     
     data=struct2table(data);
