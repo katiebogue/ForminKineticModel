@@ -10,13 +10,14 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
 
     m = matfile(fullfile(foldername,filename),'Writable',true);
     
-    if m.type=="3st"
+    initialparams=m.params_all(1,:);
+
+    if m.type=="3st" && length(initialparams)<7
         parameter_names=["k_{cap}","k_{del}","r_{cap}","r_{cap} exp"];
-    elseif m.type=="4st"
+    else
         parameter_names=["k_{cap}","k_{del}","r_{cap}","r_{cap} exp","r_{del}","k_{rel}"];
     end
-    
-    initialparams=m.params_all(1,:);
+
     n_params=m.nparams;
     for i=1:m.nsigma
         parameter_names=[parameter_names,strcat("sigma",int2str(i))];
@@ -92,26 +93,29 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
 		    for j = 1:n_params
 			    if i > j
 				    nexttile(p); hold on;
-                    [Ncount,BinCentre] = hist3([m.parameters_all(1:end,i) m.parameters_all(1:end,j)],[NBINS NBINS]);
-                    BinCentre;
-                    if length(unique(BinCentre{1,1}))==length(Ncount) && length(unique(BinCentre{1,2}))==length(Ncount)
-				        [c,h]=contourf(BinCentre{1,2},BinCentre{1,1},Ncount,NCON,'linestyle','none');
+                    if max(m.parameters_all(1:end,j))==Inf || max(m.parameters_all(1:end,i))==Inf || min(m.parameters_all(1:end,j))==-Inf || min(m.parameters_all(1:end,i))==-Inf
+                    else
+                        [Ncount,BinCentre] = hist3([m.parameters_all(1:end,i) m.parameters_all(1:end,j)],[NBINS NBINS]);
+                        %BinCentre;
+                        if length(unique(BinCentre{1,1}))==length(Ncount) && length(unique(BinCentre{1,2}))==length(Ncount)
+				            [c,h]=contourf(BinCentre{1,2},BinCentre{1,1},Ncount,NCON,'linestyle','none');
+                        end
+                        plot(modeHist(j),modeHist(i),'*','Color',[140, 0, 186]./255,'MarkerSize',8);
+				        colorbar('off');%colorbar;grid off;
+				        h1=gca;set(h1,'FontName',fname,'FontSize',fsize);
+				        if i ~= n_params
+					        set(gca,'XTickLabel',[])
+				        end
+				        if j ~= 1
+					        set(gca,'YTickLabel',[])
+				        end
+				        if i == n_params
+					        xlabel(parameter_names(j),'FontName',fname,'FontSize',fsize);
+				        end
+				        if j ==1
+					        ylabel(parameter_names(i),'FontName',fname,'FontSize',fsize)
+                        end
                     end
-                    plot(modeHist(j),modeHist(i),'*','Color',[140, 0, 186]./255,'MarkerSize',8);
-				    colorbar('off');%colorbar;grid off;
-				    h1=gca;set(h1,'FontName',fname,'FontSize',fsize);
-				    if i ~= n_params
-					    set(gca,'XTickLabel',[])
-				    end
-				    if j ~= 1
-					    set(gca,'YTickLabel',[])
-				    end
-				    if i == n_params
-					    xlabel(parameter_names(j),'FontName',fname,'FontSize',fsize);
-				    end
-				    if j ==1
-					    ylabel(parameter_names(i),'FontName',fname,'FontSize',fsize)
-				    end
 			    elseif i == j
 				    nexttile(p); hold on;
 				    title(parameter_names(i))

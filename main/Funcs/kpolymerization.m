@@ -29,9 +29,17 @@ end
     if type=="capture"
         output=kcap;
     elseif type=="3st"
-        output=1/((1/kdel) + ((kdel + rcap)/(kdel*kcap)));
+        if class(kcap)=="FilType" || class(kdel)=="FilType" || class(rcap)=="FilType"
+            output=1/((1/kdel) + ((kdel + rcap)/(kdel*kcap)));
+        else
+            output=1./((1./kdel) + ((kdel + rcap)./(kdel.*kcap)));
+        end
     elseif type=="4st"
-        output=1/((1/krel) + ((rdel + krel)/(kdel * krel)) + (((rcap * rdel) + (rcap * krel) + (kdel * krel))/(kcap * kdel * krel)));
+        if class(kcap)=="FilType" || class(kdel)=="FilType" || class(rcap)=="FilType" || class(krel)=="FilType" || class(rdel)=="FilType" 
+            output=1/((1/krel) + ((rdel + krel)/(kdel * krel)) + (((rcap * rdel) + (rcap * krel) + (kdel * krel))/(kcap * kdel * krel)));
+        else
+            output=1./((1./krel) + ((rdel + krel)./(kdel .* krel)) + (((rcap .* rdel) + (rcap .* krel) + (kdel .* krel))./(kcap .* kdel .* krel)));
+        end
         %sum(1./((1./r_PF_rev)+((r_paf_rev+r_PF_rev)./((k_pab.*(1-o.p_occ2a_0(:)).*(1.0e33.*o.p_r2a(:)/(27*6.022e23))).*r_PF_rev))+((((k_paf_rev.*exp(-1.*pp_length_vec)).*r_paf_rev)+((k_paf_rev.*exp(-1.*pp_length_vec)).*r_PF_rev)+((k_pab.*(1-o.p_occ2a_0(:)).*(1.0e33.*o.p_r2a(:)/(27*6.022e23))).*r_PF_rev))./((k_paf.*c_PA.*(1-o.p_occ2a(:))).*(k_pab.*(1-o.p_occ2a_0(:)).*(1.0e33.*o.p_r2a(:)/(27*6.022e23))).*r_PF_rev))))+sum(1./((1./r_PF_rev)+((r_paf_rev+r_PF_rev)./((k_pab.*(1-o.p_occ2b_0(:)).*(1.0e33.*o.p_r2b(:)/(27*6.022e23))).*r_PF_rev))+((((k_paf_rev.*exp(-1.*pp_length_vec)).*r_paf_rev)+((k_paf_rev.*exp(-1.*pp_length_vec)).*r_PF_rev)+((k_pab.*(1-o.p_occ2b_0(:)).*(1.0e33.*o.p_r2b(:)/(27*6.022e23))).*r_PF_rev))./((k_paf.*c_PA.*(1-o.p_occ2b(:))).*(k_pab.*(1-o.p_occ2b_0(:)).*(1.0e33.*o.p_r2b(:)/(27*6.022e23))).*r_PF_rev))))
     end
 end

@@ -193,5 +193,19 @@ classdef FilType
             obj.double=obj.double.a+obj.double.b;
             obj.dimer=obj.dimer.a+obj.dimer.b;
         end
+
+        function out=fil2array(obj)
+            if class(obj.dimer)=="Filament"
+                dim=[obj.dimer.a,obj.dimer.b];
+            else
+                dim=obj.dimer;
+            end
+            if class(obj.double)=="Filament"
+                dob=[obj.double.a,obj.double.b];
+            else
+                dob=obj.double;
+            end
+            out=[obj.single,dob,dim];
+        end
     end
 end

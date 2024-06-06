@@ -17,7 +17,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         logtf % whether or not to have step sizes in log space
         NTCHECK = 1000
         NTADAPT =50
-        NTMAX =1e8
+        NTMAX =10000
         KSCRITICAL =0.01
     end
 
@@ -30,7 +30,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         opts=Exp.opts;
         out_struct=readinExp(Exp);
         rates=out_struct.rates;
-        data=out_struct.data;
+        datatab=out_struct.data;
         opts.update_results_folder
         opts.resultsfolder=strcat("MCMC_",opts.resultsfolder);
         clear Exp
@@ -39,19 +39,21 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         opts.resultsdir=Exp.resultsdir;
         opts.resultsfolder=strcat("MCMC_",Exp.resultsfolder);
         rates=Exp.rates;
-        data=Exp.data;
+        datatab=Exp.data;
         clear Exp
         disp("Loaded in pre-determined rates, data, and opts")
     else
         error("invalid exptype")
     end
 
+    data=struct2table(datatab);
+
     mkdir (opts.resultsdir,opts.resultsfolder)
     disp("created output directory")
     wkspc=fullfile(opts.resultsdir,opts.resultsfolder,"mcmc_results.mat");
     
     if errtype==1
-        nsigma=length(unique(struct2table(data).type));
+        nsigma=length(unique(data.type));
     elseif errtype==2
         nsigma=1;
     else
@@ -135,8 +137,8 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
             logll_nt=logll_prop;
             %kpolys_nt=kpolys_prop;
             accepts(index)=accepts(index)+1;
-            m.minlogll=logll_nt;
-            m.minlogll_params=params;
+            minlogll=logll_nt;
+            minlogll_params=params;
         elseif rand < exp(logll_prop-logll_nt)
             % Boltzmann test, Accept 
             params=proposal;
@@ -149,6 +151,8 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         if nt_temp==NTCHECK
             m.nt=nt;
             m.params_all(last_nt+1:nt,:)=params_temp;
+            m.minlogll=minlogll;
+            m.minlogll_params=minlogll_params;
             last_nt=nt;
             nt_temp=0;
             params_temp(:)=0;
@@ -224,19 +228,18 @@ end
 function logll=loglikelihood(type,data,rates,params,sigma,errtype)
     kpolys=calckpolys(type,rates,params);    
     
-    data=struct2table(data);
     expdata=data.value;
 
     simdata=zeros(size(expdata));
     for i=1:length(expdata)
         if data.type(i)=="double"
-            simdata(i)=kpolys.double(i);
+            simdata(i)=kpolys{i}(1,2);
         elseif data.type(i)=="ratio"
-            simdata(i)=kpolys.dimer(i)/kpolys.double(i);
+            simdata(i)=kpolys{i}(1,3)/kpolys{i}(1,2);
         elseif data.type(i)=="dimer"
-            simdata(i)=kpolys.dimer(i);
+            simdata(i)=kpolys{i}(1,3);
         elseif data.type(i)=="single"
-            simdata(i)=kpolys.single(i);
+            simdata(i)=kpolys{i}(1,1);
         else
             error('Error. \nNo valid experimental data type.')
         end
@@ -267,39 +270,26 @@ function logll=loglikelihood(type,data,rates,params,sigma,errtype)
     end
 end
 
-function out=calckpolys(type,rates,params)
+function kpolys=calckpolys(type,rates,params)
     % calulcates log likelihood values for input parameters
 
     % calculate per PRM rates
-    kcaps=cellfun(@(x) arrayfun(@(z) z*params(1),x), rates.k_capbase,'UniformOutput',false);
-    kdels=cellfun(@(x) arrayfun(@(z) z*params(2),x), rates.k_delbase,'UniformOutput',false);
-    rcaps=cellfun(@(x) arrayfun(@(z) ((z)^params(4))*params(3),x), rates.r_capbase,'UniformOutput',false);
+    kcaps=cellfun(@(x) x.*params(1), rates.k_capbase,'UniformOutput',false);
+    kdels=cellfun(@(x) x.*params(2), rates.k_delbase,'UniformOutput',false);
+    rcaps=cellfun(@(x) ((x).^params(4)).*params(3), rates.r_capbase,'UniformOutput',false);
     if type=="4st"
-        rdels=cellfun(@(x) arrayfun(@(z) z*params(5),x), rates.r_delbase,'UniformOutput',false);
-        krels=cellfun(@(x) arrayfun(@(z) z*params(6),x), rates.k_relbase,'UniformOutput',false);
+        rdels=cellfun(@(x) x.*params(5), rates.r_delbase,'UniformOutput',false);
+        krels=cellfun(@(x) x.*params(6), rates.k_relbase,'UniformOutput',false);
     elseif type=="3st"
         rdels=kcaps;
         krels=kcaps;
     end
-    kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) arrayfun(@(kcap,kdel,rcap,rdel,krel)kpolymerization(type,kcap,kdel,rcap,rdel,krel),kcap,kdel,rcap,rdel,krel),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+    kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) kpolymerization(type,kcap,kdel,rcap,rdel,krel),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
 
-    % sum up PRMs
     for i=1:length(kpolys)
-        if length(kpolys{i})>1
-            curkpoly=kpolys{i};
-            kpolys{i}=curkpoly(1);
-            for j=2:length(curkpoly)
-                kpolys{i}=kpolys{i}+curkpoly(j);
-            end
-        end
+        PRMsum=sum(kpolys{i},1); % sum up PRMs
+        kpolys{i}=[PRMsum(1),sum(PRMsum(2:3)),sum(PRMsum(4:5))]; % Sum up filaments
     end
-
-    % Sum up filaments
-    kpolys=cellfun(@(obj) obj.add_fils,kpolys);
-
-    out.single=arrayfun(@(x) x.single,kpolys);
-    out.double=arrayfun(@(x) x.double,kpolys);
-    out.dimer=arrayfun(@(x) x.dimer,kpolys);
 end
 function [proposals,i]=generateproposal(params,dx,logtf)
     i=randi([1 length(params)]);

@@ -18,18 +18,38 @@ function out_struct=readinExp(Exp)
 
     for i=1:length(data)
         formin=data(i).formin;
-        kcaps=FilType.empty(formin.PRMCount,0);
-        kdels=FilType.empty(formin.PRMCount,0);
-        rcaps=FilType.empty(formin.PRMCount,0);
-        rdels=FilType.empty(formin.PRMCount,0);
-        krels=FilType.empty(formin.PRMCount,0);
+        kcaps=zeros(formin.PRMCount,5);
+        kdels=zeros(formin.PRMCount,5);
+        rcaps=zeros(formin.PRMCount,5);
+        rdels=zeros(formin.PRMCount,5);
+        krels=zeros(formin.PRMCount,5);
         for j=1:formin.PRMCount
             prm1=formin.PRMList(1,j);
-            kcaps(j)=prm1.kcap;
-            kdels(j)=prm1.kdel;
-            rcaps(j)=prm1.rcap;
-            rdels(j)=prm1.rdel;
-            krels(j)=prm1.krel;
+            if class(prm1.kcap)=="FilType"
+                kcaps(j,:)=prm1.kcap.fil2array;
+            else
+                kcaps(j,:)=prm1.kcap;
+            end
+            if class(prm1.kdel)=="FilType"
+                kdels(j,:)=prm1.kdel.fil2array;
+            else
+                kdels(j,:)=prm1.kdel;
+            end
+            if class(prm1.rcap)=="FilType"
+                rcaps(j,:)=prm1.rcap.fil2array;
+            else
+                rcaps(j,:)=prm1.rcap;
+            end
+            if class(prm1.rdel)=="FilType"
+                rdels(j,:)=prm1.rdel.fil2array;
+            else
+                rdels(j,:)=prm1.rdel;
+            end
+            if class(prm1.krel)=="FilType"
+                krels(j,:)=prm1.krel.fil2array;
+            else
+                krels(j,:)=prm1.krel;
+            end
         end
         k_capbase{i,1}=kcaps;
         k_delbase{i,1}=kdels;
