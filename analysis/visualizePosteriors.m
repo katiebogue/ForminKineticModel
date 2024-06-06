@@ -197,7 +197,8 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
 
         for i=1:n_params
             subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p);
-            scatter(1:maxrow,m.params_all(1:maxrow,i));
+            %scatter(1:maxrow,m.params_all(1:maxrow,i));
+            plot(m.params_all(1:maxrow,i));
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
             ylabel(parameter_names(i),'FontName',fname,'FontSize',fsize);
             p=p+1;

@@ -101,8 +101,8 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     nt_temp=0;
     last_nt=0;
     currentntcheck=NTCHECK;
-    paramHistCounts = zeros(n_params,NBINS);
-    paramHistCountsPrevious = zeros(n_params,NBINS);
+    paramHistCounts = zeros(nparams,NBINS);
+    paramHistCountsPrevious = zeros(nparams,NBINS);
     logll_nt=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype);
     disp("starting MCMC loop")
     while(nt<NTMAX)
@@ -113,7 +113,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
             p_accept=accepts./proposals;
             p_accept(p_accept==0)=0.01;
             p_accept(proposals==0)=0.44;
-            in=(dx>0.58 || dx<0.3);
+            in=(dx>0.58 | dx<0.3);
             dx(in)=dx(in).*(p_accept(in)./0.44);
             m.dx=dx;
         end
@@ -156,25 +156,39 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         end
 
         if nt==NTCHECK
-            binEdges=zeros(nparams,1);
+            binEdges=zeros(nparams,NBINS+1);
             for i=1:nparams
-                [Y,binEdges(i,1)]=discretize(params_temp(:,i),NBINS);
+                %maxp=max(params_temp(:,i));
+                %minp=min(params_temp(:,i));
+                [Y,binEdges(i,:)]=discretize(params_temp(:,i),NBINS);
             end
             clear Y
         end
         if nt<=currentntcheck
         elseif nt<=2*currentntcheck
             for i=1:nparams
-                index=discretize(params(i),binEdges(i));
+                if params(i)<binEdges(i,1)
+                    index=1;
+                elseif params(i)>binEdges(i,NBINS+1)
+                    index=NBINS;
+                else
+                    index=discretize(params(i),binEdges(i,:));
+                end
                 paramHistCountsPrevious(i,index)=paramHistCountsPrevious(i,index)+1;
             end
-            disp('Updated bins for 2nd segment')
+            %disp('Updated bins for 2nd segment')
         elseif nt<=3*currentntcheck
             for i=1:nparams
-                index=discretize(params(i),binEdges(i));
+                if params(i)<binEdges(i,1)
+                    index=1;
+                elseif params(i)>binEdges(i,NBINS+1)
+                    index=NBINS;
+                else
+                    index=discretize(params(i),binEdges(i,:));
+                end
                 paramHistCounts(i,index)=paramHistCounts(i,index)+1;
             end
-            disp('Updated bins for 3rd segment')
+            %disp('Updated bins for 3rd segment')
         end
 
         if nt==3*currentntcheck
@@ -187,8 +201,10 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
             %ks=kstest2(m.params_all(currentntcheck:2*currentntcheck,3),m.params_all(2*currentntcheck:3*currentntcheck,3),'Alpha',KSCRITICAL); 
             if ~all(ks)
                 disp('KS test successful')
+                m.proposals=proposals;
+                m.accepts=accepts;
                 m.params_out=m.params_all(currentntcheck:3*currentntcheck,:);
-                visualizePosteriors(opts.resultsdir,1)
+                %visualizePosteriors(opts.resultsdir,1)
                 return
             else
                 disp('KS test unsuccessful')
@@ -203,7 +219,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         end
     end
     m.params_out=0;
-    visualizePosteriors(opts.resultsdir,1)
+    %visualizePosteriors(opts.resultsdir,1)
 end
 function logll=loglikelihood(type,data,rates,params,sigma,errtype)
     kpolys=calckpolys(type,rates,params);    
