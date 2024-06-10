@@ -23,7 +23,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
 
     NBINS = 300;
     PARAMMAX = 20; % in log-space
-    PARAMMIN = -10; % in log-space
+    PARAMMIN = -5; % in log-space
 
     disp("MCMCParamfit.m starting") 
 
@@ -106,8 +106,10 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     m.params_all(NTMAX,nparams)=0;
     m.logparams_all(NTMAX,nparams)=0;
     m.paccept_matrix(ceil(NTMAX/NTCHECK)+1,nparams+1)=0;
-    m.paramHistCounts_matrices=zeros(nparams,NBINS,ceil(NTMAX/NTCHECK));
-    m.paramHistCounts_matrices_nts=zeros(ceil(NTMAX/NTCHECK),1);
+    disp("created paccept_matrix")
+    m.paramHistCounts_matrices(nparams,NBINS,ceil(NTMAX/NTCHECK))=0;
+    disp("created paramHistCounts_matrices")
+    m.paramHistCounts_matrices_nts(ceil(NTMAX/NTCHECK),1)=0;
     m.ksvals(ceil(NTMAX/NTCHECK),nparams)=0;
     disp("created matfile matrices")
     params_temp=zeros(NTCHECK,nparams);
@@ -139,8 +141,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
             disp(p_accept)
             p_accept(p_accept==0)=0.01;
             p_accept(proposals==0)=0.44;
-            in=(dx>0.6 | dx<0.3);
-
+            in=(p_accept>0.6 | p_accept<0.3);
             disp("previous step sizes: ")
             disp(dx)
             dx(in)=dx(in).*(p_accept(in)./0.44);
