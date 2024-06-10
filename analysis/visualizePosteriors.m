@@ -1,4 +1,4 @@
-function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
+function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
     
     if ~exist('savefigfolder','var')
         mkdir(foldername,"figures")
@@ -39,12 +39,12 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
                end
                i=i-1;
             end
-            m.parameters_all=m.params_all(ceil(i\3):i,:);
+            m.parameters_all=log10(m.params_all(ceil(i\3):i,:));
         else
-            m.parameters_all=m.params_all(ceil(len\3):len,:);
+            m.parameters_all=log10(m.params_all(ceil(len\3):len,:));
         end
     else
-        m.parameters_all=m.params_out;
+        m.parameters_all=log10(m.params_out);
     end
     
     % These two options (and uncommenting lines 45 or 46) allows for lines
@@ -59,8 +59,8 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
     figure('units','centimeters','position',[5,5,25,20],'Name','Parameter histograms');hold on;
     for i=1:n_params
         subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p); hold on;
-        histplot = histogram(m.parameters_all(1:end,i),NBINS);
-        xlabel(parameter_names(i),'FontName',fname,'FontSize',fsize);
+        histplot = histogram(m.parameters_all(:,i),NBINS);
+        xlabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
         ylabel('Frequency','FontName',fname,'FontSize',fsize);
     
     
@@ -86,7 +86,7 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
     
     % Parameter correlations
     % 2D plots
-    p=1;	NBINS=20;	NCON=300;	nX=100;
+    p=1;	NBINS=30;	NCON=300;	nX=100;
 	    figure('units','centimeters','position',[5,5,35,30],'Name','Particle clouds');hold on;
         tiledlayout(n_params,n_params,'TileSpacing','tight','Padding','none')
 	    for i= 1:n_params
@@ -110,10 +110,10 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
 					        set(gca,'YTickLabel',[])
 				        end
 				        if i == n_params
-					        xlabel(parameter_names(j),'FontName',fname,'FontSize',fsize);
+					        xlabel(strcat("log_{10} ", parameter_names(j)),'FontName',fname,'FontSize',fsize);
 				        end
-				        if j ==1
-					        ylabel(parameter_names(i),'FontName',fname,'FontSize',fsize)
+				        if j == 1
+					        ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize)
                         end
                     end
 			    elseif i == j
@@ -122,21 +122,21 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
 				    %DX=linspace(min(m.parameters_all(:,i)),max(m.parameters_all(:,i)),length(m.parameters_all)/10);
 				    %DY = density(m.parameters_all(:,i),DX);
 				    %plot(DX,DY,'linewidth',lw);hold on;
-                    histogram(m.parameters_all(ceil(end/2):end,i),NBINS);
+                    histogram(m.parameters_all(:,i),NBINS);
                     plot(modeHist(i),0,'*','Color',[140, 0, 186]./255,'MarkerSize',8);
-                    if(i ~= n_params && j ~= n_params)
-                        plot(initialparams(i),0,'sr','MarkerSize',8); % plot starting point of simulation
-                        if(exist('p_truth','var'))
-                            plot(p_truth(i),0,'og','MarkerSize',8); % plot truth
-                        end
-                    end
+                    % if(i ~= n_params && j ~= n_params)
+                    %     plot(initialparams(i),0,'sr','MarkerSize',8); % plot starting point of simulation
+                    %     if(exist('p_truth','var'))
+                    %         plot(p_truth(i),0,'og','MarkerSize',8); % plot truth
+                    %     end
+                    % end
 				    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 				    %plot(bestParams(i).*ones(1,nX),linspace(0,max(DY),nX),'.-','linewidth',lw)
 				    %plot(modeParams(i).*ones(1,nX),linspace(0,max(DY),nX),'.-','linewidth',lw)
 				    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 				    h1=gca;set(h1,'FontName',fname,'FontSize',fsize);grid on;
 				    if i ==n_params
-					    xlabel(parameter_names(i),'FontName',fname,'FontSize',fsize);
+					    xlabel(strcat("log_{10} ",parameter_names(i)),'FontName',fname,'FontSize',fsize);
 				    end
 				    if j ==1
 					    ylabel('Prob. Density','FontName',fname,'FontSize',fsize);
@@ -163,7 +163,7 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
             saveas(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled.eps'),'epsc');
         end
 
-        % Parameter VS iteration
+        % Parameter VS first 3*NTCHECK iteration
         p = 1;
         figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs first 3*NTCHECK iterations');hold on;
         for i=1:n_params
@@ -176,6 +176,21 @@ function modeHist = visualizePosteriors(foldername,saveTF,savefigfolder,filename
         if(saveTF)
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.fig'),'fig');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.eps'),'epsc');
+        end
+
+        % Parameter VS posterior iterations
+        p = 1;
+        figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs posterior iterations');hold on;
+        for i=1:n_params
+            subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p);
+            plot(m.parameters_all(:,i));
+            xlabel('Iteration','FontName',fname,'FontSize',fsize);
+            ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
+            p=p+1;
+        end
+        if(saveTF)
+            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.fig'),'fig');
+            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.eps'),'epsc');
         end
 
 
