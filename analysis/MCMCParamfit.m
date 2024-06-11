@@ -21,7 +21,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         KSCRITICAL =0.01
     end
 
-    NBINS = 300;
+    NBINS = 200;
     PARAMMAX = 20; % in log-space
     PARAMMIN = -5; % in log-space
 
@@ -248,6 +248,8 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         end
 
         if nt==3*currentntcheck
+            fprintf('nt: %d\n',nt)
+            fprintf('currentntcheck: %d\n',currentntcheck)
             m.paramHistCounts_matrices_nts(HistCountIndex,1)=currentntcheck*2;
             m.paramHistCounts_matrices_nts(HistCountIndex+1,1)=currentntcheck*3;
             m.paramHistCounts_matrices(:,:,HistCountIndex)=paramHistCountsPrevious;
@@ -286,8 +288,9 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
                 disp('KS test unsuccessful')
                 m.proposals=proposals;
                 m.accepts=accepts;
-                currentntcheck=currentntcheck*9;
+                currentntcheck=currentntcheck*3;
                 m.currentntcheck=currentntcheck;
+                fprintf('new currentntcheck: %d\n',currentntcheck)
                 paramHistCounts = zeros(nparams,NBINS);
                 paramHistCountsPrevious = zeros(nparams,NBINS);
                 fprintf('nt: %d\n',nt)
