@@ -1,5 +1,7 @@
-function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
+function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     
+    plotecdfTF = 0; % dont make the ecdf plots (causes MATLAB to crash)
+
     if ~exist('savefigfolder','var')
         mkdir(foldername,"figures")
         savefigfolder=fullfile(foldername,"figures");
@@ -8,9 +10,11 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
         filename='mcmc_results.mat';
     end
 
+    updateMCMCoutput(fullfile(foldername,filename));
+
     m = matfile(fullfile(foldername,filename),'Writable',true);
-    
-    initialparams=m.params_all(1,:);
+
+    initialparams=m.params_all_trun(1,:);
 
     if m.type=="3st" && length(initialparams)<7
         parameter_names=["k_{cap}","k_{del}","r_{cap}","r_{cap} exp"];
@@ -23,40 +27,13 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
         parameter_names=[parameter_names,strcat("sigma",int2str(i))];
     end
 
-    if isempty(who(m,'params_out'))||length(m.params_out)==1
-        len=size(m,'params_all',1);
-        if all(m.params_all(len,:)==0)
-            i=m.nt;
-            if all(m.params_all(i,:)==0)
-               i=i-1;
-               while i>0 && all(m.params_all(i,:)==0)
-                   i=i-1;
-               end
-            else
-               i=i+1;
-               while i<=len && ~all(m.params_all(i,:)==0)
-                   i=i+1;
-               end
-               i=i-1;
-            end
-            m.parameters_all=log10(m.params_all(ceil(i\3):i,:));
-        else
-            m.parameters_all=log10(m.params_all(ceil(len\3):len,:));
-        end
-    else
-        m.parameters_all=log10(m.params_out);
-    end
-    
-    % These two options (and uncommenting lines 45 or 46) allows for lines
-    % where bestPart or modePart, respectively
-    %load(strcat('bestPart_vector_POP',T))
-    %load(strcat('modePart_vector_POP',T))
     
     fname='Dotum';	fsize = 8;	lw = 3;
     
     % Parameter histograms
     p = 1; NBINS=30;
     figure('units','centimeters','position',[5,5,25,20],'Name','Parameter histograms');hold on;
+    BinEdges=zeros(NBINS+1,n_params);
     for i=1:n_params
         subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p); hold on;
         histplot = histogram(m.parameters_all(:,i),NBINS);
@@ -65,76 +42,60 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
     
     
         % Find modes of histograms
+        BinEdges(:,i)=histplot.BinEdges;
         [maxVal, maxInd] = max(histplot.Values);
         modeHist(i) = histplot.BinEdges(maxInd)+0.5*histplot.BinWidth;
-    
-    %    plot(modeHist(i),0,'*','Color',[140, 0, 186]./255,'MarkerSize',8);
-    %     if(i ~= n_params)
-    % 			plot(initialparams(i),0,'sr','MarkerSize',8); % plot starting point of simulation
-    % 			if(exist('p_truth','var'))
-    % 				plot(p_truth(i),0,'og','MarkerSize',8); % plot truth
-    % 			end
-    %     end
     
         p=p+1;
     end
     
     if(saveTF)
-        saveas(gcf,fullfile(savefigfolder,'ParameterHistograms.fig'),'fig');
+        %saveas(gcf,fullfile(savefigfolder,'ParameterHistograms.fig'),'fig');
         saveas(gcf,fullfile(savefigfolder,'ParameterHistograms.eps'),'epsc');
+        saveas(gcf,fullfile(savefigfolder,'ParameterHistograms.png'),'png');
     end
     
     % Parameter correlations
     % 2D plots
-    p=1;	NBINS=30;	NCON=300;	nX=100;
+    p=1;	NCON=300;	nX=100;
+    containsInf=m.containsInf;
 	    figure('units','centimeters','position',[5,5,35,30],'Name','Particle clouds');hold on;
         tiledlayout(n_params,n_params,'TileSpacing','tight','Padding','none')
 	    for i= 1:n_params
 		    for j = 1:n_params
 			    if i > j
 				    nexttile(p); hold on;
-                    if max(m.parameters_all(1:end,j))==Inf || max(m.parameters_all(1:end,i))==Inf || min(m.parameters_all(1:end,j))==-Inf || min(m.parameters_all(1:end,i))==-Inf
+                    if containsInf(i,1) || containsInf(j,1) 
+                        [Ncount,BinCentre] = hist3([m.parameters_all(:,i) m.parameters_all(:,j)],"Edges",{BinEdges(:,i),BinEdges(:,j)});
                     else
-                        [Ncount,BinCentre] = hist3([m.parameters_all(1:end,i) m.parameters_all(1:end,j)],[NBINS NBINS]);
-                        %BinCentre;
-                        if length(unique(BinCentre{1,1}))==length(Ncount) && length(unique(BinCentre{1,2}))==length(Ncount)
-				            [c,h]=contourf(BinCentre{1,2},BinCentre{1,1},Ncount,NCON,'linestyle','none');
-                        end
-                        plot(modeHist(j),modeHist(i),'*','Color',[140, 0, 186]./255,'MarkerSize',8);
-				        colorbar('off');%colorbar;grid off;
-				        h1=gca;set(h1,'FontName',fname,'FontSize',fsize);
-				        if i ~= n_params
-					        set(gca,'XTickLabel',[])
-				        end
-				        if j ~= 1
-					        set(gca,'YTickLabel',[])
-				        end
-				        if i == n_params
-					        xlabel(strcat("log_{10} ", parameter_names(j)),'FontName',fname,'FontSize',fsize);
-				        end
-				        if j == 1
-					        ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize)
-                        end
+                        [Ncount,BinCentre] = hist3([m.parameters_all(:,i) m.parameters_all(:,j)],[NBINS NBINS]);
+                    end
+                    %BinCentre;
+                    if length(unique(BinCentre{1,1}))==length(Ncount) && length(unique(BinCentre{1,2}))==length(Ncount)
+			            [c,h]=contourf(BinCentre{1,2},BinCentre{1,1},Ncount,NCON,'linestyle','none');
+                    end
+                    plot(modeHist(j),modeHist(i),'*','Color',[140, 0, 186]./255,'MarkerSize',8);
+			        colorbar('off');%colorbar;grid off;
+			        h1=gca;set(h1,'FontName',fname,'FontSize',fsize);
+			        if i ~= n_params
+				        set(gca,'XTickLabel',[])
+			        end
+			        if j ~= 1
+				        set(gca,'YTickLabel',[])
+			        end
+			        if i == n_params
+				        xlabel(strcat("log_{10} ", parameter_names(j)),'FontName',fname,'FontSize',fsize);
+			        end
+			        if j == 1
+				        ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize)
                     end
 			    elseif i == j
 				    nexttile(p); hold on;
 				    title(parameter_names(i))
-				    %DX=linspace(min(m.parameters_all(:,i)),max(m.parameters_all(:,i)),length(m.parameters_all)/10);
-				    %DY = density(m.parameters_all(:,i),DX);
-				    %plot(DX,DY,'linewidth',lw);hold on;
                     histogram(m.parameters_all(:,i),NBINS);
                     plot(modeHist(i),0,'*','Color',[140, 0, 186]./255,'MarkerSize',8);
-                    % if(i ~= n_params && j ~= n_params)
-                    %     plot(initialparams(i),0,'sr','MarkerSize',8); % plot starting point of simulation
-                    %     if(exist('p_truth','var'))
-                    %         plot(p_truth(i),0,'og','MarkerSize',8); % plot truth
-                    %     end
-                    % end
-				    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-				    %plot(bestParams(i).*ones(1,nX),linspace(0,max(DY),nX),'.-','linewidth',lw)
-				    %plot(modeParams(i).*ones(1,nX),linspace(0,max(DY),nX),'.-','linewidth',lw)
-				    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-				    h1=gca;set(h1,'FontName',fname,'FontSize',fsize);grid on;
+                    
+                    h1=gca;set(h1,'FontName',fname,'FontSize',fsize);grid on;
 				    if i ==n_params
 					    xlabel(strcat("log_{10} ",parameter_names(i)),'FontName',fname,'FontSize',fsize);
 				    end
@@ -157,7 +118,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
 	    %legend('Param. distr.','Param. best part.')
         set(gcf,'Color','w');
         if(saveTF)
-            savefig(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled.fig'),'compact');
+            %savefig(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled_compact.fig'),'compact');
             saveas(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled.png'),'png');
             saveas(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled.fig'),'fig');
             saveas(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled.eps'),'epsc');
@@ -168,14 +129,15 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
         figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs first 3*NTCHECK iterations');hold on;
         for i=1:n_params
             subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p);
-            plot(m.params_all(1:3*m.NTCHECK,i));
+            plot(m.logparams_all_trun(1:3*m.NTCHECK,i),'LineWidth',0.05);
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
-            ylabel(parameter_names(i),'FontName',fname,'FontSize',fsize);
+            ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
             p=p+1;
         end
         if(saveTF)
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.fig'),'fig');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.eps'),'epsc');
+            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.png'),'png');
         end
 
         % Parameter VS posterior iterations
@@ -183,7 +145,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
         figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs posterior iterations');hold on;
         for i=1:n_params
             subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p);
-            plot(m.parameters_all(:,i));
+            plot(m.parameters_all(:,i),'LineWidth',0.05);
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
             ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
             p=p+1;
@@ -191,6 +153,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
         if(saveTF)
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.fig'),'fig');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.eps'),'epsc');
+            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.png'),'png');
         end
 
 
@@ -198,71 +161,58 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename,p_truth)
         p = 1;
         figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs iteration');hold on;
         
-
-        maxrow=m.nt;
-        if all(m.params_all(maxrow,:)==0)
-           maxrow=maxrow-1;
-           while maxrow>0 && all(m.params_all(maxrow,:)==0)
-               maxrow=maxrow-1;
-           end
-        else
-           maxrow=maxrow+1;
-           len=size(m,'params_all',1);
-           while maxrow<=len && ~all(m.params_all(maxrow,:)==0)
-               maxrow=maxrow+1;
-           end
-           maxrow=maxrow-1;
-        end
-
         for i=1:n_params
             subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p);
             %scatter(1:maxrow,m.params_all(1:maxrow,i));
-            plot(m.params_all(1:maxrow,i));
+            plot(m.logparams_all_trun(:,i),'LineWidth',0.05);
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
-            ylabel(parameter_names(i),'FontName',fname,'FontSize',fsize);
+            ylabel(strcat("log_{10}", parameter_names(i)),'FontName',fname,'FontSize',fsize);
             p=p+1;
         end
         if(saveTF)
-            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.fig'),'fig');
+            %saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.fig'),'fig');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.eps'),'epsc');
+            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.png'),'png');
         end
 
 
-        % Parameter ecdf
-        p = 1; NBINS=30;
-        figure('units','centimeters','position',[5,5,25,20],'Name','Parameter ecdfs');hold on;
-        for i=1:n_params
-            % calculate ecdf
-            [f_ecdf,x_ecdf] = ecdf(m.parameters_all(1:end,i));
-
-            % calculate ci
-            ci_low_ind = find(f_ecdf<0.025,1,'last');
-            p_ci(i,1) = x_ecdf(ci_low_ind);
-
-            ci_up_ind = find(f_ecdf>0.975,1,'first');
-            p_ci(i,2) = x_ecdf(ci_up_ind);
-
-            % plot, with ci
-            subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p); hold on;
-
-            plot(x_ecdf,f_ecdf,'-','LineWidth',lw);
-
-            plot(x_ecdf,0.025*ones(length(x_ecdf),1),'--k');
-            plot(x_ecdf,0.975*ones(length(x_ecdf),1),'--k');
-
-            plot(p_ci(i,1)*ones(length(f_ecdf),1),f_ecdf,'--r');
-            plot(p_ci(i,2)*ones(length(f_ecdf),1),f_ecdf,'--r');
-
-            xlabel(parameter_names(i),'FontName',fname,'FontSize',fsize);
-            ylabel('Cumulative Distribution','FontName',fname,'FontSize',fsize);
-
-            p=p+1;
-
-        end
-        
-        if(saveTF)
-            saveas(gcf,fullfile(savefigfolder,'ParameterECDFs.fig'),'fig');
-            saveas(gcf,fullfile(savefigfolder,'ParameterECDFs.eps'),'epsc');
+        if (plotecdfTF)
+            % Parameter ecdf
+            p = 1; NBINS=30;
+            figure('units','centimeters','position',[5,5,25,20],'Name','Parameter ecdfs');hold on;
+            for i=1:n_params
+                % calculate ecdf
+                [f_ecdf,x_ecdf] = ecdf(m.parameters_all(1:sizeparameters_all,i));
+    
+                % calculate ci
+                ci_low_ind = find(f_ecdf<0.025,1,'last');
+                p_ci(i,1) = x_ecdf(ci_low_ind);
+    
+                ci_up_ind = find(f_ecdf>0.975,1,'first');
+                p_ci(i,2) = x_ecdf(ci_up_ind);
+    
+                % plot, with ci
+                subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p); hold on;
+    
+                plot(x_ecdf,f_ecdf,'-','LineWidth',lw);
+    
+                plot(x_ecdf,0.025*ones(length(x_ecdf),1),'--k');
+                plot(x_ecdf,0.975*ones(length(x_ecdf),1),'--k');
+    
+                plot(p_ci(i,1)*ones(length(f_ecdf),1),f_ecdf,'--r');
+                plot(p_ci(i,2)*ones(length(f_ecdf),1),f_ecdf,'--r');
+    
+                xlabel(parameter_names(i),'FontName',fname,'FontSize',fsize);
+                ylabel('Cumulative Distribution','FontName',fname,'FontSize',fsize);
+    
+                p=p+1;
+    
+            end
+            
+            if(saveTF)
+                saveas(gcf,fullfile(savefigfolder,'ParameterECDFs.fig'),'fig');
+                saveas(gcf,fullfile(savefigfolder,'ParameterECDFs.eps'),'epsc');
+            end
         end
 end
 
