@@ -11,8 +11,10 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     end
 
     updateMCMCoutput(fullfile(foldername,filename));
+    reloadmatfile(fullfile(foldername,filename))
 
-    m = matfile(fullfile(foldername,filename),'Writable',true);
+    %m = matfile(fullfile(foldername,filename),'Writable',true);
+    m = matfile(fullfile(foldername,filename),'Writable',false);
 
     initialparams=m.params_all_trun(1,:);
 
@@ -135,7 +137,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
             p=p+1;
         end
         if(saveTF)
-            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.fig'),'fig');
+            %saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.fig'),'fig');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.eps'),'epsc');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.png'),'png');
         end
@@ -151,7 +153,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
             p=p+1;
         end
         if(saveTF)
-            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.fig'),'fig');
+            %saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.fig'),'fig');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.eps'),'epsc');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.png'),'png');
         end

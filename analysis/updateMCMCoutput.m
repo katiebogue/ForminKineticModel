@@ -1,4 +1,8 @@
-function updateMCMCoutput(matfileloc)
+function updateMCMCoutput(matfileloc,mem)
+arguments
+    matfileloc
+    mem=15.5 % GB RAM
+end
 
     m = matfile(matfileloc,'Writable',true);
 
@@ -16,7 +20,9 @@ function updateMCMCoutput(matfileloc)
     end
     if ~isempty(who(m,'paramHistCounts_matrices'))
         m.paramHistCounts_matrices_nts( ~any(m.paramHistCounts_matrices_nts,2)) = [];
-        m.paramHistCounts_matrices(:,:,length(m.paramHistCounts_matrices_nts)+1:end)=[];
+        temp=m.paramHistCounts_matrices(:,:,1:length(m.paramHistCounts_matrices_nts));
+        m.paramHistCounts_matrices=temp;
+        clear temp
     end
 
 
@@ -46,7 +52,7 @@ function updateMCMCoutput(matfileloc)
         newlog=1;
     end
 
-    STEP=100000;
+    STEP=mem*(1024^3)/(ncols*8);
     m.logparams_all_trun(maxrow,ncols)=0;
     while i+STEP<=maxrow
         try
@@ -165,7 +171,15 @@ function updateMCMCoutput(matfileloc)
     
 
     if isempty(who(m,'params_out'))||length(m.params_out)==1
-        m.parameters_all=m.logparams_all_trun(ceil(maxrow/3):maxrow,:);
+        try
+            m.parameters_all=m.logparams_all_trun(ceil(maxrow/3):maxrow,:);
+        catch
+            maxarraysize=16*(1024^3)/(2*8); %limit to the largest possible in memory array size for 2 rows (so hist3 works)
+            m.parameters_all(maxarraysize,ncols)=0;
+            for i=1:ncols
+                m.parameters_all(:,i)=m.logparams_all_trun(maxrow-maxarraysize+1:maxrow,i);
+            end
+        end
     else
         m.parameters_all=log10(m.params_out);
     end
