@@ -4,16 +4,25 @@ function reloadmatfile(matfileloc,mem,replaceTF)
         mem=15.5 % GB of RAM
         replaceTF=1
     end
+    disp(matfileloc)
+    disp(mem)
+    disp(replaceTF)
     try
-        load(matfileloc)
-        save(matfileloc,'-v7.3')
+        if mem>6
+            load(matfileloc)
+            disp("successful load")
+            save(matfileloc,'-v7.3')
+        else
+            error("memory not high enough to attempt load")
+        end
     catch
+        disp("load failed, trying variable by variable")
         %save(strcat(matfileloc,'temp.mat'),'-v7.3')
         varlist=whos('-file', matfileloc);
         largein=[];
         for i=1:length(varlist)
             var=varlist(i).name;
-            if varlist(i).bytes<=16*(1024^3)
+            if varlist(i).bytes<=mem*(1024^3)
                 load(matfileloc,var)
                 %save(strcat(matfileloc,'temp.mat'),"var",'-append')
                 fprintf("loaded var: %s\n",var)
