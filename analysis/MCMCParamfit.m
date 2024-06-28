@@ -15,9 +15,9 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         type
         errtype % 1= use separate sigma values, 2= divide each by SEM
         logtf % whether or not to have params in log space
-        NTCHECK = 10000
+        NTCHECK = 1000
         NTADAPT =100
-        NTMAX =10^10
+        NTMAX =10^6
         KSCRITICAL =0.01
     end
 
@@ -96,6 +96,8 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     proposals=zeros(nparams,1);
     accepts_temp=zeros(nparams,1);
     proposals_temp=zeros(nparams,1);
+    accepts_adapt=zeros(nparams,1);
+    proposals_adapt=zeros(nparams,1);
 
     nt=0;
     disp("saving workspace...")
@@ -123,21 +125,34 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     paramHistCounts = zeros(nparams,NBINS);
     paramHistCountsPrevious = zeros(nparams,NBINS);
     logll_nt=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype,logtf);
+    minlogll=logll_nt;
     disp("starting MCMC loop")
     while(nt<NTMAX)
         nt=nt+1;
         nt_temp=nt_temp+1;
         
         if (nt<NTCHECK-NTADAPT)&&(rem(nt,NTADAPT)==0)
+
             disp("adapting step size...")
             fprintf('nt: %d\n',nt)
-            disp("proposal count:")
+            disp("total proposal count:")
             disp(proposals)
-            disp("acceptance count:")
+            disp("total acceptance count:")
             disp(accepts)
+
+            proposals_new=proposals-proposals_adapt;
+            accepts_new=accepts-accepts_adapt;
+
+            disp("new proposal count:")
+            disp(proposals_new)
+            disp("new acceptance count:")
+            disp(accepts_new)
             
             p_accept=accepts./proposals;
-            disp("acceptance probability:")
+            disp("total acceptance probability:")
+            disp(p_accept)
+            p_accept=accepts_new./proposals_new;
+            disp("new acceptance probability:")
             disp(p_accept)
             p_accept(p_accept==0)=0.01;
             p_accept(proposals==0)=0.44;
@@ -149,6 +164,8 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
             disp("new step sizes: ")
             disp(dx)
             m.dx=dx;
+            proposals_adapt=proposals;
+            accepts_adapt=accepts;
         end
 
         %randomly perturb one parameter
@@ -171,8 +188,10 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
                 %kpolys_nt=kpolys_prop;
                 accepts(index)=accepts(index)+1;
                 accepts_temp(index)=accepts_temp(index)+1;
-                minlogll=logll_nt;
-                minlogll_params=params;
+                if logll_nt>minlogll
+                    minlogll=logll_nt;
+                    minlogll_params=params;
+                end
             elseif rand < exp(logll_prop-logll_nt)
                 % Boltzmann test, Accept 
                 params=proposal;
@@ -300,9 +319,14 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     m.paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
     m.paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
     m.params_out=0;
-    %visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
+    visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
 end
 function logll=loglikelihood(type,data,rates,params,sigma,errtype,logtf)
+    SSE=sum((1.5-params).^2);
+    sigma2=sigma(1)^2;
+    logll=(-SSE/(2*sigma2))-(0.5*length(params)*log(2*pi*sigma2));
+    return
+
     if logtf
         kpolys=calckpolys(type,rates,10.^(params)); 
     else
