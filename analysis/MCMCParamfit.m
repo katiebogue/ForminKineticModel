@@ -15,17 +15,19 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         type
         errtype % 1= use separate sigma values, 2= divide each by SEM
         logtf % whether or not to have params in log space
-        NTCHECK = 1000
+        NTCHECK = 2000
         NTADAPT =100
         NTMAX =10^6
         KSCRITICAL =0.01
     end
 
     NBINS = 200;
-    PARAMMAX = 20; % in log-space
-    PARAMMIN = -5; % in log-space
+    PARAMMAX = Inf; % in log-space
+    PARAMMIN = -Inf; % in log-space
 
     disp("MCMCParamfit.m starting") 
+
+   
 
     % set up place to store data
     if exptype==1
@@ -99,6 +101,9 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     accepts_adapt=zeros(nparams,1);
     proposals_adapt=zeros(nparams,1);
 
+    step_up=zeros(nparams,1);
+    step_down=zeros(nparams,1);
+
     nt=0;
     disp("saving workspace...")
     save(wkspc,'-v7.3')
@@ -136,33 +141,33 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
             disp("adapting step size...")
             fprintf('nt: %d\n',nt)
             disp("total proposal count:")
-            disp(proposals)
+            disp(proposals')
             disp("total acceptance count:")
-            disp(accepts)
+            disp(accepts')
 
             proposals_new=proposals-proposals_adapt;
             accepts_new=accepts-accepts_adapt;
 
             disp("new proposal count:")
-            disp(proposals_new)
+            disp(proposals_new')
             disp("new acceptance count:")
-            disp(accepts_new)
+            disp(accepts_new')
             
             p_accept=accepts./proposals;
             disp("total acceptance probability:")
-            disp(p_accept)
+            disp(p_accept')
             p_accept=accepts_new./proposals_new;
             disp("new acceptance probability:")
-            disp(p_accept)
+            disp(p_accept')
             p_accept(p_accept==0)=0.01;
             p_accept(proposals==0)=0.44;
             in=(p_accept>0.6 | p_accept<0.3);
             disp("previous step sizes: ")
-            disp(dx)
+            disp(dx')
             dx(in)=dx(in).*(p_accept(in)./0.44);
 
             disp("new step sizes: ")
-            disp(dx)
+            disp(dx')
             m.dx=dx;
             proposals_adapt=proposals;
             accepts_adapt=accepts;
@@ -230,11 +235,16 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
             m.minlogll_params=minlogll_params;
             m.paccept_matrix(ntcheck_count,1)=nt;
             m.paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
+            disp([accepts_temp./proposals_temp]')
             accepts_temp(:)=0;
             proposals_temp(:)=0;
             last_nt=nt;
             nt_temp=0;
             params_temp(:)=0;
+            disp("step up:")
+            disp(step_up')
+            disp("step down:")
+            disp(step_down')
             fprintf('appended params_all at nt: %d\n',nt)
         end
 
@@ -313,6 +323,15 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
                 paramHistCounts = zeros(nparams,NBINS);
                 paramHistCountsPrevious = zeros(nparams,NBINS);
                 fprintf('nt: %d\n',nt)
+                p = 1;
+                figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs iteration');hold on;
+                for i=1:nparams
+                    subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p);
+                    %scatter(1:maxrow,m.params_all(1:maxrow,i));
+                    plot(m.logparams_all(1:nt,i),'LineWidth',0.05);
+                    p=p+1;
+                end
+                pause(20)
             end
         end
     end
@@ -320,11 +339,30 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     m.paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
     m.params_out=0;
     visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
+
+    function [proposals,i]=generateproposal(params,dx,logtf)
+        i=randi([1 length(params)]);
+        proposals=params;
+        step=dx(i)*(2*rand-1);
+        if step>0
+            step_up(i)=step_up(i)+1;
+        else
+            step_down(i)=step_down(i)+1;
+        end
+        proposals(i)=proposals(i)+step;
+        % if logtf
+        %     proposals(i)=proposals(i)+(10^(dx(i))*(2*rand-1));
+        % else
+        %     proposals(i)=proposals(i)+(dx(i)*(2*rand-1));
+        % end
+    end
+
 end
 function logll=loglikelihood(type,data,rates,params,sigma,errtype,logtf)
     SSE=sum((1.5-params).^2);
     sigma2=sigma(1)^2;
-    logll=(-SSE/(2*sigma2))-(0.5*length(params)*log(2*pi*sigma2));
+    %logll=(-SSE/(2*sigma2))-(0.5*length(params)*log(2*pi*sigma2));
+    logll=-SSE;
     return
 
     if logtf
@@ -395,14 +433,4 @@ function kpolys=calckpolys(type,rates,params)
         PRMsum=sum(kpolys{i},1); % sum up PRMs
         kpolys{i}=[PRMsum(1),sum(PRMsum(2:3)),sum(PRMsum(4:5))]; % Sum up filaments
     end
-end
-function [proposals,i]=generateproposal(params,dx,logtf)
-    i=randi([1 length(params)]);
-    proposals=params;
-    proposals(i)=proposals(i)+(dx(i)*(2*rand-1));
-    % if logtf
-    %     proposals(i)=proposals(i)+(10^(dx(i))*(2*rand-1));
-    % else
-    %     proposals(i)=proposals(i)+(dx(i)*(2*rand-1));
-    % end
 end
