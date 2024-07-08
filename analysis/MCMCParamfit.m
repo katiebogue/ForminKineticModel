@@ -1,4 +1,4 @@
-function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
+function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
 % 
     %   out = MCMCParamfit(Exp) 
     %   
@@ -14,20 +14,23 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         exptype % 1= is an experiment, 2= is a struct with rates, data, and resultsfolder and resultsdir
         type
         errtype % 1= use separate sigma values, 2= divide each by SEM
-        logtf % whether or not to have params in log space
-        NTCHECK = 2000
+        matfileTF=0 % whether to save to a matfile or to keep things in memory
+        NTCHECK = 3000
         NTADAPT =100
-        NTMAX =10^6
-        KSCRITICAL =0.01
+        NTMAX =10^8
+        KSCRITICAL =0.05
     end
 
+    
     NBINS = 200;
-    PARAMMAX = Inf; % in log-space
-    PARAMMIN = -Inf; % in log-space
+    PARAMMAX = 20; % in log-space
+    PARAMMIN = -10; % in log-space
+    SIGMAMAX = 2; % in log-space
+    SIGMAMIN = -2; % in log-space
+    EXPMIN = -2; % in log-space, applies to the 4th parameter
+    EXPMAX = 2; % in log-space, applies to the 4th parameter
 
     disp("MCMCParamfit.m starting") 
-
-   
 
     % set up place to store data
     if exptype==1
@@ -70,29 +73,26 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     end
     nparams=nkpolyparams+nsigma;
 
-    % Pick initial guess 
+    % Pick initial guess
+    % note: all in log10 space
     rng("shuffle")
-    params=randi([1 1000],1,nparams);
-    params(nkpolyparams+1:nparams)=rand(1,nparams-nkpolyparams);
-    params(2)=0.1;
-    params(4)=1;
-    %params(4)=randi([1 5],1,1);
-    if logtf
-        params=log10(params);
-        dx=ones(nparams,1)./100;
-        dx(1:3)=[5,5,5];
-        if type=="4st"
-            dx(5:6)=[10,5];
-        end
-    else
-        PARAMMIN=10^PARAMMIN;
-        PARAMMAX=10^PARAMMAX;
-        dx=ones(nparams,1);
-        dx(1:3)=[10^5,10^5,10^15];
-        if type=="4st"
-            dx(5:6)=[10^10,10^5];
-        end
+    % params=rand([1 nparams])+1;
+    % dx=ones(nparams,1);
+    params=zeros(1,nparams);
+    params(nkpolyparams+1:nparams)=rand(1,nparams-nkpolyparams); % set initial sigma values to between 0-1
+    params(1)=randi([11 14],1,1); % kcap initial
+    params(2)=-rand; % kdel initial
+    params(3)=randi([13 15],1,1); %rcap initial
+    params(4)=-rand/2; %rcap exp initial
+    dx=ones(nparams,1);
+    dx(1:3)=[0.1,0.1,0.1];
+    dx(4)=0.01;
+    if type=="4st"
+        params(5)=randi([10 15],1,1); %rdel initial
+        params(6)=randi([3 5],1,1); %krel initial
+        dx(5:6)=[5,5];
     end
+    
     
     accepts=zeros(nparams,1);
     proposals=zeros(nparams,1);
@@ -105,21 +105,29 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     step_down=zeros(nparams,1);
 
     nt=0;
-    disp("saving workspace...")
-    save(wkspc,'-v7.3')
-    disp("saved workspace")
-    m = matfile(wkspc,'Writable',true);
-    disp("created matfile")
-    m.params_all(NTMAX,nparams)=0;
-    m.logparams_all(NTMAX,nparams)=0;
-    m.paccept_matrix(ceil(NTMAX/NTCHECK)+1,nparams+1)=0;
-    disp("created paccept_matrix")
-    m.paramHistCounts_matrices(nparams,NBINS,ceil(NTMAX/NTCHECK))=0;
-    disp("created paramHistCounts_matrices")
-    m.paramHistCounts_matrices_nts(ceil(NTMAX/NTCHECK),1)=0;
-    m.ksvals(ceil(NTMAX/NTCHECK),nparams)=0;
-    disp("created matfile matrices")
-    params_temp=zeros(NTCHECK,nparams);
+
+    if matfileTF
+        disp("saving workspace...")
+        save(wkspc,'-v7.3')
+        disp("saved workspace")
+        m = matfile(wkspc,'Writable',true);
+        disp("created matfile")
+        m.logparams_all(NTMAX,nparams)=0;
+        m.paccept_matrix(ceil(NTMAX/NTCHECK)+1,nparams+1)=0;
+        disp("created paccept_matrix")
+        m.paramHistCounts_matrices(nparams,NBINS,ceil(NTMAX/NTCHECK))=0;
+        disp("created paramHistCounts_matrices")
+        m.paramHistCounts_matrices_nts(ceil(NTMAX/NTCHECK),1)=0;
+        m.ksvals(ceil(NTMAX/NTCHECK),nparams)=0;
+        disp("created matfile matrices")
+        params_temp=zeros(3*NTCHECK,nparams);
+    else
+        logparams_all(NTMAX,nparams)=0;
+        paccept_matrix(ceil(NTMAX/NTCHECK)+1,nparams+1)=0;
+        paramHistCounts_matrices(nparams,NBINS,ceil(NTMAX/NTCHECK))=0;
+        paramHistCounts_matrices_nts(ceil(NTMAX/NTCHECK),1)=0;
+        ksvals(ceil(NTMAX/NTCHECK),nparams)=0;
+    end
 
    
     nt_temp=0;
@@ -129,8 +137,9 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
     currentntcheck=NTCHECK;
     paramHistCounts = zeros(nparams,NBINS);
     paramHistCountsPrevious = zeros(nparams,NBINS);
-    logll_nt=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype,logtf);
+    logll_nt=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype);
     minlogll=logll_nt;
+    
     disp("starting MCMC loop")
     while(nt<NTMAX)
         nt=nt+1;
@@ -140,22 +149,22 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
 
             disp("adapting step size...")
             fprintf('nt: %d\n',nt)
-            disp("total proposal count:")
-            disp(proposals')
-            disp("total acceptance count:")
-            disp(accepts')
+            % disp("total proposal count:")
+            % disp(proposals')
+            % disp("total acceptance count:")
+            % disp(accepts')
 
             proposals_new=proposals-proposals_adapt;
             accepts_new=accepts-accepts_adapt;
 
-            disp("new proposal count:")
-            disp(proposals_new')
-            disp("new acceptance count:")
-            disp(accepts_new')
+            % disp("new proposal count:")
+            % disp(proposals_new')
+            % disp("new acceptance count:")
+            % disp(accepts_new')
             
             p_accept=accepts./proposals;
-            disp("total acceptance probability:")
-            disp(p_accept')
+            % disp("total acceptance probability:")
+            % disp(p_accept')
             p_accept=accepts_new./proposals_new;
             disp("new acceptance probability:")
             disp(p_accept')
@@ -168,22 +177,24 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
 
             disp("new step sizes: ")
             disp(dx')
-            m.dx=dx;
+            if matfileTF
+                m.dx=dx;
+            end
             proposals_adapt=proposals;
             accepts_adapt=accepts;
         end
 
         %randomly perturb one parameter
-        [proposal,index]=generateproposal(params,dx,logtf);
+        [proposal,index]=generateproposal(params,dx);
         proposals(index)=proposals(index)+1;
         proposals_temp(index)=proposals_temp(index)+1;
 
-        if proposal(index)<PARAMMIN || proposal(index)>PARAMMAX
+        if proposal(index)<PARAMMIN || proposal(index)>PARAMMAX || (index>nkpolyparams && (proposal(index)>SIGMAMAX || proposal(index)<SIGMAMIN)) || (index==4 && (proposal(index)>EXPMAX || proposal(index)<EXPMIN))
             % reject anything beyond the boundaries
             params_temp(nt_temp,:)=params;
         else
             %calculate logll of proposal
-            logll_prop=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype,logtf);
+            logll_prop=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype);
             
             %Accept or reject proposal
             if logll_prop>logll_nt
@@ -216,36 +227,71 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
                 %minp=min(params_temp(:,i));
                 [Y(i,:),binEdges(i,:)]=histcounts(params_temp((NTCHECK/2):end,i),NBINS);
             end
-            m.paramHistCounts_matrices(:,:,1)=Y;
-            m.paramHistCounts_matrices_nts(1,1)=nt;
-            m.binEdges=binEdges;
+            if matfileTF
+                m.paramHistCounts_matrices(:,:,1)=Y;
+                m.paramHistCounts_matrices_nts(1,1)=nt;
+                m.binEdges=binEdges;
+            else
+                paramHistCounts_matrices(:,:,1)=Y;
+                paramHistCounts_matrices_nts(1,1)=nt;
+            end
             clear Y
             HistCountIndex=2;
         end
 
-        if nt_temp==NTCHECK
+        if nt_temp==3*NTCHECK
             ntcheck_count=ntcheck_count+1;
-            m.nt=nt;
-            if logtf
+            if matfileTF
+                m.nt=nt;
                 m.logparams_all(last_nt+1:nt,:)=params_temp;
-                params_temp=10.^params_temp;
+                m.minlogll=minlogll;
+                m.minlogll_params=minlogll_params;
+                m.paccept_matrix(ntcheck_count,1)=nt;
+                m.paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
+            else
+                logparams_all(last_nt+1:nt,:)=params_temp;
+                paccept_matrix(ntcheck_count,1)=nt;
+                paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
             end
-            m.params_all(last_nt+1:nt,:)=params_temp;
-            m.minlogll=minlogll;
-            m.minlogll_params=minlogll_params;
-            m.paccept_matrix(ntcheck_count,1)=nt;
-            m.paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
             disp([accepts_temp./proposals_temp]')
             accepts_temp(:)=0;
             proposals_temp(:)=0;
             last_nt=nt;
             nt_temp=0;
             params_temp(:)=0;
-            disp("step up:")
-            disp(step_up')
-            disp("step down:")
-            disp(step_down')
-            fprintf('appended params_all at nt: %d\n',nt)
+            % disp("step up:")
+            % disp(step_up')
+            % disp("step down:")
+            % disp(step_down')
+            fprintf('appended logparams_all at nt: %d\n',nt)
+            %makeupdateplot
+        end
+
+        if nt==NTMAX
+            ntcheck_count=ntcheck_count+1;
+            if matfileTF
+                m.nt=nt;
+                m.logparams_all(last_nt+1:nt,:)=params_temp(1:nt_temp,:);
+                m.minlogll=minlogll;
+                m.minlogll_params=minlogll_params;
+                m.paccept_matrix(ntcheck_count,1)=nt;
+                m.paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
+            else
+                logparams_all(last_nt+1:nt,:)=params_temp(1:nt_temp,:);;
+                paccept_matrix(ntcheck_count,1)=nt;
+                paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
+            end
+            disp([accepts_temp./proposals_temp]')
+            accepts_temp(:)=0;
+            proposals_temp(:)=0;
+            last_nt=nt;
+            nt_temp=0;
+            params_temp(:)=0;
+            % disp("step up:")
+            % disp(step_up')
+            % disp("step down:")
+            % disp(step_down')
+            fprintf('appended logparams_all at nt: %d\n',nt)
         end
 
        
@@ -279,10 +325,17 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
         if nt==3*currentntcheck
             fprintf('nt: %d\n',nt)
             fprintf('currentntcheck: %d\n',currentntcheck)
-            m.paramHistCounts_matrices_nts(HistCountIndex,1)=currentntcheck*2;
-            m.paramHistCounts_matrices_nts(HistCountIndex+1,1)=currentntcheck*3;
-            m.paramHistCounts_matrices(:,:,HistCountIndex)=paramHistCountsPrevious;
-            m.paramHistCounts_matrices(:,:,HistCountIndex+1)=paramHistCounts;
+            if matfileTF
+                m.paramHistCounts_matrices_nts(HistCountIndex,1)=currentntcheck*2;
+                m.paramHistCounts_matrices_nts(HistCountIndex+1,1)=currentntcheck*3;
+                m.paramHistCounts_matrices(:,:,HistCountIndex)=paramHistCountsPrevious;
+                m.paramHistCounts_matrices(:,:,HistCountIndex+1)=paramHistCounts;
+            else
+                paramHistCounts_matrices_nts(HistCountIndex,1)=currentntcheck*2;
+                paramHistCounts_matrices_nts(HistCountIndex+1,1)=currentntcheck*3;
+                paramHistCounts_matrices(:,:,HistCountIndex)=paramHistCountsPrevious;
+                paramHistCounts_matrices(:,:,HistCountIndex+1)=paramHistCounts;
+            end
             HistCountIndex=HistCountIndex+2;
             
             disp('Begining KS test')
@@ -296,51 +349,65 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
                 cdf2(i,:) = cumsum(paramHistCounts(i,:))./(currentntcheck);
                 % compute ksStatistic
                 ksStatistic(i) = max(abs(cdf1(i,:)-cdf2(i,:)));
-                %[ks(i),p,ks2stat]=kstest2(paramHistCountsPrevious(i,:)./currentntcheck,paramHistCounts(i,:)./currentntcheck,'Alpha',KSCRITICAL); 
-                %fprintf('%d ks: %d p: %d ks2stat: %d\n',i,ks(i),p,ks2stat)
+                
             end
-            m.ksvals(ksvalindex,:)=ksStatistic';
+            if matfileTF
+                m.ksvals(ksvalindex,:)=ksStatistic';
+            else
+                ksvals(ksvalindex,:)=ksStatistic';
+            end
             ksvalindex=ksvalindex+1;
-            %ks=kstest2(m.params_all(currentntcheck:2*currentntcheck,3),m.params_all(2*currentntcheck:3*currentntcheck,3),'Alpha',KSCRITICAL); 
             if all(ksStatistic(:) < KSCRITICAL)
                 disp('KS test successful')
-                m.proposals=proposals;
-                m.accepts=accepts;
-                m.ksStatistic=ksStatistic;
-                m.params_out=m.params_all(currentntcheck:3*currentntcheck,:);
-                m.paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
-                m.paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
-                %visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
+                if matfileTF
+                    m.proposals=proposals;
+                    m.accepts=accepts;
+                    m.ksStatistic=ksStatistic;
+                    m.parameters_all=m.logparams_all(currentntcheck:3*currentntcheck,:);
+                    m.paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
+                    m.paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
+                else
+                    parameters_all=logparams_all(currentntcheck:3*currentntcheck,:);
+                    paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
+                    paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
+                    save(wkspc)
+                    disp("saved workspace to .mat")
+                end
+                visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
                 return
             else
                 disp(ksStatistic)
                 disp('KS test unsuccessful')
-                m.proposals=proposals;
-                m.accepts=accepts;
                 currentntcheck=currentntcheck*3;
-                m.currentntcheck=currentntcheck;
+                if matfileTF
+                    m.currentntcheck=currentntcheck;
+                    m.proposals=proposals;
+                    m.accepts=accepts;
+                end
                 fprintf('new currentntcheck: %d\n',currentntcheck)
                 paramHistCounts = zeros(nparams,NBINS);
                 paramHistCountsPrevious = zeros(nparams,NBINS);
-                fprintf('nt: %d\n',nt)
-                p = 1;
-                figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs iteration');hold on;
-                for i=1:nparams
-                    subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p);
-                    %scatter(1:maxrow,m.params_all(1:maxrow,i));
-                    plot(m.logparams_all(1:nt,i),'LineWidth',0.05);
-                    p=p+1;
-                end
-                pause(20)
+                %fprintf('nt: %d\n',nt)
+                makeupdateplot
+                save(wkspc)
+                disp("saved workspace to .mat")
             end
         end
     end
-    m.paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
-    m.paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
-    m.params_out=0;
+    if matfileTF
+        m.paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
+        m.paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
+        m.parameters_all=0;
+    else
+        paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
+        paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
+        parameters_all=0;
+        save(wkspc)
+        disp("saved workspace to .mat")
+    end
     visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
 
-    function [proposals,i]=generateproposal(params,dx,logtf)
+    function [proposals,i]=generateproposal(params,dx)
         i=randi([1 length(params)]);
         proposals=params;
         step=dx(i)*(2*rand-1);
@@ -350,26 +417,38 @@ function MCMCParamfit(Exp,exptype,type,errtype,logtf,NTCHECK,NTADAPT,NTMAX,KSCRI
             step_down(i)=step_down(i)+1;
         end
         proposals(i)=proposals(i)+step;
-        % if logtf
-        %     proposals(i)=proposals(i)+(10^(dx(i))*(2*rand-1));
-        % else
-        %     proposals(i)=proposals(i)+(dx(i)*(2*rand-1));
-        % end
+    end
+
+    function makeupdateplot
+        p = 1;
+        figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs iteration');hold on;
+        for k=1:nparams
+            subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p);
+            if matfileTF
+                plot(m.logparams_all(1:nt,k),'LineWidth',0.05);
+            else
+                plot(logparams_all(1:nt,k),'LineWidth',0.05);
+            end
+            p=p+1;
+        end
+        pause(20)
     end
 
 end
-function logll=loglikelihood(type,data,rates,params,sigma,errtype,logtf)
-    SSE=sum((1.5-params).^2);
-    sigma2=sigma(1)^2;
-    %logll=(-SSE/(2*sigma2))-(0.5*length(params)*log(2*pi*sigma2));
-    logll=-SSE;
-    return
 
-    if logtf
-        kpolys=calckpolys(type,rates,10.^(params)); 
-    else
-        kpolys=calckpolys(type,rates,params); 
-    end
+
+function logll=loglikelihood(type,data,rates,params,sigma,errtype)
+    % calulcates log likelihood values for input parameters
+
+    % SSE=sum((1.5-params).^2);
+    % sigma2=sigma(1)^2;
+    % logll=(-SSE/(2*sigma2))-(0.5*length(params)*log(2*pi*sigma2));
+    % logll=-SSE;
+    % return
+
+    kpolys=calckpolys(type,rates,10.^(params));
+
+    sigma=10.^sigma;
     
     expdata=data.value;
 
@@ -394,7 +473,7 @@ function logll=loglikelihood(type,data,rates,params,sigma,errtype,logtf)
             error("Number of unique data types not the same as number of sigmas")
         end
         for i=1:length(sigma)
-            rows = matches(data.type,types(i));
+            rows = data.type == types(i);
             SSE=sum((expdata(rows)-simdata(rows)).^2);
             sigma2=sigma(i)^2;
             logll_i=(-SSE/(2*sigma2))-(0.5*length(expdata(rows))*log(2*pi*sigma2));
@@ -414,7 +493,7 @@ function logll=loglikelihood(type,data,rates,params,sigma,errtype,logtf)
 end
 
 function kpolys=calckpolys(type,rates,params)
-    % calulcates log likelihood values for input parameters
+    % calulcates kpolys for input parameters
 
     % calculate per PRM rates
     kcaps=cellfun(@(x) x.*params(1), rates.k_capbase,'UniformOutput',false);
@@ -423,11 +502,13 @@ function kpolys=calckpolys(type,rates,params)
     if type=="4st"
         rdels=cellfun(@(x) x.*params(5), rates.r_delbase,'UniformOutput',false);
         krels=cellfun(@(x) x.*params(6), rates.k_relbase,'UniformOutput',false);
+        kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./krel) + ((rdel + krel)./(kdel .* krel)) + (((rcap .* rdel) + (rcap .* krel) + (kdel .* krel))./(kcap .* kdel .* krel))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
     elseif type=="3st"
         rdels=kcaps;
         krels=kcaps;
+        kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./kdel) + ((kdel + rcap)./(kdel.*kcap))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
     end
-    kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) kpolymerization(type,kcap,kdel,rcap,rdel,krel),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+    
 
     for i=1:length(kpolys)
         PRMsum=sum(kpolys{i},1); % sum up PRMs

@@ -32,6 +32,7 @@ classdef Options <handle
         r_cap double % rate constant for PRM + profilin-actin dissociation (reverse capture) | s^(-1)
         r_del double % rate constant for barbed end + PRM-profilin-actin dissociation (reverse delivery) | s^(-1)
         k_rel double % rate constant for PRM + profilin-actin-barbed end dissociation (release) | s^(-1)
+        r_cap_exp double % constant in front of PRM size in r_cap (if applicable)
     end
 
     methods
@@ -166,6 +167,9 @@ classdef Options <handle
                         fxn=@(PRM) fxn(PRM)*PRM.(invars{i});
                     elseif invars{i+1}=="negexp"
                         fxn=@(PRM) fxn(PRM)*exp(-1*PRM.(invars{i}));
+                        if step=="rcap"
+                            fxn=@(PRM) fxn(PRM)*exp(-1*PRM.(invars{i})*PRM.formin.opts.r_cap_exp);
+                        end
                     elseif invars{i+1}=="exp"
                         fxn=@(PRM) fxn(PRM)*exp(PRM.(invars{i}));
                     elseif invars{i+1}=="1-"

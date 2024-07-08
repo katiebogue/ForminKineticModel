@@ -11,7 +11,7 @@ function reloadmatfile(matfileloc,mem,replaceTF)
         if mem>6
             load(matfileloc)
             disp("successful load")
-            save(matfileloc,'-v7.3')
+            save(matfileloc)
         else
             error("memory not high enough to attempt load")
         end
@@ -22,12 +22,15 @@ function reloadmatfile(matfileloc,mem,replaceTF)
         largein=[];
         for i=1:length(varlist)
             var=varlist(i).name;
-            if varlist(i).bytes<=mem*(1024^3)
+            if var=="params_all_trun" || var=="params_out" || var=="params_all"
+                % get rid of these parameters for older versions of the
+                % code
+            elseif varlist(i).bytes<=mem*(1024^3)
                 load(matfileloc,var)
                 %save(strcat(matfileloc,'temp.mat'),"var",'-append')
                 fprintf("loaded var: %s\n",var)
                 %clear("var")
-            elseif var=="params_all_trun" || var=="logparams_all_trun" || var=="parameters_all"
+            elseif var=="logparams_all_trun" || var=="parameters_all"
                 largein=[largein, i];
             else
                 disp(var)

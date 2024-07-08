@@ -13,19 +13,43 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     updateMCMCoutput(fullfile(foldername,filename));
     reloadmatfile(fullfile(foldername,filename))
 
-    %m = matfile(fullfile(foldername,filename),'Writable',true);
-    m = matfile(fullfile(foldername,filename),'Writable',false);
+    load(fullfile(foldername,filename),'nparams')
+    load(fullfile(foldername,filename),'nsigma')
+    load(fullfile(foldername,filename),'containsInf')
+    load(fullfile(foldername,filename),'NTCHECK')
+    load(fullfile(foldername,filename),'type')
 
-    initialparams=m.params_all_trun(1,:);
+    inmemTF=[0,0];
+    % logparams_all_trun=0;
+    % parameters_all=0;
+    try
+        load(fullfile(foldername,filename),'logparams_all_trun')
+        initialparams=logparams_all_trun(1,:);
+        inmemTF(1)=1;
+    catch
+        m = matfile(fullfile(foldername,filename),'Writable',false);
+        initialparams=m.logparams_all_trun(1,:);
+    end
 
-    if m.type=="3st" && length(initialparams)<7
+    try
+        load(fullfile(foldername,filename),'parameters_all')
+        inmemTF(2)=1;
+    catch
+        if inmemTF(1)
+            m = matfile(fullfile(foldername,filename),'Writable',false);
+        end
+    end
+
+    % m = matfile(fullfile(foldername,filename),'Writable',false);
+    % initialparams=m.logparams_all_trun(1,:);
+
+    if type=="3st" && length(initialparams)<7
         parameter_names=["k_{cap}","k_{del}","r_{cap}","r_{cap} exp"];
     else
         parameter_names=["k_{cap}","k_{del}","r_{cap}","r_{cap} exp","r_{del}","k_{rel}"];
     end
 
-    n_params=m.nparams;
-    for i=1:m.nsigma
+    for i=1:nsigma
         parameter_names=[parameter_names,strcat("sigma",int2str(i))];
     end
 
@@ -35,10 +59,14 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     % Parameter histograms
     p = 1; NBINS=30;
     figure('units','centimeters','position',[5,5,25,20],'Name','Parameter histograms');hold on;
-    BinEdges=zeros(NBINS+1,n_params);
-    for i=1:n_params
-        subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p); hold on;
-        histplot = histogram(m.parameters_all(:,i),NBINS);
+    BinEdges=zeros(NBINS+1,nparams);
+    for i=1:nparams
+        subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p); hold on;
+        if inmemTF(2)
+            histplot = histogram(parameters_all(:,i),NBINS);
+        else
+            histplot = histogram(m.parameters_all(:,i),NBINS);
+        end
         xlabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
         ylabel('Frequency','FontName',fname,'FontSize',fsize);
     
@@ -60,17 +88,24 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     % Parameter correlations
     % 2D plots
     p=1;	NCON=300;	nX=100;
-    containsInf=m.containsInf;
 	    figure('units','centimeters','position',[5,5,35,30],'Name','Particle clouds');hold on;
-        tiledlayout(n_params,n_params,'TileSpacing','tight','Padding','none')
-	    for i= 1:n_params
-		    for j = 1:n_params
+        tiledlayout(nparams,nparams,'TileSpacing','tight','Padding','none')
+	    for i= 1:nparams
+		    for j = 1:nparams
 			    if i > j
 				    nexttile(p); hold on;
                     if containsInf(i,1) || containsInf(j,1) 
-                        [Ncount,BinCentre] = hist3([m.parameters_all(:,i) m.parameters_all(:,j)],"Edges",{BinEdges(:,i),BinEdges(:,j)});
+                        if inmemTF(2)
+                            [Ncount,BinCentre] = hist3([parameters_all(:,i) parameters_all(:,j)],"Edges",{BinEdges(:,i),BinEdges(:,j)});
+                        else
+                            [Ncount,BinCentre] = hist3([m.parameters_all(:,i) m.parameters_all(:,j)],"Edges",{BinEdges(:,i),BinEdges(:,j)});
+                        end
                     else
-                        [Ncount,BinCentre] = hist3([m.parameters_all(:,i) m.parameters_all(:,j)],[NBINS NBINS]);
+                        if inmemTF(2)
+                            [Ncount,BinCentre] = hist3([parameters_all(:,i) parameters_all(:,j)],[NBINS NBINS]);
+                        else
+                            [Ncount,BinCentre] = hist3([m.parameters_all(:,i) m.parameters_all(:,j)],[NBINS NBINS]);
+                        end
                     end
                     %BinCentre;
                     if length(unique(BinCentre{1,1}))==length(Ncount) && length(unique(BinCentre{1,2}))==length(Ncount)
@@ -79,13 +114,13 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
                     plot(modeHist(j),modeHist(i),'*','Color',[140, 0, 186]./255,'MarkerSize',8);
 			        colorbar('off');%colorbar;grid off;
 			        h1=gca;set(h1,'FontName',fname,'FontSize',fsize);
-			        if i ~= n_params
+			        if i ~= nparams
 				        set(gca,'XTickLabel',[])
 			        end
 			        if j ~= 1
 				        set(gca,'YTickLabel',[])
 			        end
-			        if i == n_params
+			        if i == nparams
 				        xlabel(strcat("log_{10} ", parameter_names(j)),'FontName',fname,'FontSize',fsize);
 			        end
 			        if j == 1
@@ -94,25 +129,28 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
 			    elseif i == j
 				    nexttile(p); hold on;
 				    title(parameter_names(i))
-                    histogram(m.parameters_all(:,i),NBINS);
+                    if inmemTF(2)
+                        histogram(parameters_all(:,i),NBINS);
+                    else
+                        histogram(m.parameters_all(:,i),NBINS);
+                    end
+
                     plot(modeHist(i),0,'*','Color',[140, 0, 186]./255,'MarkerSize',8);
                     
                     h1=gca;set(h1,'FontName',fname,'FontSize',fsize);grid on;
-				    if i ==n_params
+				    if i ==nparams
 					    xlabel(strcat("log_{10} ",parameter_names(i)),'FontName',fname,'FontSize',fsize);
 				    end
 				    if j ==1
 					    ylabel('Prob. Density','FontName',fname,'FontSize',fsize);
 				    end
-				    if i ~= n_params
+				    if i ~= nparams
 					    %set(gca,'XTickLabel',[])
 				    end
 				    if j ~= 1
 					    set(gca,'YTickLabel',[])
 				    end
-				    %xlabel(parameter_names(i),'FontName',fname,'FontSize',fsize);%ylabel('Prob. Density','FontName',fname,'FontSize',fsize);
 				    axis tight;
-				    %xlim([lb(j) ub(j)])
 			    end
 			    p = p + 1;
 		    end
@@ -120,7 +158,6 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
 	    %legend('Param. distr.','Param. best part.')
         set(gcf,'Color','w');
         if(saveTF)
-            %savefig(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled_compact.fig'),'compact');
             saveas(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled.png'),'png');
             saveas(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled.fig'),'fig');
             saveas(gcf,fullfile(savefigfolder,'ParameterCorrelations_Labeled.eps'),'epsc');
@@ -129,9 +166,13 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         % Parameter VS first 3*NTCHECK iteration
         p = 1;
         figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs first 3*NTCHECK iterations');hold on;
-        for i=1:n_params
-            subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p);
-            plot(m.logparams_all_trun(1:3*m.NTCHECK,i),'LineWidth',0.05);
+        for i=1:nparams
+            subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p);
+            if inmemTF(1)
+                plot(logparams_all_trun(1:3*NTCHECK,i),'LineWidth',0.05);
+            else
+                plot(m.logparams_all_trun(1:3*NTCHECK,i),'LineWidth',0.05);
+            end
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
             ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
             p=p+1;
@@ -145,9 +186,13 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         % Parameter VS posterior iterations
         p = 1;
         figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs posterior iterations');hold on;
-        for i=1:n_params
-            subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p);
-            plot(m.parameters_all(:,i),'LineWidth',0.05);
+        for i=1:nparams
+            subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p);
+            if inmemTF(2)
+                plot(parameters_all(:,i),'LineWidth',0.05);
+            else
+                plot(m.parameters_all(:,i),'LineWidth',0.05);
+            end
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
             ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
             p=p+1;
@@ -157,16 +202,20 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.eps'),'epsc');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.png'),'png');
         end
+        close all
 
 
         % Parameter VS iteration
         p = 1;
         figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs iteration');hold on;
         
-        for i=1:n_params
-            subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p);
-            %scatter(1:maxrow,m.params_all(1:maxrow,i));
-            plot(m.logparams_all_trun(:,i),'LineWidth',0.05);
+        for i=1:nparams
+            subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p);
+            if inmemTF(1)
+                plot(logparams_all_trun(:,i),'LineWidth',0.05);
+            else
+                plot(m.logparams_all_trun(:,i),'LineWidth',0.05);
+            end
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
             ylabel(strcat("log_{10}", parameter_names(i)),'FontName',fname,'FontSize',fsize);
             p=p+1;
@@ -176,15 +225,20 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.eps'),'epsc');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.png'),'png');
         end
+        close all
 
 
         if (plotecdfTF)
             % Parameter ecdf
             p = 1; NBINS=30;
             figure('units','centimeters','position',[5,5,25,20],'Name','Parameter ecdfs');hold on;
-            for i=1:n_params
+            for i=1:nparams
                 % calculate ecdf
-                [f_ecdf,x_ecdf] = ecdf(m.parameters_all(1:sizeparameters_all,i));
+                if inmemTF(2)
+                    [f_ecdf,x_ecdf] = ecdf(parameters_all(1:sizeparameters_all,i));
+                else
+                    [f_ecdf,x_ecdf] = ecdf(m.parameters_all(1:sizeparameters_all,i));
+                end
     
                 % calculate ci
                 ci_low_ind = find(f_ecdf<0.025,1,'last');
@@ -194,7 +248,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
                 p_ci(i,2) = x_ecdf(ci_up_ind);
     
                 % plot, with ci
-                subplot(ceil(sqrt(n_params)),ceil(sqrt(n_params)),p); hold on;
+                subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p); hold on;
     
                 plot(x_ecdf,f_ecdf,'-','LineWidth',lw);
     
@@ -216,6 +270,64 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
                 saveas(gcf,fullfile(savefigfolder,'ParameterECDFs.eps'),'epsc');
             end
         end
+
+        nt=NTCHECK;
+
+        if inmemTF(1)
+            len=length(logparams_all_trun);
+        else
+            len=length(m.logparams_all_trun);
+        end
+
+        while nt*3<len
+            ksplot(nt)
+            nt=nt*3;
+        end
+        ksplot(floor(len/3))
+
+    function ksplot(nt)
+        figure('units','centimeters','position',[5,5,45,30],'Name','KStest');hold on;
+        tiles = tiledlayout(nparams,3,'TileSpacing','tight','Padding','none');
+    
+        q=1;
+        ksval=zeros(nparams,1);
+        for k=1:nparams
+            nexttile(q)
+            if inmemTF(1)
+                plot(logparams_all_trun(nt:nt*3,k),'LineWidth',0.05);
+            else
+                plot(m.logparams_all_trun(nt:nt*3,k),'LineWidth',0.05);
+            end
+            %xlabel('Iteration');
+            ylabel(parameter_names(k));
+            q=q+1;
+    
+            ax1=nexttile(q);
+            ax2=nexttile(q+1);
+            q=q+2;
+    
+            label1=strcat(num2str(nt),"-",num2str(nt*2));
+            label2=strcat(num2str(nt*2+1),"-",num2str(nt*3));
+            if inmemTF(1)
+                [ksval(k),histploti,cdfplot]=mykstest(logparams_all_trun(nt:nt*2,k),logparams_all_trun(nt*2+1:nt*3,k),label1,label2,1,[ax1,ax2]);
+            else
+                [ksval(k),histploti,cdfplot]=mykstest(m.logparams_all_trun(nt:nt*2,k),m.logparams_all_trun(nt*2+1:nt*3,k),label1,label2,1,[ax1,ax2]);
+            end
+        end
+    
+        tiles.Title.String = strcat("KStest for nt= ",num2str(nt*3)," (ntcheck= ",num2str(nt),")");
+    
+        if saveTF
+            saveas(gcf,fullfile(savefigfolder,strcat("KStestfig_",num2str(nt),".png")'),'png');
+            saveas(gcf,fullfile(savefigfolder,strcat("KStestfig_",num2str(nt),".eps")),'epsc');
+        end
+        close all
+    
+    end
+
+    load('Users/katiebogue/MATLAB/GitHub/kpolyMCMC/Experiments_4c.mat')
+    maxlikelihoodplot(Experiment1,foldername)
+        
 end
 
 
