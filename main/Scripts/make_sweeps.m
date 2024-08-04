@@ -25,6 +25,7 @@ for i=1:length(bestfits)
     kpolysweep(opts,"k_cap","log2",true)
     kpolysweep(opts,"k_del","log2",true)
     kpolysweep(opts,"r_cap","log2",true)
+    kpolysweep(opts,"r_cap_exp","log2",true)
     if opts.kpoly_type~="3st"
         kpolysweep(opts,"r_del","log2",true)
         kpolysweep(opts,"k_rel","log2",true)

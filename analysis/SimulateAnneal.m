@@ -1,6 +1,6 @@
-function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,KSCRITICAL,nondim)
+function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initialguess,exptype,type,errtype, inputtype, nondim, NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
 % 
-    %   out = MCMCParamfit(Exp) 
+    %   out = SimulateAnneal(Exp) 
     %   
     %   Inputs:
     %         : 
@@ -11,27 +11,27 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
 
     arguments
         Exp
+        initialguess
         exptype % 1= is an experiment, 2= is a struct with rates, data, and resultsfolder and resultsdir
         type
         errtype % 1= use separate sigma values, 2= divide each by SEM
-        matfileTF=0 % whether to save to a matfile or to keep things in memory
-        NTCHECK = 3000
-        NTADAPT =100
-        NTMAX =10^7
-        KSCRITICAL =0.02
+        inputtype % 1= nondimensionalize params, 2= regular params
         nondim= 1 % whether to use nondimensionality
+        NTCHECK = 1000
+        NTADAPT =100
+        NTMAX =10^6
+        KSCRITICAL =0.01
     end
 
     
     NBINS = 200;
-    PARAMMAX = 20; % in log-space
+    PARAMMAX = 30; % in log-space
     PARAMMIN = -10; % in log-space
     SIGMAMAX = 2; % in log-space
     SIGMAMIN = -2; % in log-space
     EXPMIN = 0.1; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
-    EXPMAX = 10; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
+    EXPMAX = 2; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
 
-    disp("MCMCParamfit.m starting") 
 
     % set up place to store data
     if exptype==1
@@ -42,7 +42,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         opts.update_results_folder
         opts.resultsfolder=strcat("MCMC_",opts.resultsfolder);
         clear Exp
-        disp("Read in information from Experiment object")
+        %disp("Read in information from Experiment object")
     elseif exptype==2
         opts.resultsdir=Exp.resultsdir;
         opts.resultsfolder=strcat("MCMC_",Exp.resultsfolder);
@@ -77,10 +77,6 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
             end
         end
     end
-
-    mkdir (opts.resultsdir,opts.resultsfolder)
-    disp("created output directory")
-    wkspc=fullfile(opts.resultsdir,opts.resultsfolder,"mcmc_results.mat");
     
     if errtype==1
         nsigma=length(unique(data.type));
@@ -109,30 +105,31 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
     rng("shuffle")
     % params=rand([1 nparams])+1;
     % dx=ones(nparams,1);
-    params=zeros(1,nparams);
-    params(nkpolyparams+1:nparams)=rand(1,nparams-nkpolyparams); % set initial sigma values to between 0-1
+    if nondim
+        if inputtype==2
+            initialguess(2:3)=log10(10.^(initialguess(2:3))./10^(initialguess(1)));
+            if type=="4st"
+                initialguess(5:6)=log10(10.^(initialguess(5:6))./10^(initialguess(1)));
+            end
+            initialguess(1)=[];
+        end
+    else
+        if inputtype==1
+            error("must supply regular parameters")
+        end
+    end
+    params=initialguess;
     dx=ones(nparams,1);
     dx(1:3)=[0.1,0.1,0.1];
     if nondim
-        params(1)=randi([11 14],1,1); % alpha_del initial
-        params(2)=-rand; % beta_cap initial
-        params(3)=1; %rcap exp initial
         dx(3)=1;
     else
-        params(1)=randi([11 14],1,1); % kcap initial
-        params(2)=-rand; % kdel initial
-        params(3)=randi([13 15],1,1); %rcap initial
-        params(4)=1; %rcap exp initial
         dx(4)=1;
     end
     if type=="4st"
         if nondim
-            params(4)=1; %gamma_del initial
-            params(5)=randi([3 5],1,1); %tau_rel initial
             dx(5:6)=[1,5];
         else
-            params(5)=randi([10 15],1,1); %rdel initial
-            params(6)=randi([3 5],1,1); %krel initial
             dx(5:6)=[5,5];
         end
     end
@@ -150,29 +147,12 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
 
     nt=0;
 
-    if matfileTF
-        disp("saving workspace...")
-        save(wkspc,'-v7.3')
-        disp("saved workspace")
-        m = matfile(wkspc,'Writable',true);
-        disp("created matfile")
-        m.logparams_all(NTMAX,nparams)=0;
-        m.paccept_matrix(ceil(NTMAX/NTCHECK)+1,nparams+1)=0;
-        disp("created paccept_matrix")
-        m.paramHistCounts_matrices(nparams,NBINS,ceil(NTMAX/NTCHECK))=0;
-        disp("created paramHistCounts_matrices")
-        m.paramHistCounts_matrices_nts(ceil(NTMAX/NTCHECK),1)=0;
-        m.ksvals(ceil(NTMAX/NTCHECK),nparams)=0;
-        disp("created matfile matrices")
-        params_temp=zeros(3*NTCHECK,nparams);
-    else
-        logparams_all(NTMAX,nparams)=0;
-        paccept_matrix(ceil(NTMAX/NTCHECK)+1,nparams+1)=0;
-        paramHistCounts_matrices(nparams,NBINS,ceil(NTMAX/NTCHECK))=0;
-        paramHistCounts_matrices_nts(ceil(NTMAX/NTCHECK),1)=0;
-        ksvals(ceil(NTMAX/NTCHECK),nparams)=0;
-    end
+    paccept_matrix(ceil(NTMAX/NTCHECK)+1,nparams+1)=0;
+    paramHistCounts_matrices(nparams,NBINS,ceil(NTMAX/NTCHECK))=0;
+    paramHistCounts_matrices_nts(ceil(NTMAX/NTCHECK),1)=0;
+    ksvals(ceil(NTMAX/NTCHECK),nparams)=0;
 
+    params_temp=zeros(NTCHECK,nparams);
    
     nt_temp=0;
     last_nt=0;
@@ -183,47 +163,41 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
     paramHistCountsPrevious = zeros(nparams,NBINS);
     [logll_nt,divvalue]=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype,nondim,divdatapoint);
     minlogll=logll_nt;
+    if nondim
+        minlogll_params=gettrueparams(params,divvalue,divkpoly,nkpolyparams);
+    else
+        minlogll_params=params;
+    end
+    minlogll_params_raw=params;
+    %fitTF=checkfit(type,data,rates,params(1:nkpolyparams),nondim,divdatapoint);
+
     
-    disp("starting MCMC loop")
+    %disp("starting MCMC loop")
     while(nt<NTMAX)
         nt=nt+1;
         nt_temp=nt_temp+1;
         
         if (nt<NTCHECK-NTADAPT)&&(rem(nt,NTADAPT)==0)
 
-            disp("adapting step size...")
-            fprintf('nt: %d\n',nt)
-            % disp("total proposal count:")
-            % disp(proposals')
-            % disp("total acceptance count:")
-            % disp(accepts')
+            % disp("adapting step size...")
+            % fprintf('nt: %d\n',nt)
 
             proposals_new=proposals-proposals_adapt;
             accepts_new=accepts-accepts_adapt;
-
-            % disp("new proposal count:")
-            % disp(proposals_new')
-            % disp("new acceptance count:")
-            % disp(accepts_new')
             
             p_accept=accepts./proposals;
-            % disp("total acceptance probability:")
-            % disp(p_accept')
             p_accept=accepts_new./proposals_new;
-            disp("new acceptance probability:")
-            disp(p_accept')
+            % disp("new acceptance probability:")
+            % disp(p_accept')
             p_accept(p_accept==0)=0.01;
             p_accept(proposals==0)=0.44;
             in=(p_accept>0.6 | p_accept<0.3);
-            disp("previous step sizes: ")
-            disp(dx')
+            % disp("previous step sizes: ")
+            % disp(dx')
             dx(in)=dx(in).*(p_accept(in)./0.44);
 
-            disp("new step sizes: ")
-            disp(dx')
-            if matfileTF
-                m.dx=dx;
-            end
+            % disp("new step sizes: ")
+            % disp(dx')
             proposals_adapt=proposals;
             accepts_adapt=accepts;
         end
@@ -235,7 +209,6 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
 
         if (index~=(4-nondim) && proposal(index)<PARAMMIN) || (index~=(4-nondim) && proposal(index)>PARAMMAX) || (index>nkpolyparams && (proposal(index)>SIGMAMAX || proposal(index)<SIGMAMIN)) || (index==(4-nondim) && (proposal(index)>EXPMAX || proposal(index)<EXPMIN))
             % reject anything beyond the boundaries
-            params_temp(nt_temp,:)=params;
         else
             %calculate logll of proposal
             [logll_prop,divvalue]=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype,nondim,divdatapoint);
@@ -244,7 +217,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
             % exptrueparams(4)=trueparams(4);
             % kps=calckpolys(type,rates,exptrueparams,0);
             % val=kps{divdatapoint}(1,2);
-            % if abs(val-divkpoly)>10^-5
+            % if abs(val-divkpoly)>10^-3
             %     error("not getting to correct kpoly")
             % end
             %Accept or reject proposal
@@ -264,7 +237,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
                         minlogll_params=params;
                     end
                 end
-            elseif rand < exp(logll_prop-logll_nt)
+            elseif rand < exp((logll_prop-logll_nt)/kbt(nt))
                 % Boltzmann test, Accept 
                 params=proposal;
                 logll_nt=logll_prop;
@@ -272,88 +245,43 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
                 accepts(index)=accepts(index)+1;
                 accepts_temp(index)=accepts_temp(index)+1;
             end
-            params_temp(nt_temp,:)=params;
         end
 
+        if nt<NTCHECK
+            params_temp(nt,:)=params;
+        end
          if nt==NTCHECK
             binEdges=zeros(nparams,NBINS+1);
             Y = zeros(nparams,NBINS);
             for i=1:nparams
-                %maxp=max(params_temp(:,i));
-                %minp=min(params_temp(:,i));
                 [Y(i,:),binEdges(i,:)]=histcounts(params_temp((NTCHECK/2):end,i),NBINS);
             end
-            if matfileTF
-                m.paramHistCounts_matrices(:,:,1)=Y;
-                m.paramHistCounts_matrices_nts(1,1)=nt;
-                m.binEdges=binEdges;
-            else
-                paramHistCounts_matrices(:,:,1)=Y;
-                paramHistCounts_matrices_nts(1,1)=nt;
-            end
+            paramHistCounts_matrices(:,:,1)=Y;
+            paramHistCounts_matrices_nts(1,1)=nt;
             clear Y
             HistCountIndex=2;
         end
 
         if nt_temp==3*NTCHECK
             ntcheck_count=ntcheck_count+1;
-            if matfileTF
-                m.nt=nt;
-                m.logparams_all(last_nt+1:nt,:)=params_temp;
-                m.minlogll=minlogll;
-                m.minlogll_params=minlogll_params;
-                if nondim
-                    m.minlogll_params_raw=minlogll_params_raw;
-                end
-                m.paccept_matrix(ntcheck_count,1)=nt;
-                m.paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
-            else
-                logparams_all(last_nt+1:nt,:)=params_temp;
-                paccept_matrix(ntcheck_count,1)=nt;
-                paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
-            end
-            disp([accepts_temp./proposals_temp]')
+            paccept_matrix(ntcheck_count,1)=nt;
+            paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
+            %disp([accepts_temp./proposals_temp]')
             accepts_temp(:)=0;
             proposals_temp(:)=0;
             last_nt=nt;
             nt_temp=0;
-            params_temp(:)=0;
-            % disp("step up:")
-            % disp(step_up')
-            % disp("step down:")
-            % disp(step_down')
-            fprintf('appended logparams_all at nt: %d\n',nt)
-            %makeupdateplot
         end
 
         if nt==NTMAX
             ntcheck_count=ntcheck_count+1;
-            if matfileTF
-                m.nt=nt;
-                m.logparams_all(last_nt+1:nt,:)=params_temp(1:nt_temp,:);
-                m.minlogll=minlogll;
-                m.minlogll_params=minlogll_params;
-                if nondim
-                    m.minlogll_params_raw=minlogll_params_raw;
-                end
-                m.paccept_matrix(ntcheck_count,1)=nt;
-                m.paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
-            else
-                logparams_all(last_nt+1:nt,:)=params_temp(1:nt_temp,:);;
-                paccept_matrix(ntcheck_count,1)=nt;
-                paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
-            end
-            disp([accepts_temp./proposals_temp]')
+            paccept_matrix(ntcheck_count,1)=nt;
+            paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
+            %disp([accepts_temp./proposals_temp]')
             accepts_temp(:)=0;
             proposals_temp(:)=0;
             last_nt=nt;
             nt_temp=0;
-            params_temp(:)=0;
-            % disp("step up:")
-            % disp(step_up')
-            % disp("step down:")
-            % disp(step_down')
-            fprintf('appended logparams_all at nt: %d\n',nt)
         end
 
        
@@ -369,7 +297,6 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
                 end
                 paramHistCountsPrevious(i,index)=paramHistCountsPrevious(i,index)+1;
             end
-            %disp('Updated bins for 2nd segment')
         elseif nt<=3*currentntcheck
             for i=1:nparams
                 if params(i)<binEdges(i,1)
@@ -381,26 +308,19 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
                 end
                 paramHistCounts(i,index)=paramHistCounts(i,index)+1;
             end
-            %disp('Updated bins for 3rd segment')
         end
 
         if nt==3*currentntcheck
-            fprintf('nt: %d\n',nt)
-            fprintf('currentntcheck: %d\n',currentntcheck)
-            if matfileTF
-                m.paramHistCounts_matrices_nts(HistCountIndex,1)=currentntcheck*2;
-                m.paramHistCounts_matrices_nts(HistCountIndex+1,1)=currentntcheck*3;
-                m.paramHistCounts_matrices(:,:,HistCountIndex)=paramHistCountsPrevious;
-                m.paramHistCounts_matrices(:,:,HistCountIndex+1)=paramHistCounts;
-            else
-                paramHistCounts_matrices_nts(HistCountIndex,1)=currentntcheck*2;
-                paramHistCounts_matrices_nts(HistCountIndex+1,1)=currentntcheck*3;
-                paramHistCounts_matrices(:,:,HistCountIndex)=paramHistCountsPrevious;
-                paramHistCounts_matrices(:,:,HistCountIndex+1)=paramHistCounts;
-            end
+            %fprintf('nt: %d\n',nt)
+            %fprintf('currentntcheck: %d\n',currentntcheck)
+
+            paramHistCounts_matrices_nts(HistCountIndex,1)=currentntcheck*2;
+            paramHistCounts_matrices_nts(HistCountIndex+1,1)=currentntcheck*3;
+            paramHistCounts_matrices(:,:,HistCountIndex)=paramHistCountsPrevious;
+            paramHistCounts_matrices(:,:,HistCountIndex+1)=paramHistCounts;
             HistCountIndex=HistCountIndex+2;
             
-            disp('Begining KS test')
+            %disp('Begining KS test')
             % intialize
             ksStatistic = zeros(nparams,1);
             cdf1 = zeros(nparams,NBINS);
@@ -413,61 +333,26 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
                 ksStatistic(i) = max(abs(cdf1(i,:)-cdf2(i,:)));
                 
             end
-            if matfileTF
-                m.ksvals(ksvalindex,:)=ksStatistic';
-            else
-                ksvals(ksvalindex,:)=ksStatistic';
-            end
+            ksvals(ksvalindex,:)=ksStatistic';
             ksvalindex=ksvalindex+1;
             if all(ksStatistic(:) < KSCRITICAL)
-                disp('KS test successful')
-                if matfileTF
-                    m.proposals=proposals;
-                    m.accepts=accepts;
-                    m.ksStatistic=ksStatistic;
-                    m.parameters_all=m.logparams_all(currentntcheck:3*currentntcheck,:);
-                    m.paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
-                    m.paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
-                else
-                    parameters_all=logparams_all(currentntcheck:3*currentntcheck,:);
-                    paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
-                    paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
-                    save(wkspc)
-                    disp("saved workspace to .mat")
-                end
-                visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
+                %disp('KS test successful')
+                maxlikelihoodplots(minlogll_params,type)
+                fitTF=checkfit(type,data,rates,params(1:nkpolyparams),nondim,divdatapoint);
                 return
             else
-                disp(ksStatistic)
-                disp('KS test unsuccessful')
+                %disp(ksStatistic')
+                %disp('KS test unsuccessful')
                 currentntcheck=currentntcheck*3;
-                if matfileTF
-                    m.currentntcheck=currentntcheck;
-                    m.proposals=proposals;
-                    m.accepts=accepts;
-                end
-                fprintf('new currentntcheck: %d\n',currentntcheck)
+                %fprintf('new currentntcheck: %d\n',currentntcheck)
                 paramHistCounts = zeros(nparams,NBINS);
                 paramHistCountsPrevious = zeros(nparams,NBINS);
-                %fprintf('nt: %d\n',nt)
-                %makeupdateplot
-                save(wkspc)
-                disp("saved workspace to .mat")
             end
         end
     end
-    if matfileTF
-        m.paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
-        m.paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
-        m.parameters_all=0;
-    else
-        paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
-        paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
-        parameters_all=0;
-        save(wkspc)
-        disp("saved workspace to .mat")
-    end
-    visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
+
+    maxlikelihoodplots(minlogll_params,type)
+    fitTF=checkfit(type,data,rates,params(1:nkpolyparams),nondim,divdatapoint);
 
     function [proposals,i]=generateproposal(params,dx)
         i=randi([1 length(params)]);
@@ -481,32 +366,63 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         proposals(i)=proposals(i)+step;
     end
 
-    function makeupdateplot
-        p = 1;
-        figure('units','centimeters','position',[5,5,25,20],'Name','Parameter vs iteration');hold on;
-        for k=1:nparams
-            subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p);
-            if matfileTF
-                plot(m.logparams_all(1:nt,k),'LineWidth',0.05);
-            else
-                plot(logparams_all(1:nt,k),'LineWidth',0.05);
-            end
-            p=p+1;
-        end
-        pause(20)
+    function output = kbt(ntvalue)
+        %output=1-((ntvalue/NTMAX)^(8));
+
+        output=0.5*(NTMAX^5)*(1+cos(ntvalue*pi/NTMAX));
     end
 
 end
 
+function maxlikelihoodplots(minlogll_params,type)
+    load('Users/katiebogue/MATLAB/GitHub/kpolyMCMC/Experiments_4c.mat')
+
+    Experiment1.opts.set_equation(1);
+    Experiment1.opts.k_cap=10^minlogll_params(1);
+    Experiment1.opts.k_del=10^minlogll_params(2);
+    Experiment1.opts.r_cap=10^minlogll_params(3);
+    Experiment1.opts.r_cap_exp=minlogll_params(4);
+    Experiment1.opts.kpoly_type=type;
+    
+    if type=="4st"
+        Experiment1.opts.r_del=10^minlogll_params(5);
+        Experiment1.opts.k_rel=10^minlogll_params(6);
+    end
+    
+    figure('units','centimeters','position',[5,5,45,30],'Name','BestFit');hold on;
+    tiles = tiledlayout(2,3,'TileSpacing','tight','Padding','none');
+    title(tiles,num2str(minlogll_params))
+
+    fig3=Experiment1.expdatabar(group="Fig 3");
+    ax_temp = copyobj(copyobj(fig3(1).Children, get(fig3(1).Children,'Type')), tiles);
+    ax_temp(2).Layout.Tile=5;
+    close(fig3)
+
+    
+    fig35=Experiment1.expdatabar(group="Fig 3 5");
+    ax_temp = copyobj(copyobj(fig35(1).Children, get(fig35(1).Children,'Type')), tiles);
+    ax_temp(2).Layout.Tile=4;
+    close(fig35)
+
+    fig4a=Experiment1.expdatabar(group="Fig 4a");
+    ax_temp = copyobj(copyobj(fig4a(1).Children, get(fig4a(1).Children,'Type')), tiles);
+    ax_temp(2).Layout.Tile=3;
+    close(fig4a)
+
+    fig4c=Experiment1.expdatabar(group="Fig 4c");
+    ax_temp = copyobj(copyobj(fig4c(1).Children, get(fig4c(1).Children,'Type')), tiles);
+    ax_temp(2).Layout.Tile=2;
+    close(fig4c)
+
+    figNTD=Experiment1.expdatabar("log2",false,group="NTD data"); % uses log2 scale
+    ax_temp = copyobj(copyobj(figNTD(1).Children, get(figNTD(1).Children,'Type')), tiles);
+    ax_temp(2).Layout.Tile=1;
+    close(figNTD)
+end
+
 
 function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,nondim,divdatapoint)
-    % calulcates log likelihood values for input parameters
-
-    % SSE=sum((1.5-params).^2);
-    % sigma2=sigma(1)^2;
-    % logll=(-SSE/(2*sigma2))-(0.5*length(params)*log(2*pi*sigma2));
-    % logll=-SSE;
-    % return
+    % calulcates energy values for input parameters
 
     inputparams=10.^(params);
 
@@ -524,7 +440,6 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
     if nondim
         divvalue=kpolys{divdatapoint}(1,2);
         data(divdatapoint,:)=[];
-        kpolys(divdatapoint)=[];
         expdata=data.ratiovalues;
     else
         expdata=data.value;
@@ -536,7 +451,8 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
         if data.type(i)=="ratio"
             simdata(i)=kpolys{i}(1,3)/kpolys{i}(1,2);
         elseif nondim
-            if data.type(i)=="double"
+            if i==divdatapoint
+            elseif data.type(i)=="double"
                 simdata(i)=kpolys{i}(1,2);
             elseif data.type(i)=="dimer"
                 simdata(i)=kpolys{i}(1,3);
@@ -570,6 +486,16 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
             sigma2=sigma(i)^2;
             logll_i=(-SSE/(2*sigma2))-(0.5*length(expdata(rows))*log(2*pi*sigma2));
             logll=logll+logll_i;
+
+            %extra penalty for double data
+            % if data.type=="double"
+            %     logll=logll+2*logll_i;
+            % end
+
+            %extra penalty for NTD data
+            % if data.type=="ratio"
+            %     logll=logll-SSE;
+            % end
         end
     elseif errtype==2
         for i=1:length(expdata)
@@ -582,6 +508,25 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
     else
         error("invalid error type")
     end
+
+    % extra penalty for more trends
+    % rows = data.type == "double";
+    % logll=logll-sum(10.*(abs(diff(simdata(rows))-diff(expdata(rows))))); 
+
+    % extra penalty for fig 4a data
+    rows=[];
+    for i=1:length(expdata)
+        if data.groups{i}=="Fig 4a"
+            rows=[rows, i];
+        end
+    end
+    logll=logll-sum(abs(diff(simdata(rows))-diff(expdata(rows))));
+    
+    if sign(diff(simdata(rows))) ~= sign(diff(expdata(rows)))
+        logll=logll-sum((abs(diff(simdata(rows))-diff(expdata(rows)))));
+    end
+
+
 end
 
 function kpolys=calckpolys(type,rates,params,nondim)
@@ -634,5 +579,101 @@ function trueparams=gettrueparams(params,alphakp,kp,nparams)
     end
 
     trueparams=[log10(kcap), trueparams];
+
+end
+
+function fitTF=checkfit(type,data,rates,params,nondim,divdatapoint)
+    % calulcates energy values for input parameters
+
+    inputparams=10.^(params);
+
+    % have all but rcap_exp be in log space
+    if nondim
+        inputparams(3)=params(3);
+    else
+        inputparams(4)=params(4);
+    end
+    
+    kpolys=calckpolys(type,rates,inputparams,nondim);
+    
+    if nondim
+        divvalue=kpolys{divdatapoint}(1,2);
+        data(divdatapoint,:)=[];
+        expdata=data.ratiovalues;
+    else
+        expdata=data.value;
+        divvalue=1;
+    end
+
+    simdata=zeros(size(expdata));
+    for i=1:length(expdata)
+        if data.type(i)=="ratio"
+            simdata(i)=kpolys{i}(1,3)/kpolys{i}(1,2);
+        elseif nondim
+            if i==divdatapoint
+            elseif data.type(i)=="double"
+                simdata(i)=kpolys{i}(1,2);
+            elseif data.type(i)=="dimer"
+                simdata(i)=kpolys{i}(1,3);
+            elseif data.type(i)=="single"
+                simdata(i)=kpolys{i}(1,1);
+            else
+                error('Error. \nNo valid experimental data type.')
+            end
+            simdata(i)=simdata(i)/divvalue;
+        else
+            if data.type(i)=="double"
+                simdata(i)=kpolys{i}(1,2);
+            elseif data.type(i)=="dimer"
+                simdata(i)=kpolys{i}(1,3);
+            elseif data.type(i)=="single"
+                simdata(i)=kpolys{i}(1,1);
+            else
+                error('Error. \nNo valid experimental data type.')
+            end
+        end
+    end
+
+    fitTF=1;
+
+    % check if trend is present for fig 4a
+    rows=[];
+    for i=1:length(expdata)
+        if data.groups{i}=="Fig 4a"
+            rows=[rows, i];
+        end
+    end
+    %logll=logll-sum(abs(diff(simdata(rows))-diff(expdata(rows))));
+    if sign(diff(simdata(rows))) ~= sign(diff(expdata(rows)))
+        fitTF=0;
+    end
+
+
+    % check if trend is present for fig 3
+    rows=[];
+    for i=1:length(expdata)
+        if data.groups{i}=="Fig 3 5"
+            rows=[rows, i];
+        end
+    end
+    %logll=logll-sum(abs(diff(simdata(rows))-diff(expdata(rows))));
+    if sign(diff(simdata(rows))) ~= sign(diff(expdata(rows)))
+        fitTF=0;
+    end
+
+    % check if NTD is within error bars
+    rows=[];
+    for i=1:length(expdata)
+        if data.groups{i}=="NTD data"
+            rows=[rows, i];
+        end
+    end
+    topvals=data.value(rows)+data.errtop(rows);
+    botvals=data.value(rows)-data.errbot(rows);
+    for i=rows
+        if simdata(i)>topvals(i) || simdata(i)+.01<botvals(i)
+            fitTF=0;
+        end
+    end
 
 end

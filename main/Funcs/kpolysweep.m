@@ -32,12 +32,22 @@ elseif scale=="ln"
     yscale=@(x) log(x);
 end
 
+colors=["blue","red","black"];
+
 if sweep=="PRM size"
     FH1_lengths=[50,150,350,600];
     scatn=0;
     for j=1:length(FH1_lengths)
         FH1_length=FH1_lengths(j);
         for k=0.1:0.4:0.9
+            if k==.1
+                color1='blue';
+            elseif k==0.5
+                color1='red';
+            else
+                color1='black';
+            end
+
             if FH1_length<60 && k>0.5
                 continue
             end
@@ -50,8 +60,10 @@ if sweep=="PRM size"
                 kpolyratios(i,1)=formin1.kpoly.ratio;
             end
             scatn=scatn+1;
-            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
-            plt=plot(xvals',yscale(kpolyratios),'Color',options.colors(scatn));
+            %scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
+            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',color1);
+            %plt=plot(xvals',yscale(kpolyratios),'Color',options.colors(scatn));
+            plt=plot(xvals',yscale(kpolyratios),'Color',color1);
             plt.Annotation.LegendInformation.IconDisplayStyle='off';
             scat.DisplayName=sprintf("FH1 length=%d; FH2 dist=%d",FH1_length,PRM_loc);
         end
@@ -73,8 +85,10 @@ elseif sweep=="FH1 length"
                 kpolyratios(i,1)=formin1.kpoly.ratio;
             end
             scatn=scatn+1;
-            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(k),'MarkerFaceColor',options.colors(scatn));
-            plt=plot(xvals',yscale(kpolyratios),'Color',options.colors(scatn));
+            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(k),'MarkerFaceColor',colors(j));
+            plt=plot(xvals',yscale(kpolyratios),'Color',colors(j));
+            % scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(k),'MarkerFaceColor',options.colors(scatn));
+            % plt=plot(xvals',yscale(kpolyratios),'Color',options.colors(scatn));
             plt.Annotation.LegendInformation.IconDisplayStyle='off';
             scat.DisplayName=sprintf("PRM size=%d; FH2 dist=%d",PRM_size,PRM_loc);
         end
@@ -97,8 +111,8 @@ elseif sweep=="FH2 dist"
                 kpolyratios(i,1)=formin1.kpoly.ratio;
             end
             scatn=scatn+1;
-            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
-            plt=plot(xvals',yscale(kpolyratios),'Color',options.colors(scatn));
+            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',colors(k));
+            plt=plot(xvals',yscale(kpolyratios),'Color',colors(k));
             plt.Annotation.LegendInformation.IconDisplayStyle='off';
             scat.DisplayName=sprintf("FH1 length=%d; PRM size=%d",FH1_length,PRM_size);
         end
@@ -121,8 +135,8 @@ elseif sweep=="NT dist"
                 kpolyratios(i,1)=formin1.kpoly.ratio;
             end
             scatn=scatn+1;
-            scat=scatter([FH1_length-xvals]',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
-            plt=plot([FH1_length-xvals]',yscale(kpolyratios),'Color',options.colors(scatn));
+            scat=scatter([FH1_length-xvals]',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',colors(k));
+            plt=plot([FH1_length-xvals]',yscale(kpolyratios),'Color',colors(k));
             plt.Annotation.LegendInformation.IconDisplayStyle='off';
             scat.DisplayName=sprintf("FH1 length=%d; PRM size=%d",FH1_length,PRM_size);
         end
@@ -146,15 +160,17 @@ else
                     PRM_size=PRM_sizes(i);
                     formin1=Formin("formin1",options,c_PA=1,gating=1,length=FH1_length,PRMloc=PRM_loc,PRMsize=PRM_size);
                     if sweep=="k_cap"
-                        yvals=10.^([0:0.2:12]);
+                        yvals=10.^([0:0.2:10]);
                     elseif sweep=="k_del"
-                        yvals=10.^([-8:0.2:10]);
+                        yvals=10.^([-8:0.2:6]);
                     elseif sweep=="r_cap"
-                        yvals=10.^([-5:0.2:20]);
+                        yvals=10.^([-2:0.2:12]);
                     elseif sweep=="r_del"
                         yvals=10.^([0:0.2:10]);
                     elseif sweep=="k_rel"
                         yvals=10.^([-2:0.2:14]);
+                    elseif sweep=="r_cap_exp"
+                        yvals=10.^([-2:0.1:2]);
                     else
                         yvals=10.^([-2:0.2:10]);
                     end
@@ -164,8 +180,14 @@ else
                         kpolyratios(n,1)=formin1.kpoly.ratio;
                     end
                     scatn=scatn+1;
-                    scat=scatter(log10(yvals),yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
-                    plt=plot(log10(yvals),yscale(kpolyratios),'Color',options.colors(scatn));
+                    if k==0.75
+                        scat=scatter(log10(yvals),yscale(kpolyratios),options.shapes(j),'MarkerEdgeColor',colors(i));
+                    else
+                        scat=scatter(log10(yvals),yscale(kpolyratios),15,'filled',options.shapes(j),'MarkerFaceColor',colors(i));
+                    end
+                    plt=plot(log10(yvals),yscale(kpolyratios),'Color',colors(i));
+                    % scat=scatter(log10(yvals),yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
+                    % plt=plot(log10(yvals),yscale(kpolyratios),'Color',options.colors(scatn));
                     plt.Annotation.LegendInformation.IconDisplayStyle='off';
                     scat.DisplayName=sprintf("FH1 length=%d; FH2 dist=%d; PRM size=%d",FH1_length,PRM_loc,PRM_size);
                 end

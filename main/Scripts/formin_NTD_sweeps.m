@@ -12,6 +12,7 @@ ltfile="N600_lookup.mat"; % output file from polymer-c; must be on matlab path
 pythonpath="/Users/katiebogue/MATLAB/GitHub/ForminKineticModel/main/python"; % path to python files
 resultsloc="/Users/katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results"; % path to location to save results
 forminfile="ForminTypes.txt"; % file containing sequences
+gatingfile="ForminTypes_gating.txt";
 %% create lookuptable
 lt=(load(ltfile,'lookuptable').lookuptable);
 lt=Lookuptable(lt);
@@ -20,73 +21,88 @@ lt=Lookuptable(lt);
 opts=Options(lt,pythonpath,...
     "4st",...       % kpoly type
     resultsloc,...
-    50,...          % k_cap
-    4*10^(-1.9),... % k_del
-    10^(5.1),...    % r_cap
-    2*10^(9),...    % r_del
-    8*10^(10));     % k_rel
+    25.704,...          % k_cap
+    0.022909,... % k_del
+    37896.5784,...    % r_cap
+    1,...    % r_del
+    1);     % k_rel
 
+opts.r_cap_exp=0.86103;
 opts.set_equation(1); % using preset #1 (see Options class)
 opts.NTopt=2; 
 
 %% create experiment object
-Experiment1=Experiment(opts,forminfile,"uniprot",2.5); % using the input sequence option and concentration of profilin actin of 2.5
+Experiment1=Experiment(opts,forminfile,"uniprot",0.88); % using the input sequence option and concentration of profilin actin of 2.5
+Experiment1.set_gating_file(gatingfile);
 %Experiment1.set_gating("BNI1",0.5);
 
 %% Load best fit tables
-load("best fits.mat")
-fit_3st(:,{'NTopt', 'CTopt'}) = [];
-fit_4st(:,{'NTopt', 'CTopt'}) = [];
-fit_4st_krel(:,{'NTopt', 'CTopt'}) = [];
+% load("best fits.mat")
+% fit_3st(:,{'NTopt', 'CTopt'}) = [];
+% fit_4st(:,{'NTopt', 'CTopt'}) = [];
+% fit_4st_krel(:,{'NTopt', 'CTopt'}) = [];
 
 %% Make heatmaps
 set(groot,'defaultfigureposition',[400 250 900 750]) % helps prevent cut offs in figs
 titles="log_2(k_{poly} N terminal dimerized/k_{poly} double)";
 
-Experiment1.applytable(fit_4st)
-NTDtable_4st=makeNTDtable(Experiment1);
+NTDtable=makeNTDtable(Experiment1);
 figure
-h1=makeheatmap(NTDtable_4st);
-h1.Title = {titles,"4st"};
-opts.update_results_folder
-opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","4st");
-figuresave(gcf,opts,append('NTDsweep_','4st','.fig'),true);
-NTDmaxmin_4st=max_min_table(NTDtable_4st);
-figure
-b=make_barplot(NTDmaxmin_4st);
-title([titles,"4st"]);
-figuresave(gcf,opts,append('NTDsweep_bar_','4st','.fig'),true);
-
-
-Experiment1.applytable(fit_3st)
-NTDtable_3st=makeNTDtable(Experiment1);
-NTDmaxmin_3st=max_min_table(NTDtable_3st);
-figure
-h2=makeheatmap(NTDtable_3st);
-h2.Title = {titles,"3st"};
+h1=makeheatmap(NTDtable);
+h1.Title = {titles,"3st"};
 opts.update_results_folder
 opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","3st");
 figuresave(gcf,opts,append('NTDsweep_','3st','.fig'),true);
-NTDmaxmin_3st=max_min_table(NTDtable_3st);
+NTDmaxmin=max_min_table(NTDtable);
 figure
-b=make_barplot(NTDmaxmin_3st);
+b=make_barplot(NTDmaxmin);
 title([titles,"3st"]);
 figuresave(gcf,opts,append('NTDsweep_bar_','3st','.fig'),true);
 
-Experiment1.applytable(fit_4st_krel)
-NTDtable_4st_krel=makeNTDtable(Experiment1);
-NTDmaxmin_4st_krel=max_min_table(NTDtable_4st_krel);
-figure
-h3=makeheatmap(NTDtable_4st_krel);
-h3.Title = {titles,"4st_krel"};
-opts.update_results_folder
-opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","4st_krel");
-figuresave(gcf,opts,append('NTDsweep_','4st_krel','.fig'),true);
-NTDmaxmin_4st_krel=max_min_table(NTDtable_4st_krel);
-figure
-b=make_barplot(NTDmaxmin_4st_krel);
-title([titles,"4st_krel"]);
-figuresave(gcf,opts,append('NTDsweep_bar_','4st_krel','.fig'),true);
+% Experiment1.applytable(fit_4st)
+% NTDtable_4st=makeNTDtable(Experiment1);
+% figure
+% h1=makeheatmap(NTDtable_4st);
+% h1.Title = {titles,"4st"};
+% opts.update_results_folder
+% opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","4st");
+% figuresave(gcf,opts,append('NTDsweep_','4st','.fig'),true);
+% NTDmaxmin_4st=max_min_table(NTDtable_4st);
+% figure
+% b=make_barplot(NTDmaxmin_4st);
+% title([titles,"4st"]);
+% figuresave(gcf,opts,append('NTDsweep_bar_','4st','.fig'),true);
+
+
+% Experiment1.applytable(fit_3st)
+% NTDtable_3st=makeNTDtable(Experiment1);
+% NTDmaxmin_3st=max_min_table(NTDtable_3st);
+% figure
+% h2=makeheatmap(NTDtable_3st);
+% h2.Title = {titles,"3st"};
+% opts.update_results_folder
+% opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","3st");
+% figuresave(gcf,opts,append('NTDsweep_','3st','.fig'),true);
+% NTDmaxmin_3st=max_min_table(NTDtable_3st);
+% figure
+% b=make_barplot(NTDmaxmin_3st);
+% title([titles,"3st"]);
+% figuresave(gcf,opts,append('NTDsweep_bar_','3st','.fig'),true);
+
+% Experiment1.applytable(fit_4st_krel)
+% NTDtable_4st_krel=makeNTDtable(Experiment1);
+% NTDmaxmin_4st_krel=max_min_table(NTDtable_4st_krel);
+% figure
+% h3=makeheatmap(NTDtable_4st_krel);
+% h3.Title = {titles,"4st_krel"};
+% opts.update_results_folder
+% opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","4st_krel");
+% figuresave(gcf,opts,append('NTDsweep_','4st_krel','.fig'),true);
+% NTDmaxmin_4st_krel=max_min_table(NTDtable_4st_krel);
+% figure
+% b=make_barplot(NTDmaxmin_4st_krel);
+% title([titles,"4st_krel"]);
+% figuresave(gcf,opts,append('NTDsweep_bar_','4st_krel','.fig'),true);
 
 function NTDtable=makeNTDtable(exp)
     numformins=length(exp.ForminList);

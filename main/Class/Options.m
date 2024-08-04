@@ -62,6 +62,10 @@ classdef Options <handle
             obj.resultsfolder= 'RESULTS_' + time;
         end
 
+        function out=getconsts(obj)
+            out=[obj.k_cap,obj.k_del,obj.r_cap,obj.r_del,obj.k_rel,obj.r_cap_exp];
+        end
+
         function set_FH1(obj,NameValueArgs)
             arguments
                 obj Options
@@ -148,6 +152,7 @@ classdef Options <handle
                 obj.equations.kdel=makeeq();
                 obj.equationstext.kdel_eq=[sprintf("%s(%s),",invars{1:end})];
                 invars={"size","negexp"};
+                step="rcap";
                 obj.equations.rcap=makeeq();
                 obj.equationstext.rcap_eq=[sprintf("%s(%s),",invars{1:end})];
             end
@@ -166,9 +171,10 @@ classdef Options <handle
                     if invars{i+1}=="linear"
                         fxn=@(PRM) fxn(PRM)*PRM.(invars{i});
                     elseif invars{i+1}=="negexp"
-                        fxn=@(PRM) fxn(PRM)*exp(-1*PRM.(invars{i}));
                         if step=="rcap"
                             fxn=@(PRM) fxn(PRM)*exp(-1*PRM.(invars{i})*PRM.formin.opts.r_cap_exp);
+                        else
+                            fxn=@(PRM) fxn(PRM)*exp(-1*PRM.(invars{i}));
                         end
                     elseif invars{i+1}=="exp"
                         fxn=@(PRM) fxn(PRM)*exp(PRM.(invars{i}));

@@ -18,6 +18,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     load(fullfile(foldername,filename),'containsInf')
     load(fullfile(foldername,filename),'NTCHECK')
     load(fullfile(foldername,filename),'type')
+    load(fullfile(foldername,filename),'nondim')
 
     inmemTF=[0,0];
     % logparams_all_trun=0;
@@ -44,15 +45,31 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     % initialparams=m.logparams_all_trun(1,:);
 
     if type=="3st" && length(initialparams)<7
-        parameter_names=["k_{cap}","k_{del}","r_{cap}","r_{cap} exp"];
+        if nondim
+            parameter_names=["alpha_{del}","beta_{cap}","r_{cap} exp"];
+        else
+            parameter_names=["k_{cap}","k_{del}","r_{cap}","r_{cap} exp"];
+        end
     else
-        parameter_names=["k_{cap}","k_{del}","r_{cap}","r_{cap} exp","r_{del}","k_{rel}"];
+        if nondim
+            parameter_names=["alpha_{del}","beta_{cap}","r_{cap} exp","gamma_{del}","tau_{rel}"];
+        else
+            parameter_names=["k_{cap}","k_{del}","r_{cap}","r_{cap} exp","r_{del}","k_{rel}"];
+        end
+        
     end
 
     for i=1:nsigma
         parameter_names=[parameter_names,strcat("sigma",int2str(i))];
     end
 
+    parameter_labels=parameter_names;
+    for i=1:length(parameter_names)
+        if parameter_names(i)~="r_{cap} exp"
+            parameter_labels(i)=strcat("log_{10} ", parameter_names(i));
+        end
+    end
+    
     
     fname='Dotum';	fsize = 8;	lw = 3;
     
@@ -64,10 +81,12 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         subplot(ceil(sqrt(nparams)),ceil(sqrt(nparams)),p); hold on;
         if inmemTF(2)
             histplot = histogram(parameters_all(:,i),NBINS);
+            stdev=std(parameters_all(:,i));
         else
             histplot = histogram(m.parameters_all(:,i),NBINS);
+            stdev=std(m.parameters_all(:,i));
         end
-        xlabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
+        xlabel(parameter_labels(i),'FontName',fname,'FontSize',fsize);
         ylabel('Frequency','FontName',fname,'FontSize',fsize);
     
     
@@ -76,6 +95,13 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         [maxVal, maxInd] = max(histplot.Values);
         modeHist(i) = histplot.BinEdges(maxInd)+0.5*histplot.BinWidth;
     
+        plot(modeHist(i),'*','Color',[140, 0, 186]./255,'MarkerSize',8);
+
+        xline(modeHist(i) - stdev, 'Color', 'r', 'LineWidth', 2, 'LineStyle', '--');
+        xline(modeHist(i) + stdev, 'Color', 'r', 'LineWidth', 2, 'LineStyle', '--');
+
+        legend({sprintf('mode= %3.2f, std = %3.2f', modeHist(i), stdev)})  
+
         p=p+1;
     end
     
@@ -121,10 +147,10 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
 				        set(gca,'YTickLabel',[])
 			        end
 			        if i == nparams
-				        xlabel(strcat("log_{10} ", parameter_names(j)),'FontName',fname,'FontSize',fsize);
+				        xlabel(parameter_labels(j),'FontName',fname,'FontSize',fsize);
 			        end
 			        if j == 1
-				        ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize)
+				        ylabel(parameter_labels(i),'FontName',fname,'FontSize',fsize)
                     end
 			    elseif i == j
 				    nexttile(p); hold on;
@@ -139,7 +165,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
                     
                     h1=gca;set(h1,'FontName',fname,'FontSize',fsize);grid on;
 				    if i ==nparams
-					    xlabel(strcat("log_{10} ",parameter_names(i)),'FontName',fname,'FontSize',fsize);
+					    xlabel(parameter_labels(i),'FontName',fname,'FontSize',fsize);
 				    end
 				    if j ==1
 					    ylabel('Prob. Density','FontName',fname,'FontSize',fsize);
@@ -174,7 +200,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
                 plot(m.logparams_all_trun(1:3*NTCHECK,i),'LineWidth',0.05);
             end
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
-            ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
+            ylabel(parameter_labels(i),'FontName',fname,'FontSize',fsize);
             p=p+1;
         end
         if(saveTF)
@@ -194,7 +220,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
                 plot(m.parameters_all(:,i),'LineWidth',0.05);
             end
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
-            ylabel(strcat("log_{10} ", parameter_names(i)),'FontName',fname,'FontSize',fsize);
+            ylabel(parameter_labels(i),'FontName',fname,'FontSize',fsize);
             p=p+1;
         end
         if(saveTF)
@@ -217,7 +243,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
                 plot(m.logparams_all_trun(:,i),'LineWidth',0.05);
             end
             xlabel('Iteration','FontName',fname,'FontSize',fsize);
-            ylabel(strcat("log_{10}", parameter_names(i)),'FontName',fname,'FontSize',fsize);
+            ylabel(parameter_labels(i),'FontName',fname,'FontSize',fsize);
             p=p+1;
         end
         if(saveTF)
@@ -325,8 +351,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     
     end
 
-    load('Users/katiebogue/MATLAB/GitHub/kpolyMCMC/Experiments_4c.mat')
-    maxlikelihoodplot(Experiment1,foldername)
+    maxlikelihoodplot(foldername)
         
 end
 

@@ -311,6 +311,73 @@ classdef Experiment
             end
         end
 
+        function fig=alldataplot(obj,scaledTF)
+            arguments
+                obj Experiment
+                scaledTF=0 %wether ot not to include the scaled plots
+            end
+
+            fig=figure('units','centimeters','position',[5,5,45,30],'Name','Experimental Fits');hold on;
+            if scaledTF
+                tiles = tiledlayout(5,2,'TileSpacing','tight','Padding','none');
+                p=9;
+            else
+                tiles = tiledlayout(2,3,'TileSpacing','tight','Padding','none');
+                p=5;
+            end
+            title(tiles,num2str(obj.opts.getconsts))
+        
+            figNTD=obj.expdatabar("log2",false,group="NTD data"); % uses log2 scale
+            ax_temp = copyobj(copyobj(figNTD(1).Children, get(figNTD(1).Children,'Type')), tiles);
+            ax_temp(2).Layout.Tile=p;
+            close(figNTD)
+            p=p-1;
+
+            fig3=obj.expdatabar(group="Fig 3");
+            ax_temp = copyobj(copyobj(fig3(1).Children, get(fig3(1).Children,'Type')), tiles);
+            ax_temp(2).Layout.Tile=p;
+            if scaledTF
+                p=p-1;
+                ax_temp = copyobj(copyobj(fig3(2).Children, get(fig3(2).Children,'Type')), tiles);
+                ax_temp(2).Layout.Tile=p;
+            end
+            close(fig3)
+            p=p-1;
+        
+            
+            fig35=obj.expdatabar(group="Fig 3 5");
+            ax_temp = copyobj(copyobj(fig35(1).Children, get(fig35(1).Children,'Type')), tiles);
+            ax_temp(2).Layout.Tile=p;
+            if scaledTF
+                p=p-1;
+                ax_temp = copyobj(copyobj(fig35(2).Children, get(fig35(2).Children,'Type')), tiles);
+                ax_temp(2).Layout.Tile=p;
+            end
+            close(fig35)
+            p=p-1;
+        
+            fig4a=obj.expdatabar(group="Fig 4a");
+            ax_temp = copyobj(copyobj(fig4a(1).Children, get(fig4a(1).Children,'Type')), tiles);
+            ax_temp(2).Layout.Tile=p;
+            if scaledTF
+                p=p-1;
+                ax_temp = copyobj(copyobj(fig4a(2).Children, get(fig4a(2).Children,'Type')), tiles);
+                ax_temp(2).Layout.Tile=p;
+            end
+            close(fig4a)
+            p=p-1;
+        
+            fig4c=obj.expdatabar(group="Fig 4c");
+            ax_temp = copyobj(copyobj(fig4c(1).Children, get(fig4c(1).Children,'Type')), tiles);
+            ax_temp(2).Layout.Tile=p;
+            if scaledTF
+                p=p-1;
+                ax_temp = copyobj(copyobj(fig4c(2).Children, get(fig4c(2).Children,'Type')), tiles);
+                ax_temp(2).Layout.Tile=p;
+            end
+            close(fig4c)
+        end
+
         function makeresults(obj)
             arguments
                 obj Experiment
@@ -392,6 +459,15 @@ classdef Experiment
             obj.PRMtable(true);
         end
 
+        function set_gating_file(obj,file)
+            filestruct = importdata(file); 
+            forminlist = filestruct.textdata;
+            for i = 1:length(forminlist)/2
+                forminname = convertCharsToStrings(forminlist(i));   %takes the names (every other string)
+                gating = filestruct.data(i);  
+                obj.set_gating(forminname,gating)
+            end
+        end
 
         function set_gating(obj,forminname,gating)
             arguments
@@ -400,16 +476,10 @@ classdef Experiment
                 gating double
             end
             formin=-1;
-            for i=1:length(obj.ForminList)
-                if obj.ForminList(i).name==forminname
-                    if formin==-1
-                        formin=obj.ForminList(i);
-                    else
-                        error("multiple formins in this Experiment have the name %s",forminname)
-                    end
-                end
-            end
-            if formin==-1
+            indx=find(obj.forminnames==forminname);
+            if indx
+                formin=obj.ForminList(indx);
+            else
                 error("no formin in this Experiment has the name %s",forminname)
             end
             formin.gating=gating;
@@ -536,7 +606,7 @@ classdef Experiment
             iterations=NameValueArgs.iterations;
         
 
-            vals={obj.opts.k_cap,obj.opts.k_del,obj.opts.r_cap,obj.opts.r_del,obj.opts.k_rel};
+            vals={obj.opts.k_cap,obj.opts.k_del,obj.opts.r_cap,obj.opts.r_cap_exp, obj.opts.r_del,obj.opts.k_rel};
             fval=getSOS(vals{:},false);
             ogtable=maketable();
             if NameValueArgs.ogtable
@@ -548,16 +618,17 @@ classdef Experiment
 
             for i=1:iterations
                 disp(i)
-                r=(rtop-rbot)*rand(1,5)+rbot;
+                r=(rtop-rbot)*rand(1,6)+rbot;
+                r=[vals{1},vals{2},vals{3},vals{4},vals{5},vals{6}];
 
                 % not using scaled
-                [params,fval] = fminsearch(@(z) getSOS(abs(10^(z(1))),abs(10^(z(2))),abs(10^(z(3))),abs(10^(z(4))),abs(10^(z(5))),false),[r(1);r(2);r(3);r(4);r(5)],options); 
+                [params,fval] = fminsearch(@(z) getSOS(abs(10^(z(1))),abs(10^(z(2))),abs(10^(z(3))),abs(10^(z(4))),abs(10^(z(5))),abs(10^(z(6))),false),[r(1);r(2);r(3);r(4);r(5);r(6)],options); 
                 vals=num2cell(abs(10.^(params)));
                 T(index+1,:)=maketable();
                 index=index+1;
 
                 % using scaled
-                [params,fval] = fminsearch(@(z) getSOS(abs(10^(z(1))),abs(10^(z(2))),abs(10^(z(3))),abs(10^(z(4))),abs(10^(z(5))),true),[r(1);r(2);r(3);r(4);r(5)],options); 
+                [params,fval] = fminsearch(@(z) getSOS(abs(10^(z(1))),abs(10^(z(2))),abs(10^(z(3))),abs(10^(z(4))),abs(10^(z(5))),abs(10^(z(6))),true),[r(1);r(2);r(3);r(4);r(5);r(6)],options); 
                 vals=num2cell(abs(10.^(params)));
                 T(index+1,:)=maketable();
                 index=index+1;
@@ -569,11 +640,13 @@ classdef Experiment
             obj.opts.r_cap=ogtable.r_cap;
             obj.opts.r_del=ogtable.r_del;
             obj.opts.k_rel=ogtable.k_rel;
+            obj.opts.r_cap_exp=ogtable.r_cap_exp;
             
-            function val=getSOS(k_cap,k_del,r_cap,r_del,k_rel,scaled)
+            function val=getSOS(k_cap,k_del,r_cap,r_cap_exp,r_del,k_rel,scaled)
                 obj.opts.k_cap=k_cap;
                 obj.opts.k_del=k_del;
                 obj.opts.r_cap=r_cap;
+                obj.opts.r_cap_exp=r_cap_exp;
                 obj.opts.r_del=r_del;
                 obj.opts.k_rel=k_rel;
                 
@@ -601,7 +674,7 @@ classdef Experiment
             function tab=maketable()
                 tab=table;
                 tab.fval=fval;
-                [tab.k_cap,tab.k_del,tab.r_cap,tab.r_del,tab.k_rel]=vals{:};
+                [tab.k_cap,tab.k_del,tab.r_cap,tab.r_cap_exp,tab.r_del,tab.k_rel]=vals{:};
                 grouplist=unique([obj.data.groups]);
                 grouptitle=strcat(grouplist," scaled");
                 tab.all=obj.SOS();
@@ -625,7 +698,7 @@ classdef Experiment
                 end
                 
                 optstable=rows2vars(obj.opts.optionstable);
-                optstable=removevars(optstable,{'resultsdir','resultsfolder','python_path','k_cap','k_del','r_cap','r_del','k_rel','OriginalVariableNames'});
+                optstable=removevars(optstable,{'resultsdir','resultsfolder','python_path','k_cap','k_del','r_cap','r_cap_exp','r_del','k_rel','OriginalVariableNames'});
                 tab=[tab,optstable];
             end
         end
@@ -661,6 +734,14 @@ classdef Experiment
                         obj.ForminList(j).(splitformin{2})=value;
                     end
                 end
+            end
+        end
+
+        function names = forminnames(obj)
+            L=length(obj.ForminList);
+            names=[];
+            for i=1:L
+                names=[names;obj.ForminList(i).name];
             end
         end
     end

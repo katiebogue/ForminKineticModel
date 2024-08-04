@@ -1,11 +1,12 @@
 function out_struct=readinExp(Exp)
     % read in formin info 
-    ogtable=struct('k_cap',Exp.opts.k_cap,'k_del',Exp.opts.k_del,'r_cap',Exp.opts.r_cap,'r_del',Exp.opts.r_del,'k_rel',Exp.opts.k_rel);
+    ogtable=struct('k_cap',Exp.opts.k_cap,'k_del',Exp.opts.k_del,'r_cap',Exp.opts.r_cap,'r_cap_exp',Exp.opts.r_cap_exp,'r_del',Exp.opts.r_del,'k_rel',Exp.opts.k_rel);
     Exp.opts.k_cap= 1;
     Exp.opts.k_del=1; 
     Exp.opts.r_cap=1; 
     Exp.opts.r_del=1; 
     Exp.opts.k_rel=1;
+    Exp.opts.r_cap_exp=1;
 
     data=Exp.data;
     L=length(data);
@@ -63,6 +64,7 @@ function out_struct=readinExp(Exp)
     Exp.opts.k_cap=ogtable.k_cap;
     Exp.opts.k_del=ogtable.k_del;
     Exp.opts.r_cap=ogtable.r_cap;
+    Exp.opts.r_cap_exp=ogtable.r_cap_exp;
     Exp.opts.r_del=ogtable.r_del;
     Exp.opts.k_rel=ogtable.k_rel;
 
