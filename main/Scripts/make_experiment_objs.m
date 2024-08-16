@@ -11,13 +11,14 @@
     % KPOLYMERIZATION, PRM, EXPERIMENT/EXPDATABAR.
 
 %% Input files/ paths
-ltfile="N600_lookup.mat"; % output file from polymer-c; must be on matlab path
+%ltfile="N600_lookup.mat"; % output file from polymer-c; must be on matlab path
 ltfile="prvec_runs_lookup.mat"; % output file from polymer-c; must be on matlab path
 
 pythonpath="/Users/katiebogue/MATLAB/GitHub/ForminKineticModel/main/python"; % path to python files
 resultsloc="/Users/katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results"; % path to location to save results
 forminfile="Experimental constructs.txt"; % file containing sequences
 %forminfile="Quinlan_FHODB variations.txt"; % file containing sequences
+forminfile="BNI1 FHOD CAPU.txt";
 
 %ltfile2="basesep_35.5_output.mat"; % need to use base sep 35.5 runs for capu and fhod dimer
 ltfile2="dimerdisttest.mat"; % test with larger dimerdist runs for capu and fhod dimer
@@ -37,17 +38,18 @@ lt=Lookuptable(lt);
 opts=Options(lt,pythonpath,...
     "3st",...       % kpoly type
     resultsloc,...
-    50,...          % k_cap
-    4*10^(-1.9),... % k_del
-    10^(5.1),...    % r_cap
-    2*10^(9),...    % r_del
-    8*10^(10));     % k_rel
+    73.0227,...          % k_cap
+    0.022909,... % k_del
+    37896.5784,...    % r_cap
+    1,...    % r_del
+    1);     % k_rel
 
+opts.r_cap_exp=0.86103;
 opts.set_equation(1); % using preset #1 (see Options class)
 opts.NTopt=5; % for input sequences
 
 %% create experiment object
-Experiment1=Experiment(opts,forminfile,"seq",2.5); % using the input sequence option and concentration of profilin actin of 2.5
+Experiment1=Experiment(opts,forminfile,"seq",0.88); % using the input sequence option and concentration of profilin actin of 2.5
 
 %% set gating 
 % (gating for Capu is 1, which is the default, so it does not need to be set)

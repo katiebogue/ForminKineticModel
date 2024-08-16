@@ -153,7 +153,7 @@ else
             FH1_length=FH1_lengths(j);
             for k=[0.25,0.75]
                 if FH1_length<60 && k>0.5
-                    continue
+                    %continue
                 end
                 PRM_loc=ceil(FH1_length*k);
                 for i=1:length(PRM_sizes)

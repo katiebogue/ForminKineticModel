@@ -5,9 +5,9 @@
     % See also FORMIN, EXPERIMENT, LOOKUPTABLE, OPTIONS, EXPDATABAR,
     % KPOLYMERIZATION, PRM, EXPERIMENT/EXPDATABAR.
 
-%% Input files/ paths
-ltfile="N600_lookup.mat"; % output file from polymer-c; must be on matlab path
-%ltfile="prvec_runs_lookup_N260.mat"; % output file from polymer-c; must be on matlab path
+    %% Input files/ paths
+%ltfile="N600_lookup.mat"; % output file from polymer-c; must be on matlab path
+ltfile="prvec_runs_lookup.mat"; % output file from polymer-c; must be on matlab path
 
 pythonpath="/Users/katiebogue/MATLAB/GitHub/ForminKineticModel/main/python"; % path to python files
 resultsloc="/Users/katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results"; % path to location to save results
@@ -19,9 +19,9 @@ lt=Lookuptable(lt);
 %% create options object
 % modify this line to change the rate constants:
 opts=Options(lt,pythonpath,...
-    "4st",...       % kpoly type
+    "3st",...       % kpoly type
     resultsloc,...
-    25.704,...          % k_cap
+    73.0227,...          % k_cap
     0.022909,... % k_del
     37896.5784,...    % r_cap
     1,...    % r_del
@@ -32,7 +32,7 @@ opts.set_equation(1); % using preset #1 (see Options class)
 opts.NTopt=2; 
 
 %% create experiment object
-Experiment1=Experiment(opts,forminfile,"uniprot",0.88); % using the input sequence option and concentration of profilin actin of 2.5
+Experiment1=Experiment(opts,forminfile,"uniprot",0.88); % using the input sequence option and concentration of profilin actin of 0.88
 Experiment1.set_gating_file(gatingfile);
 %Experiment1.set_gating("BNI1",0.5);
 
@@ -46,7 +46,7 @@ Experiment1.set_gating_file(gatingfile);
 set(groot,'defaultfigureposition',[400 250 900 750]) % helps prevent cut offs in figs
 titles="log_2(k_{poly} N terminal dimerized/k_{poly} double)";
 
-NTDtable=makeNTDtable(Experiment1);
+NTDtable=makeNTDtable(Experiment1,20);
 figure
 h1=makeheatmap(NTDtable);
 h1.Title = {titles,"3st"};
@@ -104,9 +104,9 @@ figuresave(gcf,opts,append('NTDsweep_bar_','3st','.fig'),true);
 % title([titles,"4st_krel"]);
 % figuresave(gcf,opts,append('NTDsweep_bar_','4st_krel','.fig'),true);
 
-function NTDtable=makeNTDtable(exp)
+function NTDtable=makeNTDtable(exp,rollingavg)
     numformins=length(exp.ForminList);
-    NTDtable=table('Size',[numformins*600 5],'VariableTypes',["double","double","double","double","string"],'VariableNames',{'doubles','dimers','ratios','NTD_dists','formin_name'});
+    NTDtable=table('Size',[numformins*600 6],'VariableTypes',["double","double","double","double","double","string"],'VariableNames',{'doubles','dimers','ratios','ratios_raw','NTD_dists','formin_name'});
     for i=1:numformins
         formini=exp.ForminList(i);
         [doubles,dimers,ratios,NTD_dists]=NTD_predictions(formini);
@@ -114,9 +114,10 @@ function NTDtable=makeNTDtable(exp)
         y=600*i;
         NTDtable(x:y,1)=array2table(doubles');
         NTDtable(x:y,2)=array2table(dimers');
-        NTDtable(x:y,3)=array2table(ratios');
-        NTDtable(x:y,4)=array2table(NTD_dists');
-        NTDtable(x:y,5)={formini.name};
+        NTDtable(x:y,3)=array2table(movmean(ratios',rollingavg,"omitnan"));
+        NTDtable(x:y,4)=array2table(ratios');
+        NTDtable(x:y,5)=array2table(NTD_dists');
+        NTDtable(x:y,6)={formini.name};
     end
 end
 function [doubles,dimers,ratios,NTD_dists]=NTD_predictions(formin)
@@ -130,7 +131,11 @@ function [doubles,dimers,ratios,NTD_dists]=NTD_predictions(formin)
             NTD_dist=formin.PRMList(1,formin.PRMCount).dist_NT;
             doubles(NTD_dist)=kpoly.double;
             dimers(NTD_dist)=kpoly.dimer;
-            ratios(NTD_dist)=log2(kpoly.ratio);
+            ratioval=log2(kpoly.ratio);
+            if ratioval==-Inf
+                ratioval=NaN;
+            end
+            ratios(NTD_dist)=ratioval;
             formin.add_length(1)
         else
             formin.add_length(-i)
@@ -140,12 +145,21 @@ function [doubles,dimers,ratios,NTD_dists]=NTD_predictions(formin)
 end
 
 function h=makeheatmap(tab)
+    ogtab=tab;
+    % x=movmean(tab.ratios,10,"omitnan");
+    % tab.ratios=x;
     h = heatmap(tab,'formin_name','NTD_dists','ColorVariable','ratios');
     h.ColorMethod = 'none';
     h.NodeChildren(3).YDir='normal';
     load('customcolorbar_red_blue_large.mat');
     h.Colormap=CustomColormap;
-    maxratio=max(abs(tab.ratios));  
+    max_min_tab=max_min_table(tab);
+    allmaxmin=[max_min_tab.max; abs(max_min_tab.min)];
+    allmaxmin=sort(allmaxmin);
+    maxratio=allmaxmin(end);
+    if maxratio-allmaxmin(end-1)>5
+        maxratio=allmaxmin(end-1);
+    end
     h.ColorLimits=[-maxratio,maxratio];
     yvals=[1:600];
     CustomYLabels = string(yvals);

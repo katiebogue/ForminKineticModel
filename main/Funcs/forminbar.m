@@ -61,32 +61,36 @@ function fig=forminbar(forminList,settings,save,NameValueArgs)
         yscale=@(x) log(x);
     end
 
-    fig(1)=figure;
-
+   
     kpoly=[forminList.kpoly];
     fh1names=[forminList.name];
 
-    % bar graph showing all polymerization rates
-    kpoly_table = table(yscale([kpoly.single]'), yscale([kpoly.double]'), yscale([kpoly.dimer]'), 'RowNames', fh1names);
-   
-    kpoly_bar = bar(kpoly_table{:,:});
-    set(gca,'xtick',1:length(fh1names), 'xticklabel',kpoly_table.Properties.RowNames);
-    xtickangle(90);
-    maxBar = max(cellfun(@max, get(kpoly_bar, 'YData'))); 
-    ylim([0, maxBar*1.1])
-    set(kpoly_bar(1), 'FaceColor','b');
-    set(kpoly_bar(2), 'FaceColor','r');
-    set(kpoly_bar(3), 'FaceColor','g');
-    legend( 'single', 'double', 'N-term dimerized');
-    xlabel('Formins');
-    ylabel(ylab);
+    if length(fh1names)>1
+        fig(1)=figure;
     
-    title('Polymerization Rates per Formin')
+        % bar graph showing all polymerization rates
+        kpoly_table = table(yscale([kpoly.single]'), yscale([kpoly.double]'), yscale([kpoly.dimer]'), 'RowNames', fh1names);
+       
+        kpoly_bar = bar(kpoly_table{:,:});
+        set(gca,'xtick',1:length(fh1names), 'xticklabel',kpoly_table.Properties.RowNames);
+        xtickangle(90);
+        vals=get(kpoly_bar, 'YData');
+        maxBar = max(cellfun(@max, vals)); 
+        ylim([0, maxBar*1.1])
+        set(kpoly_bar(1), 'FaceColor','b');
+        set(kpoly_bar(2), 'FaceColor','r');
+        set(kpoly_bar(3), 'FaceColor','g');
+        legend( 'single', 'double', 'N-term dimerized');
+        xlabel('Formins');
+        ylabel(ylab);
+        
+        title('Polymerization Rates per Formin')
+    
+        if save
+            figuresave(gcf,settings,append(gca().Title.String,'.fig'));
+        end
 
-    if save
-        figuresave(gcf,settings,append(gca().Title.String,'.fig'));
     end
-
     
     % Change in Polymerization Rates w/ Dimerization per Formin
 

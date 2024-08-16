@@ -6,10 +6,10 @@ Diap2--Mouse	0.2
 Diap3--Mouse	.26
 Diap1--Rat	1
 Diap3--Rat	.26
-DAAM1--Human	0.05
-DAAM2--Human	0.05
-DAAM1--Mouse	0.05
-DAAM2--Mouse	0.05
+DAAM1--Human	0.2
+DAAM2--Human	0.2
+DAAM1--Mouse	0.2
+DAAM2--Mouse	0.2
 CAPU--FruitFly	1
 FMN1--Human	1
 FMN2--Human	1

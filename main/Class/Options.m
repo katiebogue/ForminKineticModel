@@ -72,7 +72,7 @@ classdef Options <handle
                 NameValueArgs.min_lenPRM double=4 % minimum PRM length (including interruptions)
                 NameValueArgs.nInt double=1 % number of allowed interruptions (counts once for each amino acid-- i.e. if the max int len is 2, AA is acceptable but counts as 2 interruptions)
                 NameValueArgs.max_lenInt double=1 % maximum interruption length
-                NameValueArgs.min_nP double=1 % minimum number of Ps 
+                NameValueArgs.min_nP double=4 % minimum number of Ps 
                 NameValueArgs.NTopt double {mustBeInRange(NameValueArgs.NTopt,1,5)}=1 % FH1 NT definition options 
                 NameValueArgs.CTopt double {mustBeInRange(NameValueArgs.CTopt,1,3)}=1 % FH1 CT definition options
                 NameValueArgs.PRMscanopt double {mustBeInRange(NameValueArgs.PRMscanopt,1,2)}=1 % PRM scan options

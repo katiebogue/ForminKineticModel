@@ -744,5 +744,34 @@ classdef Experiment
                 names=[names;obj.ForminList(i).name];
             end
         end
+
+        function fracs = fracmultibind(obj)
+            L=length(obj.ForminList);
+            fracs=zeros(L,3);
+
+            for i=1:L
+                fract=pmultibind(obj.ForminList(i));
+                fracs(i,1)=fract.single;
+                fracs(i,2)=fract.double;
+                fracs(i,3)=fract.dimer;
+            end      
+        end
+
+        function [fig,fracs] = plotmultibind(obj)
+            fracs=obj.fracmultibind;
+            fh1names=obj.forminnames;
+            fig=figure;
+            fracbind_table = table(fracs, 'RowNames', fh1names);
+        
+            
+            fracbind_bar = bar(fracbind_table{:,:});
+            set(gca,'xtick',1:length(fh1names), 'xticklabel',fracbind_table.Properties.RowNames)
+            xtickangle(90)
+            legend("single","double","dimer")
+            xlabel('Formins')
+            ylabel("Fraction of time spent with multiple simultaneous binding")
+        
+            title('Fraction of time spent with multiple simultaneous binding per Formin')
+        end
     end
 end
