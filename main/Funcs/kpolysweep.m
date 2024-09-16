@@ -15,6 +15,8 @@ arguments
     scale string {mustBeMember(scale,{'none','log2','log10','ln'})}="log2"
     save logical=false
 end
+set(gca,'fontname','Arial')
+
 fig=figure;
 hold on
 
@@ -35,7 +37,7 @@ end
 colors=["blue","red","black"];
 
 if sweep=="PRM size"
-    FH1_lengths=[50,150,350,600];
+    FH1_lengths=[50,150,300,400];
     scatn=0;
     for j=1:length(FH1_lengths)
         FH1_length=FH1_lengths(j);
@@ -61,7 +63,7 @@ if sweep=="PRM size"
             end
             scatn=scatn+1;
             %scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
-            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',color1);
+            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',color1,'MarkerFaceAlpha',0.7);
             %plt=plot(xvals',yscale(kpolyratios),'Color',options.colors(scatn));
             plt=plot(xvals',yscale(kpolyratios),'Color',color1);
             plt.Annotation.LegendInformation.IconDisplayStyle='off';
@@ -85,7 +87,7 @@ elseif sweep=="FH1 length"
                 kpolyratios(i,1)=formin1.kpoly.ratio;
             end
             scatn=scatn+1;
-            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(k),'MarkerFaceColor',colors(j));
+            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(k),'MarkerFaceColor',colors(j),'MarkerFaceAlpha',0.7);
             plt=plot(xvals',yscale(kpolyratios),'Color',colors(j));
             % scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(k),'MarkerFaceColor',options.colors(scatn));
             % plt=plot(xvals',yscale(kpolyratios),'Color',options.colors(scatn));
@@ -111,7 +113,7 @@ elseif sweep=="FH2 dist"
                 kpolyratios(i,1)=formin1.kpoly.ratio;
             end
             scatn=scatn+1;
-            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',colors(k));
+            scat=scatter(xvals',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',colors(k),'MarkerFaceAlpha',0.7);
             plt=plot(xvals',yscale(kpolyratios),'Color',colors(k));
             plt.Annotation.LegendInformation.IconDisplayStyle='off';
             scat.DisplayName=sprintf("FH1 length=%d; PRM size=%d",FH1_length,PRM_size);
@@ -135,7 +137,7 @@ elseif sweep=="NT dist"
                 kpolyratios(i,1)=formin1.kpoly.ratio;
             end
             scatn=scatn+1;
-            scat=scatter([FH1_length-xvals]',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',colors(k));
+            scat=scatter([FH1_length-xvals]',yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',colors(k),'MarkerFaceAlpha',0.7);
             plt=plot([FH1_length-xvals]',yscale(kpolyratios),'Color',colors(k));
             plt.Annotation.LegendInformation.IconDisplayStyle='off';
             scat.DisplayName=sprintf("FH1 length=%d; PRM size=%d",FH1_length,PRM_size);
@@ -146,7 +148,7 @@ elseif sweep=="NT dist"
 else
     if ismember(sweep,fieldnames(options))
         ogopt=options.(sweep);
-        FH1_lengths=[50,150,500];
+        FH1_lengths=[50,150,300];
         PRM_sizes=[4,10];
         scatn=0;
         for j=1:length(FH1_lengths)
@@ -181,9 +183,9 @@ else
                     end
                     scatn=scatn+1;
                     if k==0.75
-                        scat=scatter(log10(yvals),yscale(kpolyratios),options.shapes(j),'MarkerEdgeColor',colors(i));
+                        scat=scatter(log10(yvals),yscale(kpolyratios),50,options.shapes(j),'MarkerEdgeColor',colors(i));
                     else
-                        scat=scatter(log10(yvals),yscale(kpolyratios),15,'filled',options.shapes(j),'MarkerFaceColor',colors(i));
+                        scat=scatter(log10(yvals),yscale(kpolyratios),20,'filled',options.shapes(j),'MarkerFaceColor',colors(i),'MarkerFaceAlpha',0.7);
                     end
                     plt=plot(log10(yvals),yscale(kpolyratios),'Color',colors(i));
                     % scat=scatter(log10(yvals),yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
@@ -208,7 +210,7 @@ end
 ylabel(ylab)
 title(strcat("Change in elongation rate vs. ",xlab))
 legend('Location','southoutside','NumColumns',2,'FontSize',8)
-lne=yline(yscale(1),'LineWidth',2);
+lne=yline(yscale(1),'LineWidth',1,'Color',[0 0 0]);
 lne.Annotation.LegendInformation.IconDisplayStyle='off';
 
 if save

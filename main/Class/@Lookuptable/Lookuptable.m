@@ -84,12 +84,16 @@ classdef Lookuptable <handle
         function value= get.max_length(obj)
             value=FilType(find_maxN("single"),find_maxN("double"),find_maxN("dimer"));
             function max=find_maxN(type)
-                Ns=fieldnames(obj.(type));
-                max=0;
-                for i=1:length(Ns)
-                    N=str2double(erase(Ns{i},"N"));
-                    if N>max
-                        max=N;
+                if isempty(obj.(type))
+                    max=zeros(1,0);
+                else
+                    Ns=fieldnames(obj.(type));
+                    max=0;
+                    for i=1:length(Ns)
+                        N=str2double(erase(Ns{i},"N"));
+                        if N>max
+                            max=N;
+                        end
                     end
                 end
             end
@@ -115,11 +119,15 @@ classdef Lookuptable <handle
             obj.NList.intersectratio=true;
             obj.getmissingNs;
             function Nlist=find_N(type)
-                Ns=fieldnames(obj.(type));
-                Nlist=zeros(1,length(Ns));
-                for i=1:length(Ns)
-                    N=str2double(erase(Ns{i},"N"));
-                    Nlist(i)=N;
+                if isempty(obj.(type))
+                    Nlist=zeros(1,0);
+                else
+                    Ns=fieldnames(obj.(type));
+                    Nlist=zeros(1,length(Ns));
+                    for i=1:length(Ns)
+                        N=str2double(erase(Ns{i},"N"));
+                        Nlist(i)=N;
+                    end
                 end
             end
         end
@@ -133,15 +141,17 @@ classdef Lookuptable <handle
             obj.AddedStats= value;
             obj.StatNames=string(fieldnames(obj.AddedStats));
             function addstats(type)
-                Ns=fieldnames(obj.(type));
-                for i=1:length(Ns)
-                    vars=fieldnames(obj.(type).(Ns{i}));
-                    for j=1:length(vars)
-                        var=vars{j};
-                        if ~isfield(value,var)
-                            value.(var)=FilType();
+                if ~isempty(obj.(type))
+                    Ns=fieldnames(obj.(type));
+                    for i=1:length(Ns)
+                        vars=fieldnames(obj.(type).(Ns{i}));
+                        for j=1:length(vars)
+                            var=vars{j};
+                            if ~isfield(value,var)
+                                value.(var)=FilType();
+                            end
+                            value.(var).(type).(Ns{i})=obj.(type).(Ns{i}).(var);
                         end
-                        value.(var).(type).(Ns{i})=obj.(type).(Ns{i}).(var);
                     end
                 end
             end
@@ -157,13 +167,15 @@ classdef Lookuptable <handle
             obj.NNames=string(fieldnames(obj.AddedNs));
             obj.updateNList();
             function addNs(type)
-                Ns=fieldnames(obj.(type));
-                for i=1:length(Ns)
-                    N=Ns{i};
-                    if ~isfield(value,N)
-                        value.(N)=FilType();
+                if length(obj.(type))>0
+                    Ns=fieldnames(obj.(type));
+                    for i=1:length(Ns)
+                        N=Ns{i};
+                        if ~isfield(value,N)
+                            value.(N)=FilType();
+                        end
+                        value.(N).(type)=obj.(type).(N);
                     end
-                    value.(N).(type)=obj.(type).(N);
                 end
             end
         end
@@ -234,7 +246,11 @@ classdef Lookuptable <handle
             obj.holdratio=false;
             
             function mat=makemat(stats2)
-                numrows=obj.max_length.(type)*size(stats2,1);
+                if type=="ratio"
+                    numrows=min(obj.max_length.dimer,obj.max_length.double)*size(stats2,1);
+                else
+                    numrows=obj.max_length.(type)*size(stats2,1);
+                end
                 mat=zeros(numrows,3);
                 for i=1:size(stats2,1)
                     N=obj.NList.(type)(i);
@@ -311,6 +327,10 @@ classdef Lookuptable <handle
 
     methods
       fig=ltplot(obj,xval,stat)
+    end
+
+    methods
+      fig=varltplot(obj,xval,stat,skip)
     end
 
 end

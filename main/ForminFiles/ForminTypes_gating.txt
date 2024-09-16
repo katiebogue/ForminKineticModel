@@ -12,7 +12,6 @@ DAAM1--Mouse	0.2
 DAAM2--Mouse	0.2
 CAPU--FruitFly	1
 FMN1--Human	1
-FMN2--Human	1
 FMN1--Mouse	1
 FMN2--Mouse	1
 INF2--Mouse	0.2
@@ -26,9 +25,9 @@ BNI1P--Yeast	0.5
 FHODB--FruitFly	0.5
 Delphinin--Human	0.04
 Delphinin--Mouse	0.03
-FMNL1--Human	.55
+FMNL1--Human	0.55
 FMNL2--Human	1
 FHDC1--Mouse	1
 DM7--FruitFly	1
-FMNL1--Mouse	.55
+FMNL1--Mouse	0.55
 Delphilin--Zebrafish	0.04

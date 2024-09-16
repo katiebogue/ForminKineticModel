@@ -8,6 +8,9 @@
     %% Input files/ paths
 %ltfile="N600_lookup.mat"; % output file from polymer-c; must be on matlab path
 ltfile="prvec_runs_lookup.mat"; % output file from polymer-c; must be on matlab path
+Nmax=400;
+% ltfile="GST_N300.mat"; % output file from polymer-c; must be on matlab path
+% Nmax=300;
 
 pythonpath="/Users/katiebogue/MATLAB/GitHub/ForminKineticModel/main/python"; % path to python files
 resultsloc="/Users/katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results"; % path to location to save results
@@ -46,18 +49,81 @@ Experiment1.set_gating_file(gatingfile);
 set(groot,'defaultfigureposition',[400 250 900 750]) % helps prevent cut offs in figs
 titles="log_2(k_{poly} N terminal dimerized/k_{poly} double)";
 
-NTDtable=makeNTDtable(Experiment1,20);
+NTDtable=makeNTDtable(Experiment1,20,Nmax);
 figure
-h1=makeheatmap(NTDtable);
+h1=makeheatmap(NTDtable,Nmax);
 h1.Title = {titles,"3st"};
 opts.update_results_folder
 opts.resultsfolder=strcat(opts.resultsfolder,"NTDsweep_","3st");
 figuresave(gcf,opts,append('NTDsweep_','3st','.fig'),true);
-NTDmaxmin=max_min_table(NTDtable);
 figure
+h2=makeheatmap_std(NTDtable,Nmax,'fh1length','rollingstd');
+h2.Title = {"rolling standard deviation of log2 ratios","3st"};
+figuresave(gcf,opts,append('NTDsweep_stds','3st','.fig'),true);
+figure
+h2=makeheatmap_std(NTDtable,Nmax,'fh1length','std_dimer');
+h2.Title = {"rolling standard deviation of dimer kpoly","3st"};
+figuresave(gcf,opts,append('NTDsweep_stds_dimer','3st','.fig'),true);
+figure
+h2=makeheatmap_std(NTDtable,Nmax,'fh1length','std_double');
+h2.Title = {"rolling standard deviation of double kpoly","3st"};
+figuresave(gcf,opts,append('NTDsweep_stds_double','3st','.fig'),true);
+figure
+h2=makeheatmap_std(NTDtable,Nmax,'NTD_dists','rollingstd');
+h2.Title = {"rolling standard deviation of log2 ratios","3st"};
+figuresave(gcf,opts,append('NTDsweep_stds_NT','3st','.fig'),true);
+figure
+h2=makeheatmap_std(NTDtable,Nmax,'NTD_dists','std_dimer');
+h2.Title = {"rolling standard deviation of dimer kpoly","3st"};
+figuresave(gcf,opts,append('NTDsweep_stds_dimer_NT','3st','.fig'),true);
+figure
+h2=makeheatmap_std(NTDtable,Nmax,'NTD_dists','std_double');
+h2.Title = {"rolling standard deviation of double kpoly","3st"};
+figuresave(gcf,opts,append('NTDsweep_stds_double_NT','3st','.fig'),true);
+figure
+NTDmaxmin=max_min_table(NTDtable);
 b=make_barplot(NTDmaxmin);
 title([titles,"3st"]);
 figuresave(gcf,opts,append('NTDsweep_bar_','3st','.fig'),true);
+
+%% look for variance cut off
+dimdob_dif=NTDtable.doubles-NTDtable.dimers;
+dimer_std=movstd(NTDtable.dimers,5,"omitnan");
+double_std=movstd(NTDtable.doubles,5,"omitnan");
+ratio_std=movstd(NTDtable.ratios_raw,5,"omitnan");
+NTDtable.dimer_check=dimer_std.*0.1>abs(dimdob_dif);
+NTDtable.double_check=double_std.*0.1>abs(dimdob_dif);
+NTDtable.ratio_check=ratio_std.*0.1>abs(dimdob_dif);
+
+NTDtable.dimer_check_diff=dimer_std.*0.1-abs(dimdob_dif);
+NTDtable.double_check_diff=double_std.*0.1-abs(dimdob_dif);
+NTDtable.ratio_check_diff=ratio_std.*0.1-abs(dimdob_dif);
+
+figure
+h = heatmap(NTDtable,'formin_name','fh1length','ColorVariable','dimer_check');
+h.ColorMethod = 'none';
+h.Colormap=sky(2);
+h.NodeChildren(3).YDir='normal';
+yvals=str2double(h.YData);
+CustomYLabels = string(yvals);
+CustomYLabels(mod(yvals,20) ~= 0) = " ";
+h.YDisplayLabels = CustomYLabels;
+h.GridVisible = 'off';
+figuresave(gcf,opts,append('NTDsweep_dimer_check','3st','.fig'),true);
+
+figure
+h = heatmap(NTDtable,'formin_name','fh1length','ColorVariable','double_check');
+h.ColorMethod = 'none';
+h.Colormap=sky(2);
+h.NodeChildren(3).YDir='normal';
+yvals=str2double(h.YData);
+CustomYLabels = string(yvals);
+CustomYLabels(mod(yvals,20) ~= 0) = " ";
+h.YDisplayLabels = CustomYLabels;
+h.GridVisible = 'off';
+figuresave(gcf,opts,append('NTDsweep_double_check','3st','.fig'),true);
+
+
 
 % Experiment1.applytable(fit_4st)
 % NTDtable_4st=makeNTDtable(Experiment1);
@@ -104,34 +170,40 @@ figuresave(gcf,opts,append('NTDsweep_bar_','3st','.fig'),true);
 % title([titles,"4st_krel"]);
 % figuresave(gcf,opts,append('NTDsweep_bar_','4st_krel','.fig'),true);
 
-function NTDtable=makeNTDtable(exp,rollingavg)
+function NTDtable=makeNTDtable(exp,rollingavg,Nmax)
     numformins=length(exp.ForminList);
-    NTDtable=table('Size',[numformins*600 6],'VariableTypes',["double","double","double","double","double","string"],'VariableNames',{'doubles','dimers','ratios','ratios_raw','NTD_dists','formin_name'});
+    NTDtable=table('Size',[numformins*Nmax 10],'VariableTypes',["double","double","double","double","double","double","double","double","double","string"],'VariableNames',{'doubles','dimers','ratios','ratios_raw','NTD_dists','rollingstd','fh1length','std_dimer','std_double','formin_name'});
     for i=1:numformins
         formini=exp.ForminList(i);
-        [doubles,dimers,ratios,NTD_dists]=NTD_predictions(formini);
-        x=(600*(i-1)+1);
-        y=600*i;
+        [doubles,dimers,ratios,NTD_dists,fh1ength]=NTD_predictions(formini,Nmax);
+        x=(Nmax*(i-1)+1);
+        y=Nmax*i;
         NTDtable(x:y,1)=array2table(doubles');
         NTDtable(x:y,2)=array2table(dimers');
         NTDtable(x:y,3)=array2table(movmean(ratios',rollingavg,"omitnan"));
         NTDtable(x:y,4)=array2table(ratios');
         NTDtable(x:y,5)=array2table(NTD_dists');
-        NTDtable(x:y,6)={formini.name};
+        NTDtable(x:y,6)=array2table(movstd(ratios',5,"omitnan"));
+        NTDtable(x:y,7)=array2table(fh1ength');
+        NTDtable(x:y,8)=array2table((movstd(dimers',5,"omitnan"))./mean(dimers,"omitnan"));
+        NTDtable(x:y,9)=array2table((movstd(doubles',5,"omitnan"))./mean(doubles,"omitnan"));
+        NTDtable(x:y,10)={formini.name};
     end
 end
-function [doubles,dimers,ratios,NTD_dists]=NTD_predictions(formin)
-    doubles=NaN(1,600);
-    dimers=NaN(1,600);
-    ratios=NaN(1,600);
-    NTD_dists=[1:600];
-    for i=0:599
-        if formin.length<600
+function [doubles,dimers,ratios,NTD_dists,fh1ength]=NTD_predictions(formin,Nmax)
+    doubles=NaN(1,Nmax);
+    dimers=NaN(1,Nmax);
+    ratios=NaN(1,Nmax);
+    NTD_dists=[1:Nmax];
+    fh1ength=NaN(1,Nmax);
+    for i=0:(Nmax-1)
+        if formin.length<Nmax+1
             kpoly=formin.kpoly;
             NTD_dist=formin.PRMList(1,formin.PRMCount).dist_NT;
             doubles(NTD_dist)=kpoly.double;
             dimers(NTD_dist)=kpoly.dimer;
             ratioval=log2(kpoly.ratio);
+            fh1ength(NTD_dist)=formin.length;
             if ratioval==-Inf
                 ratioval=NaN;
             end
@@ -144,7 +216,7 @@ function [doubles,dimers,ratios,NTD_dists]=NTD_predictions(formin)
     end
 end
 
-function h=makeheatmap(tab)
+function h=makeheatmap(tab,Nmax)
     ogtab=tab;
     % x=movmean(tab.ratios,10,"omitnan");
     % tab.ratios=x;
@@ -156,17 +228,39 @@ function h=makeheatmap(tab)
     max_min_tab=max_min_table(tab);
     allmaxmin=[max_min_tab.max; abs(max_min_tab.min)];
     allmaxmin=sort(allmaxmin);
+    allmaxmin = allmaxmin(~isnan(allmaxmin));
     maxratio=allmaxmin(end);
     if maxratio-allmaxmin(end-1)>5
         maxratio=allmaxmin(end-1);
     end
     h.ColorLimits=[-maxratio,maxratio];
-    yvals=[1:600];
+    h.ColorLimits=[-5,5];
+    yvals=[1:Nmax];
     CustomYLabels = string(yvals);
     CustomYLabels(mod(yvals,20) ~= 0) = " ";
     h.YDisplayLabels = CustomYLabels;
     h.GridVisible = 'off';
 
+end
+function h=makeheatmap_std(tab,Nmax,disttype,stdtype)
+    h = heatmap(tab,'formin_name',disttype,'ColorVariable',stdtype);
+    h.ColorMethod = 'none';
+    h.NodeChildren(3).YDir='normal';
+    tab.ratios=tab.(stdtype);
+    max_min_tab=max_min_table(tab);
+    allmaxmin=[max_min_tab.max; abs(max_min_tab.min)];
+    allmaxmin=sort(allmaxmin);
+    allmaxmin = allmaxmin(~isnan(allmaxmin));
+    maxratio=allmaxmin(end);
+    if maxratio-allmaxmin(end-1)>1
+        maxratio=allmaxmin(end-1);
+    end
+    h.ColorLimits=[0,maxratio];
+    yvals=str2double(h.YData);
+    CustomYLabels = string(yvals);
+    CustomYLabels(mod(yvals,20) ~= 0) = " ";
+    h.YDisplayLabels = CustomYLabels;
+    h.GridVisible = 'off';
 end
 function mmtab=max_min_table(tab)
     formins=unique(tab.formin_name);

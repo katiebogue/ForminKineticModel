@@ -4,7 +4,7 @@ classdef Options <handle
 
     properties (SetObservable, AbortSet)
         python_path string
-        kpoly_type string {mustBeMember(kpoly_type,{'capture','3st','4st'})}='4st'
+        kpoly_type string {mustBeMember(kpoly_type,{'capture','3st','4st'})}='3st'
         equations struct
         lookup Lookuptable
 
@@ -33,6 +33,10 @@ classdef Options <handle
         r_del double % rate constant for barbed end + PRM-profilin-actin dissociation (reverse delivery) | s^(-1)
         k_rel double % rate constant for PRM + profilin-actin-barbed end dissociation (release) | s^(-1)
         r_cap_exp double % constant in front of PRM size in r_cap (if applicable)
+
+        % delivery location, only used if added to kpoly calcs
+        del_x double=0
+        del_y double=0
     end
 
     methods
@@ -89,7 +93,7 @@ classdef Options <handle
         function set_equation(obj,preset,step,vars)
             arguments
                 obj
-                preset double {mustBeMember(preset,[0,1])}
+                preset double {mustBeMember(preset,[0,1,2,3])}
             end
             arguments (Repeating)
                 step string {mustBeMember(step,{'kcap','kdel','rcap','rdel','krel'})}
@@ -155,6 +159,28 @@ classdef Options <handle
                 step="rcap";
                 obj.equations.rcap=makeeq();
                 obj.equationstext.rcap_eq=[sprintf("%s(%s),",invars{1:end})];
+            elseif preset==2
+                invars={"POcclude","1-","c_PA","linear"};
+                obj.equations.kcap=makeeq();
+                obj.equationstext.kcap_eq=[sprintf("%s(%s),",invars{1:end})];
+                invars={"POcclude","1-base","gating","linear"};
+                obj.equations.kdel=makeeq();
+                obj.equationstext.kdel_eq=[sprintf("%s(%s),",invars{1:end})];
+                invars={"size","negexp"};
+                step="rcap";
+                obj.equations.rcap=makeeq();
+                obj.equationstext.rcap_eq=[sprintf("%s(%s),",invars{1:end})];
+            elseif preset==3
+                invars={"POcclude","1-","c_PA","linear"};
+                obj.equations.kcap=makeeq();
+                obj.equationstext.kcap_eq=[sprintf("%s(%s),",invars{1:end})];
+                invars={"POcclude","1-base","gating","linear","prvec","prveccalc"};
+                obj.equations.kdel=makeeq();
+                obj.equationstext.kdel_eq=[sprintf("%s(%s),",invars{1:end})];
+                invars={"size","negexp"};
+                step="rcap";
+                obj.equations.rcap=makeeq();
+                obj.equationstext.rcap_eq=[sprintf("%s(%s),",invars{1:end})];
             end
             
             steps={"kcap","kdel","rcap","rdel","krel"};
@@ -184,6 +210,8 @@ classdef Options <handle
                         fxn=@(PRM) fxn(PRM)*(1.0e33*(PRM.(invars{i}))/(27*6.022e23));
                     elseif invars{i+1}=="1-base"
                         fxn=@(PRM) fxn(PRM)*(1-PRM.(strcat(invars{i},"_Base")));
+                    elseif invars{i+1}=="prveccalc"
+                        fxn=@(PRM) fxn(PRM)*(PRM.prval);
                     end
                 end
             end

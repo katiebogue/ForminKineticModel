@@ -146,6 +146,12 @@ classdef PRM < handle & dynamicprops
             end
         end
 
+        function out=prval(obj)
+            prdob=pr(obj.dist_FH2,obj.fh1length,35.5,1,obj.formin.opts.del_x,obj.formin.opts.del_y,"double");
+            prdim=pr(obj.dist_FH2,obj.fh1length,35.5,1,obj.formin.opts.del_x,obj.formin.opts.del_y,"dimer");
+            out=FilType(prdob,prdob,prdim,prdob,prdim);
+        end
+
     end
 
     methods (Static)

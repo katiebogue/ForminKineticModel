@@ -1,4 +1,4 @@
-function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,KSCRITICAL,nondim)
+function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,KSCRITICAL,nondim,prcalc)
 % 
     %   out = MCMCParamfit(Exp) 
     %   
@@ -11,7 +11,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
 
     arguments
         Exp
-        exptype % 1= is an experiment, 2= is a struct with rates, data, and resultsfolder and resultsdir
+        exptype % 1= is an experiment, 2= is a struct with rates, data, and resultsfolder and resultsdir, and fh1sizes and prmlocs
         type
         errtype % 1= use separate sigma values, 2= divide each by SEM
         matfileTF=0 % whether to save to a matfile or to keep things in memory
@@ -19,7 +19,8 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         NTADAPT =100
         NTMAX =10^7
         KSCRITICAL =0.02
-        nondim= 1 % whether to use nondimensionality
+        nondim= 0 % whether to use nondimensionality
+        prcalc= 1
     end
 
     
@@ -30,17 +31,27 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
     SIGMAMIN = -2; % in log-space
     EXPMIN = 0.1; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
     EXPMAX = 10; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
+    XLOCMAX= 35.5;
+    XLOCMIN= 0;
+    YLOCMAX= 20;
+    YLOCMIN= 0;
 
     disp("MCMCParamfit.m starting") 
 
     % set up place to store data
     if exptype==1
         opts=Exp.opts;
+        if prcalc
+            opts.set_equation(2);
+        end
         out_struct=readinExp(Exp);
+        opts.set_equation(1);
         rates=out_struct.rates;
         datatab=out_struct.data;
         opts.update_results_folder
         opts.resultsfolder=strcat("MCMC_",opts.resultsfolder);
+        fh1lengths=out_struct.fh1sizes;
+        prmlocs=out_struct.prmlocs;
         clear Exp
         disp("Read in information from Experiment object")
     elseif exptype==2
@@ -48,6 +59,8 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         opts.resultsfolder=strcat("MCMC_",Exp.resultsfolder);
         rates=Exp.rates;
         datatab=Exp.data;
+        fh1lengths=Exp.fh1sizes;
+        prmlocs=Exp.prmlocs;
         clear Exp
         disp("Loaded in pre-determined rates, data, and opts")
     else
@@ -102,6 +115,9 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
             nkpolyparams=6;
         end
     end
+    if prcalc
+        nkpolyparams=nkpolyparams+2;
+    end
     nparams=nkpolyparams+nsigma;
 
     % Pick initial guess
@@ -136,8 +152,11 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
             dx(5:6)=[5,5];
         end
     end
-    
-    
+
+    if prcalc
+        params(nkpolyparams-1:nkpolyparams)=0; %initial delivery location
+    end
+
     accepts=zeros(nparams,1);
     proposals=zeros(nparams,1);
     accepts_temp=zeros(nparams,1);
@@ -181,7 +200,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
     currentntcheck=NTCHECK;
     paramHistCounts = zeros(nparams,NBINS);
     paramHistCountsPrevious = zeros(nparams,NBINS);
-    [logll_nt,divvalue]=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype,nondim,divdatapoint);
+    [logll_nt,divvalue]=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype,nondim,divdatapoint,prcalc,prmlocs,fh1lengths);
     minlogll=logll_nt;
     
     disp("starting MCMC loop")
@@ -233,12 +252,18 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         proposals(index)=proposals(index)+1;
         proposals_temp(index)=proposals_temp(index)+1;
 
-        if (index~=(4-nondim) && proposal(index)<PARAMMIN) || (index~=(4-nondim) && proposal(index)>PARAMMAX) || (index>nkpolyparams && (proposal(index)>SIGMAMAX || proposal(index)<SIGMAMIN)) || (index==(4-nondim) && (proposal(index)>EXPMAX || proposal(index)<EXPMIN))
+        if (prcalc && index==(nkpolyparams) && (proposal(index)>YLOCMAX || proposal(index)<YLOCMIN))... % del location thresholds
+                || (prcalc && index==(nkpolyparams-1) && (proposal(index)>XLOCMAX || proposal(index)<XLOCMIN))... %del location thresholds
+                || (index~=(4-nondim) && proposal(index)<PARAMMIN && index<=(nkpolyparams-prcalc-prcalc)) ...% regular param thresholds
+                || (index~=(4-nondim) && proposal(index)>PARAMMAX && index<=(nkpolyparams-prcalc-prcalc)) ... % regular param thresholds
+                || (index>nkpolyparams && (proposal(index)>SIGMAMAX || proposal(index)<SIGMAMIN)) ... % sigma thresholds
+                || (index==(4-nondim) && (proposal(index)>EXPMAX || proposal(index)<EXPMIN)) % rcap exponent threshold
+            
             % reject anything beyond the boundaries
             params_temp(nt_temp,:)=params;
         else
             %calculate logll of proposal
-            [logll_prop,divvalue]=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype,nondim,divdatapoint);
+            [logll_prop,divvalue]=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype,nondim,divdatapoint,prcalc,prmlocs,fh1lengths);
             % trueparams=gettrueparams(proposal,divvalue,divkpoly,nkpolyparams);
             % exptrueparams=10.^(trueparams);
             % exptrueparams(4)=trueparams(4);
@@ -258,7 +283,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
                 if logll_nt>minlogll
                     minlogll=logll_nt;
                     if nondim
-                        minlogll_params=gettrueparams(params,divvalue,divkpoly,nkpolyparams);
+                        minlogll_params=gettrueparams(params,divvalue,divkpoly,nkpolyparams,prcalc);
                         minlogll_params_raw=params;
                     else
                         minlogll_params=params;
@@ -499,7 +524,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
 end
 
 
-function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,nondim,divdatapoint)
+function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,nondim,divdatapoint,prcalc,prmlocs,fh1lengths)
     % calulcates log likelihood values for input parameters
 
     % SSE=sum((1.5-params).^2);
@@ -516,8 +541,13 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
     else
         inputparams(4)=params(4);
     end
+
+    % have all but delivery location be in log space
+    if prcalc
+        inputparams(end-1:end)=params(end-1:end);
+    end
     
-    kpolys=calckpolys(type,rates,inputparams,nondim);
+    kpolys=calckpolys(type,rates,inputparams,nondim,prcalc,prmlocs,fh1lengths);
 
     sigma=10.^sigma;
     
@@ -584,8 +614,27 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
     end
 end
 
-function kpolys=calckpolys(type,rates,params,nondim)
+function kpolys=calckpolys(type,rates,params,nondim,prcalc,prmlocs,fh1lengths)
     % calulcates kpolys for input parameters
+    if prcalc
+        x=params(end-1);
+        y=params(end);
+        prdobs=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x,y,"double"),prmlocs,fh1lengths,'UniformOutput',false);
+        prdims=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x,y,"dimer"),prmlocs,fh1lengths,'UniformOutput',false);
+        for i=1:length(rates.k_delbase)
+            prdob=prdobs{i};
+            prdim=prdims{i};
+            vals=rates.k_delbase{i};
+            for j=1:size(vals,1)
+                vals(j,1)=vals(j,1)*prdob(j);
+                vals(j,2)=vals(j,2)*prdob(j);
+                vals(j,3)=vals(j,3)*prdob(j);
+                vals(j,4)=vals(j,4)*prdim(j);
+                vals(j,5)=vals(j,5)*prdim(j);
+            end
+            rates.k_delbase{i}=vals;
+        end
+    end
 
     % calculate per PRM rates
     if nondim
@@ -620,11 +669,14 @@ function kpolys=calckpolys(type,rates,params,nondim)
     end
 end
 
-function trueparams=gettrueparams(params,alphakp,kp,nparams)
+function trueparams=gettrueparams(params,alphakp,kp,nparams,prcalc)
     %must be 3 state method
     kcap=kp/alphakp;
     trueparams=log10((10.^params)*kcap);
     trueparams(3)=params(3); %rcap_exp
+    if prcalc
+        trueparams(nparams-1:nparams)=params(nparams-1:nparams); %delivery locations
+    end
 
     i=nparams;
     while i<length(trueparams)

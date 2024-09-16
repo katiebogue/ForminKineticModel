@@ -69,6 +69,9 @@ classdef Experiment
             fields=fieldnames([obj.ForminList]);
             for i=1:length(fields)
                 varname=fields{i};
+                if varname=="lastkpoly"
+                    continue
+                end
                 val=[obj.ForminList.(varname)];
                 if class(val)=="FilType"
                     T.(strcat("Single ",varname))=[val.single]';
@@ -462,7 +465,7 @@ classdef Experiment
         function set_gating_file(obj,file)
             filestruct = importdata(file); 
             forminlist = filestruct.textdata;
-            for i = 1:length(forminlist)/2
+            for i = 1:length(forminlist)
                 forminname = convertCharsToStrings(forminlist(i));   %takes the names (every other string)
                 gating = filestruct.data(i);  
                 obj.set_gating(forminname,gating)

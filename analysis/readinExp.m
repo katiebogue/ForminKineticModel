@@ -17,6 +17,9 @@ function out_struct=readinExp(Exp)
     r_delbase=cell([L 1]);
     k_relbase=cell([L 1]);
 
+    fh1sizes=cell([L 1]);
+    prmlocs=cell([L 1]);
+
     for i=1:length(data)
         formin=data(i).formin;
         kcaps=zeros(formin.PRMCount,5);
@@ -24,8 +27,15 @@ function out_struct=readinExp(Exp)
         rcaps=zeros(formin.PRMCount,5);
         rdels=zeros(formin.PRMCount,5);
         krels=zeros(formin.PRMCount,5);
+
+        fh1s=zeros(formin.PRMCount,1);
+        prms=zeros(formin.PRMCount,1);
         for j=1:formin.PRMCount
             prm1=formin.PRMList(1,j);
+
+            fh1s(j,:)=prm1.fh1length;
+            prms(j,:)=prm1.dist_FH2;
+
             if class(prm1.kcap)=="FilType"
                 kcaps(j,:)=prm1.kcap.fil2array;
             else
@@ -57,6 +67,9 @@ function out_struct=readinExp(Exp)
         r_capbase{i,1}=rcaps;
         r_delbase{i,1}=rdels;
         k_relbase{i,1}=krels;
+
+        fh1sizes{i,1}=fh1s;
+        prmlocs{i,1}=prms;
     end
     % get values with all parameters set to 1
 
@@ -79,4 +92,7 @@ function out_struct=readinExp(Exp)
 
     out_struct.rates=rates;
     out_struct.opts=Exp.opts;
+    out_struct.fh1sizes=fh1sizes;
+    out_struct.prmlocs=prmlocs;
+    
 end

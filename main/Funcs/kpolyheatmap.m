@@ -30,14 +30,14 @@ if sweep_type=="NT dist v r_cap"
     param="r_cap";
     x_label="Distance from PRM to N-term";
     scatn=0;
-    PRM_loc=400;
+    PRM_loc=100;
     PRM_size=10;
 
     PRM_lab=strcat("loc: ",num2str(PRM_loc)," size: ",num2str(PRM_size));
 
     ogopt=options.(param);
-    param_vals=10.^([-10:0.5:20]);
-    xvals=PRM_loc:600;
+    param_vals=10.^([-4:0.5:16]);
+    xvals=PRM_loc:400;
 
     kpolyratios=zeros(length(param_vals)*length(xvals),1);
     paramvals_matrix=kpolyratios;
@@ -61,7 +61,10 @@ if sweep_type=="NT dist v r_cap"
     if smooth
         for n=1:length(param_vals)
             index=paramvals_matrix==param_vals(n);
-            kpolyratios(index)=smoothdata(kpolyratios(index),"lowess","SmoothingFactor",smoothfac);
+            vals=kpolyratios(index);
+            smootheddata=smoothdata(vals,"lowess","SmoothingFactor",smoothfac);
+            smootheddata(smootheddata<0)=vals(smootheddata<0);
+            kpolyratios(index)=smootheddata;
         end
         kpoly_lab=strcat(kpoly_lab," (smoothed:",num2str(smoothfac),")");
     end
@@ -83,6 +86,11 @@ if sweep_type=="NT dist v r_cap"
             h.Colormap=[parula;red];
             h.ColorLimits = [min(log2(kpolyratios)) 0];
         end
+    elseif col==3
+        load('customcolorbar_red_blue.mat');
+        h.Colormap=CustomColormap;
+        minn=min(log2(kpolyratios(kpolyratios~=0)));
+        h.ColorLimits=[minn abs(minn)];
     elseif length(col)==2
         load('customcolorbar_red_blue.mat');
         h.Colormap=CustomColormap;
@@ -108,10 +116,10 @@ if sweep_type=="NT dist v r_cap"
     h.Title = {kpoly_lab,PRM_lab,lab};
 
     % Convert each number in the array into a string
-    CustomXLabels = string(xvals-400);
+    CustomXLabels = string(xvals-PRM_loc);
     CustomYLabels = string(log10(param_vals));
     % Replace all but the fifth elements by spaces
-    CustomXLabels(mod(xvals-400,20) ~= 0) = " ";
+    CustomXLabels(mod(xvals-PRM_loc,20) ~= 0) = " ";
     CustomYLabels(mod(log10(param_vals),4) ~= 0) = " ";
     % Set the 'XDisplayLabels' property of the heatmap 
     % object 'h' to the custom x-axis tick labels
@@ -122,7 +130,7 @@ if sweep_type=="NT dist v r_cap"
 end
 
 if save
-    figuresave(gcf,options,append("heatmapsweep_",sweep_type,'.fig'),true);
+    figuresave(gcf,options,append("heatmapsweep_",sweep_type," ", num2str(options.k_cap)," kdel ", num2str(options.k_del),'.fig'),true);
 end
 end
 

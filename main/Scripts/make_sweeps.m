@@ -10,12 +10,12 @@
 %% Set variables
 opts=opts;
 
-bestfits={fit_3st,fit_4st,fit_4st_krel};
-
+%bestfits={fit_3st,fit_4st,fit_4st_krel};
+bestfits=1;
 %% Make and save kpoly sweep figures
 set(groot,'defaultfigureposition',[400 250 900 750]) % helps prevent cut offs in figs
 for i=1:length(bestfits)
-    opts.applytable(bestfits{i})
+    %opts.applytable(bestfits{i})
     opts.update_results_folder
     opts.resultsfolder=strcat(opts.resultsfolder," ",opts.kpoly_type,num2str(i));
     kpolysweep(opts,"PRM size","log2",true)
@@ -34,47 +34,63 @@ end
 
 %% Make and save polymerstat sweep figures
 opts.update_results_folder
-skip=20;
 opts.resultsfolder=strcat(opts.resultsfolder," polymerstat sweep");
-fig=opts.lookup.ltplot("NTdist","Prvec0",skip,type="ratio",ratioscale="log2");
-xlim([100 600])
-figuresave(fig,opts,strcat("inset Sweep_Change in Prvec0 vs. distance to NT_skip",num2str(skip),".fig"),true);
-ylim([-20 1])
-xlim([0 600])
-figuresave(fig,opts,strcat("Sweep_Change in Prvec0 vs. distance to NT_skip",num2str(skip),".fig"),true);
-
-fig=opts.lookup.ltplot("length","Prvec0",skip,type="ratio",ratioscale="log2");
-xlim([300 600])
-figuresave(fig,opts,strcat("inset Sweep_Change in Prvec0 vs. FH1 length_skip",num2str(skip),".fig"),true);
-ylim([-20 1])
-xlim([0 600])
-figuresave(fig,opts,strcat("Sweep_Change in Prvec0 vs. FH1 length_skip",num2str(skip),".fig"),true);
-
-fig=opts.lookup.ltplot("CTdist","Prvec0",skip,type="ratio",ratioscale="log2");
-xlim([300 600])
-figuresave(fig,opts,strcat("inset Sweep_Change in Prvec0 vs. distance to FH2_skip",num2str(skip),".fig"),true);
-ylim([-20 1])
-xlim([0 600])
-figuresave(fig,opts,strcat("Sweep_Change in Prvec0 vs. distance to FH2_skip",num2str(skip),".fig"),true);
-
+prvec_types=["Prvec0"];
+%prvec_types=["Prvec0","Prvec0_halfup","Prvec0_halfup_op","Prvec0_op","Prvec0_up","Prvec0_up_op","Prvec_cen","Prvec_cen_halfup","Prvec_cen_up","Prvec_offcen","Prvec_offcen_halfup","Prvec_offcen_halfup_op","Prvec_offcen_op","Prvec_offcen_up","Prvec_offcen_up_op"];
+skip=20;
+for i=1:length(prvec_types)
+    fig=opts.lookup.ltplot("NTdist",prvec_types(i),skip,type="ratio",ratioscale="log2");
+    % xlim([100 600])
+    % figuresave(fig,opts,strcat("inset Sweep_Change in ",prvec_types(i)," vs. distance to NT_skip",num2str(skip),".fig"),true);
+    xlim([100 400])
+    figuresave(fig,opts,strcat("inset Sweep_Change in ",prvec_types(i)," vs. distance to NT_skip",num2str(skip),"_N400.fig"),true);
+    %ylim([-20 1])
+    % xlim([0 600])
+    % figuresave(fig,opts,strcat("Sweep_Change in ",prvec_types(i)," vs. distance to NT_skip",num2str(skip),".fig"),true);
+    xlim([0 400])
+    figuresave(fig,opts,strcat("Sweep_Change in ",prvec_types(i)," vs. distance to NT_skip",num2str(skip),"_N400.fig"),true);
+    
+    fig=opts.lookup.ltplot("length",prvec_types(i),skip,type="ratio",ratioscale="log2");
+    % xlim([300 600])
+    % figuresave(fig,opts,strcat("inset Sweep_Change in ",prvec_types(i)," vs. FH1 length_skip",num2str(skip),".fig"),true);
+    xlim([300 400])
+    figuresave(fig,opts,strcat("inset Sweep_Change in ",prvec_types(i)," vs. FH1 length_skip",num2str(skip),"_N400.fig"),true);
+    %ylim([-20 1])
+    % xlim([0 600])
+    % figuresave(fig,opts,strcat("Sweep_Change in ",prvec_types(i)," vs. FH1 length_skip",num2str(skip),".fig"),true);
+    xlim([0 400])
+    figuresave(fig,opts,strcat("Sweep_Change in ",prvec_types(i)," vs. FH1 length_skip",num2str(skip),"_N400.fig"),true);
+    
+    fig=opts.lookup.ltplot("CTdist",prvec_types(i),skip,type="ratio",ratioscale="log2");
+    % xlim([300 600])
+    % figuresave(fig,opts,strcat("inset Sweep_Change in ",prvec_types(i)," vs. distance to FH2_skip",num2str(skip),".fig"),true);
+    xlim([300 400])
+    figuresave(fig,opts,strcat("inset Sweep_Change in ",prvec_types(i)," vs. distance to FH2_skip",num2str(skip),"_N400.fig"),true);
+    %ylim([-20 1])
+    % xlim([0 600])
+    % figuresave(fig,opts,strcat("Sweep_Change in ",prvec_types(i)," vs. distance to FH2_skip",num2str(skip),".fig"),true);
+    xlim([0 400])
+    figuresave(fig,opts,strcat("Sweep_Change in ",prvec_types(i)," vs. distance to FH2_skip",num2str(skip),"_N400.fig"),true);
+    close all
+end
 skip=5;
 fig=opts.lookup.ltplot("NTdist","POcclude",skip,type="ratio",ratioscale="log2");
-xlim([50 600])
+xlim([50 400])
 figuresave(fig,opts,strcat("inset Sweep_Change in POcclude vs. distance to NT_skip",num2str(skip),".fig"),true);
-xlim([0 600])
+xlim([0 400])
 ylim([-11 0.5])
 figuresave(fig,opts,strcat("Sweep_Change in POcclude vs. distance to NT_skip",num2str(skip),".fig"),true);
 
 fig=opts.lookup.ltplot("length","POcclude",skip,type="ratio",ratioscale="log2");
-xlim([50 600])
+xlim([50 400])
 figuresave(fig,opts,strcat("inset Sweep_Change in POcclude vs. FH1 length_skip",num2str(skip),".fig"),true);
-xlim([0 600])
+xlim([0 400])
 ylim([-11 0.5])
 figuresave(fig,opts,strcat("Sweep_Change in POcclude vs. FH1 length_skip",num2str(skip),".fig"),true);
 
 fig=opts.lookup.ltplot("CTdist","POcclude",skip,type="ratio",ratioscale="log2");
-xlim([50 600])
+xlim([50 400])
 figuresave(fig,opts,strcat("inset Sweep_Change in POcclude vs. distance to FH2_skip",num2str(skip),".fig"),true);
 ylim([-11 0.5])
-xlim([0 600])
+xlim([0 400])
 figuresave(fig,opts,strcat("Sweep_Change in POcclude vs. distance to FH2_skip",num2str(skip),".fig"),true);

@@ -80,6 +80,7 @@ def get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP,i=-1,
     #print(len(pp_index_vec_startr))
     while (i+1)< len(pp_index_vec_startr):
         i+=1
+        #print(pp_length_vec[i])
         #print(pp_index_vec_startr[i])
         #print(i)
         if i+1==len(pp_index_vec_startr):
@@ -87,7 +88,11 @@ def get_first_PRM(seq,min_PP_length,nInterruptions,lenInterruptions,min_nP,i=-1,
         elif i+2==len(pp_index_vec_startr):
             if pp_index_vec_startr[i+1]-pp_index_vec_startr[i]<100:
                 return pp_index_vec_startr[i]
+            elif pp_length_vec[i]>10:
+                return pp_index_vec_startr[i]
         elif pp_index_vec_startr[i+1]-pp_index_vec_startr[i]<100 and pp_index_vec_startr[i+2]-pp_index_vec_startr[i+1]<100:
+            return pp_index_vec_startr[i]
+        elif pp_length_vec[i]>10:
             return pp_index_vec_startr[i]
            
 
@@ -279,5 +284,6 @@ def main(a1,a2,a3,a4,a5,a6,a7,a8,a9):
     
     #print(fh1_length,'\n', pp_index_vec, '\n', pp_length_vec, '\n', P_index_vec,'\n', pp_index_vec_start)
     return fh1_length, pp_index_vec, pp_length_vec, P_index_vec, pp_index_vec_start 
+    # return fh1_length, pp_index_vec, pp_length_vec
 
 #main()

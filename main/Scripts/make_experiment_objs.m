@@ -16,9 +16,10 @@ ltfile="prvec_runs_lookup.mat"; % output file from polymer-c; must be on matlab 
 
 pythonpath="/Users/katiebogue/MATLAB/GitHub/ForminKineticModel/main/python"; % path to python files
 resultsloc="/Users/katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results"; % path to location to save results
+resultsloc="/Users/katiebogue/MATLAB/GitHub/kpolyMCMC";
 forminfile="Experimental constructs.txt"; % file containing sequences
 %forminfile="Quinlan_FHODB variations.txt"; % file containing sequences
-forminfile="BNI1 FHOD CAPU.txt";
+%forminfile="BNI1 FHOD CAPU.txt";
 
 %ltfile2="basesep_35.5_output.mat"; % need to use base sep 35.5 runs for capu and fhod dimer
 ltfile2="dimerdisttest.mat"; % test with larger dimerdist runs for capu and fhod dimer
@@ -29,8 +30,8 @@ ertype='SEM';
 %% create lookuptable
 lt=(load(ltfile,'lookuptable').lookuptable);
 lt=Lookuptable(lt);
- lt2=(load(ltfile2,'lookuptable').lookuptable);
- lt.addN(lt2.dimer.N123);
+  lt2=(load(ltfile2,'lookuptable').lookuptable);
+  lt.addN(lt2.dimer.N123);
 % lt.addN(lt2.dimer.N255);
 
 %% create options object
@@ -72,19 +73,22 @@ elseif ertype=='SD'
     Experiment1=Experiment1.add_data("FHODB",0.6519,'ratio',errminus=0.1168,errplus=0.1168,groups=["NTD data"]);
     Experiment1=Experiment1.add_data("CAPU",1,'ratio',errminus=0.1168,errplus=0.1168,groups=["NTD data"]); % these error bars are a guess!
 end
-Experiment1=Experiment1.add_data("BNI1P(pPD18)",9.554461,'double',errminus=0.46825234,errplus=0.46829044,groups=["Fig 3","Fig 4c"]);
-Experiment1=Experiment1.add_data("BNI1P(pPD28)",7.642275,'double',errminus=0.68292357,errplus=0.72194778,groups=["Fig 3"]);
+
 Experiment1=Experiment1.add_data("BNI1P(pPB37)",9.617512,'double',errminus=1.17073171,errplus=0.60709018,groups=["Fig 4a"]);
 Experiment1=Experiment1.add_data("BNI1P(pPC37)",6.885804,'double',errminus=0.88888889,errplus=0.9105691,groups=["Fig 4a"]);
-Experiment1=Experiment1.add_data("BNI1P(pPD37)",2.70152246,'double',errminus=0.5203252,errplus=0.49864499,groups=["Fig 3","Fig 4a"]);
-Experiment1=Experiment1.add_data("BNI1P(pPD65)",2.471568,'double',errminus=0.33170574,errplus=0.33170573,groups=["Fig 3"]);
-Experiment1=Experiment1.add_data("BNI1P(pPB18)",1.486034,'double',errminus=0.9907,errplus=1.0019,groups=["Fig 4c"]);
-Experiment1=Experiment1.add_data("BNI1P(pPC18)",4.294227,'double',errminus=0.5773,errplus=0.6145,groups=["Fig 4c"]);
 
 Experiment1=Experiment1.add_data("BNI1P(pPD18)",8.17234102,'double',errminus=0.917030689999999,errplus=0.897556700000001,groups=["Fig 3 5"]);
 Experiment1=Experiment1.add_data("BNI1P(pPD28)",7.48941745,'double',errminus=1.0926777,errplus=1.11218982,groups=["Fig 3 5"]);
-Experiment1=Experiment1.add_data("BNI1P(pPD37)",2.70895242,'double',errminus=0.52678865,errplus=0.50731465,groups=["Fig 3 5"]);
+Experiment1=Experiment1.add_data("BNI1P(pPD37)",2.70895242,'double',errminus=0.52678865,errplus=0.50731465,groups=["Fig 3 5","Fig 4a"]);
 Experiment1=Experiment1.add_data("BNI1P(pPD65)",2.35773458,'double',errminus=0.46829046,errplus=0.56585096,groups=["Fig 3 5"]);
+
+Experiment1=Experiment1.add_data("BNI1P(pPD37)",2.70152246,'double',errminus=0.5203252,errplus=0.49864499,groups=["Fig 3"]);
+Experiment1=Experiment1.add_data("BNI1P(pPD65)",2.471568,'double',errminus=0.33170574,errplus=0.33170573,groups=["Fig 3"]);
+Experiment1=Experiment1.add_data("BNI1P(pPD28)",7.642275,'double',errminus=0.68292357,errplus=0.72194778,groups=["Fig 3"]);
+
+Experiment1=Experiment1.add_data("BNI1P(pPB18)",1.486034,'double',errminus=0.9907,errplus=1.0019,groups=["Fig 4c"]);
+Experiment1=Experiment1.add_data("BNI1P(pPC18)",4.294227,'double',errminus=0.5773,errplus=0.6145,groups=["Fig 4c"]);
+Experiment1=Experiment1.add_data("BNI1P(pPD18)",9.554461,'double',errminus=0.46825234,errplus=0.46829044,groups=["Fig 3","Fig 4c"]);
 
 
 %% make plots

@@ -19,6 +19,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     load(fullfile(foldername,filename),'NTCHECK')
     load(fullfile(foldername,filename),'type')
     load(fullfile(foldername,filename),'nondim')
+    load(fullfile(foldername,filename),'prcalc')
 
     inmemTF=[0,0];
     % logparams_all_trun=0;
@@ -44,7 +45,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     % m = matfile(fullfile(foldername,filename),'Writable',false);
     % initialparams=m.logparams_all_trun(1,:);
 
-    if type=="3st" && length(initialparams)<7
+    if type=="3st" 
         if nondim
             parameter_names=["alpha_{del}","beta_{cap}","r_{cap} exp"];
         else
@@ -59,13 +60,17 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         
     end
 
+    if prcalc
+        parameter_names=[parameter_names,"del site, x", "del site, y"];
+    end
+
     for i=1:nsigma
         parameter_names=[parameter_names,strcat("sigma",int2str(i))];
     end
 
     parameter_labels=parameter_names;
     for i=1:length(parameter_names)
-        if parameter_names(i)~="r_{cap} exp"
+        if parameter_names(i)~="r_{cap} exp" && parameter_names(i)~="del site, x" && parameter_names(i)~="del site, y"
             parameter_labels(i)=strcat("log_{10} ", parameter_names(i));
         end
     end
@@ -351,7 +356,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     
     end
 
-    maxlikelihoodplot(foldername)
+    maxlikelihoodplot(foldername,prcalc)
         
 end
 
