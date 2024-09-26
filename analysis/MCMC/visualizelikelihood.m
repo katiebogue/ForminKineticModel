@@ -1,6 +1,25 @@
 function visualizelikelihood(foldername,fitparams)
-% please make sure fitparams are entered in log form and with sigma
-% values and not in nondimensionalized form
+%VISUALIZELIKELIHOOD generate posterior distributions of MCMC run with
+%visualization of the location of specific parameters in the clouds
+%
+%   VISUALIZEPOSTERIORS(foldername,fitparams) generate posterior paramater
+%   clouds of the MCMC run located in foldername/mcmc_results.mat, and
+%   place the parameters in fitparams on these clouds
+%
+%   Inputs:
+%       foldername       : location of mcmc_results.ma with MCMC output
+%       fitparams        : array of values corresponding to each of the fit
+%                           parameters, to be visualized; must be entered
+%                           in log form and with sigma values and not in
+%                           nondimensionalized form 
+% 
+%   Loads Users/katiebogue/MATLAB/GitHub/kpolyMCMC/Experiments_4c.mat and
+%   uses that Experiment object to make calculations, compare to data, etc.
+%
+%   Also generates bargraphs of simulated vs experimental values using the
+%   fitparams and the maximum likelihood parameters from the MCMC fit.
+% 
+% See also MCMCPARAMFIT, VISUALIZEPOSTERIORS, GETLOGLL, EXPERIMENT/ALLDATAPLOT.
 
     filename='mcmc_results.mat';
 
@@ -44,9 +63,6 @@ function visualizelikelihood(foldername,fitparams)
         Experiment1.opts.k_rel=10^minlogll_params(6);
     end
     Experiment1.alldataplot;
-
-
-    
 
     if type=="3st" && length(parameters_all(1,:))<7
         if nondim

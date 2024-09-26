@@ -1,3 +1,27 @@
+% COMPARE_PRM_DEFS creates bargraphs of simulated values using different
+% PRM definitions
+% 
+%   Requires the following variables to exist:
+%       PRMs -- matrix with number of PRMs per formin per PRM def
+%       KP1 -- matrix with single Kpoly values per formin per PRM def
+%       KP2 -- matrix with double Kpoly values per formin per PRM def
+%       KP3 -- matrix with dimer Kpoly values per formin per PRM def
+%       dimer -- matrix with change in Kpoly values per formin per PRM def
+% 
+%   Makes a barchart of each of the above variables.
+%   The variables should have values for 6 PRM definitions ('3 w/ int','4
+%   w/ int','6 w/ int','3 w/o int','4 w/o int','6 w/o int') and for the
+%   following formins:
+%   "Diap1--Human"; "Diap2--Human"; "Diap3--Human"; "Diap1--Mouse";
+%   "Diap2--Mouse"; "Diap3--Mouse"; "Diap1--Rat"; "Diap3--Rat";
+%   "DAAM1--Human"; "DAAM2--Human"; "DAAM1--Mouse"; "DAAM2--Mouse";
+%   "CAPU--FruitFly"; "FMN1--Human"; "FMN2--Human"; "FMN1--Mouse";
+%   "FMN2--Mouse"; "INF2--Mouse"; "FHOD1--Human"; "FHOD3--Human";
+%   "FHOD1--Mouse"; "FHOD3--Mouse"; "BNR1--Yeast"; "CDC12P--Yeast";
+%   "BNI1P--Yeast"; "FHODB--FruitFly"; "Delphinin--Human";
+%   "Delphinin--Mouse"; "FMNL1--Human"; "FMNL2--Human"; "FHDC1--Mouse";
+%   "DM7--FruitFly"; "FMNL1--Mouse"; "Delphinin--Zebrafish" 
+
 close all
 figure(1);
 PRM_bar = bar(PRMs(:,:));

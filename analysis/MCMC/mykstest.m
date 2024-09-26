@@ -1,4 +1,35 @@
 function [KSstatistic,histplot,cdfplot] = mykstest(x1,x2,x1label,x2label,plotTF,ax)
+%MYKSTEST compute Kolmogorov–Smirnov statistic between two distributions 
+%
+%   [KSstatistic,histplot,cdfplot] = MYKSTEST(x1,x2) compute Kolmogorov–Smirnov statistic between x1
+%   and x2 and generate plot with two panels: an overlapping histogram and a cdf plot
+%
+%   [KSstatistic,histplot,cdfplot] = MYKSTEST(x1,x2,x1label,x2label) compute Kolmogorov–Smirnov statistic between x1
+%   and x2, and generate plot with specified x and y labels with two
+%   panels: an overlapping histogram and a cdf plot
+%
+%   [KSstatistic,histplot,cdfplot] = MYKSTEST(x1,x2,x1label,x2label,0) compute Kolmogorov–Smirnov statistic between x1
+%   and x2, do not make a plot
+%
+%   [KSstatistic,histplot,cdfplot] = MYKSTEST(x1,x2,x1label,x2label,1,ax) compute Kolmogorov–Smirnov statistic between x1
+%   and x2, and generate plot on axes ax with specified x and y labels with two
+%   panels: an overlapping histogram and a cdf plot
+%
+%   Inputs:
+%       x1       : array of values to compare with x2
+%       x2       : array of values to compare with x1
+%       x1label  : x axes label for x1 values (default is "x1")
+%       x2label  : x axes label for x2 values (default is "x2")
+%       plotTF   : whether or not to generate plot (default is true)
+%       ax       : 2x1 axes object to add plots to (default is to just
+%                   generate new figures)
+%       
+%   Outputs:
+%       KSstatistic : KS stat value
+%       histplot    : histogram object with generated histograms
+%       cdfplot     : cdf plot object
+%
+% See also MCMCPARAMFIT.
 arguments
     x1
     x2

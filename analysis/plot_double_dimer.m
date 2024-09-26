@@ -1,10 +1,19 @@
-%% 
-% graphs probability of occlusion for double and n-dimerized fh1 of all
-% lengths and binding site locations
-% graphs double minus dimerized probability of occlusion
-
-% higher probability of occlusion corresponds to slower
-% polymerization rate
+% PLOT_DOUBLE_DIMER generates 3D scatter plots of probability of occlusion
+% vs PRM location and FH1 length from old lookup tables
+%
+%   Reads in occlusion probabilities using old lookuptable format.
+% 
+%   Makes 3 plots:
+%   - probability of occlusion for double 
+%   - probability of occlusion for n-dimerized fh1
+%   - double minus dimerized probability of occlusion
+%
+%   Reads in data from double_200.txt and dimer_122.txt
+%
+%   Uses extrapolation.
+%
+%   Note that higher probability of occlusion corresponds to slower
+%   polymerization rate
 
 %% double
 %initialization

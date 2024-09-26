@@ -1,13 +1,45 @@
 function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initialguess,exptype,type,errtype, inputtype, nondim, NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
+%SIMULATEANNEAL run simulated annealing algorithm to find best fit parameters,
+%using an adaptive step size, KS test for convergence, and a cosine annealing temperature function.
+%
+%   [minlogll_params, minlogll_params_raw,fitTF] = SIMULATEANNEAL(Exp,initialguess,exptype,type,errtype, inputtype, nondim, NTCHECK,NTADAPT,NTMAX,KSCRITICAL) 
+%
+%   Inputs:
+%       Exp       : Either an Experiment object or a struct (see below),
+%                   but should contain the data for the MCMC fit
+%       initalguess: initial values for the parameters to start with
+%       exptype   : which type of input Exp is
+%               1 - Experiment object
+%               2 - struct with rates, data, resultsfolder, resultsdir, fh1sizes, and prmlocs
+%       type      : which model to use, 3st or 4st
+%       errtype   : how to integrate error into the loglikelihood function
+%               1 - use separate sigma values (fit params) for each group
+%               2 - divide each value by the SEM
+%       inputtype : what type of parameters the initialguess is
+%               1- nondimensionalized parameters
+%               2- regular parameters
+%       nondim    : whether to use nondimensionality (default is true)
+%       NTCHECK   : Iterations to run before checking KS, triples each time (default is 1000)
+%       NTADAPT   : iterations to go in between modifying step size (before reaching the fitst NTCHECK) (defalt is 100)
+%       NTMAX     : maximum number of iterations (defalt is 10^6)
+%       KSCRITICAL: critical value for stopping criteria (stops when KS < KSCRITICAL) (defalt is 0.01)
+%       
+%   Outputs:
+%       minlogll_params     : the best fit parameters, nondimensionalized
+%                             if nondim is true
+%       minlogll_params_raw : the best fit parameters, in normal dimensions
+%       fitTF               : boolean value, true if 
+%   
 % 
-    %   out = SimulateAnneal(Exp) 
-    %   
-    %   Inputs:
-    %         : 
-    %
-    %   
-    %   
-    %   See 
+%   Generates bargraphs of simulated vs experimental values using the
+%   best fit params and by loading in
+%   Users/katiebogue/MATLAB/GitHub/kpolyMCMC/Experiments_4c.mat. 
+%
+%   Runs readinExp (if Exp is type 1).
+%
+%   Check the boundary conditions specified in the file before use.  
+% 
+% See also VISUALIZELIKELIHOOD, EXPERIMENT, OPTIONS, READINEXP.
 
     arguments
         Exp
@@ -525,8 +557,6 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
     if sign(diff(simdata(rows))) ~= sign(diff(expdata(rows)))
         logll=logll-sum((abs(diff(simdata(rows))-diff(expdata(rows)))));
     end
-
-
 end
 
 function kpolys=calckpolys(type,rates,params,nondim)
@@ -558,7 +588,6 @@ function kpolys=calckpolys(type,rates,params,nondim)
         kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./kdel) + ((kdel + rcap)./(kdel.*kcap))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
     end
     
-
     for i=1:length(kpolys)
         PRMsum=sum(kpolys{i},1); % sum up PRMs
         kpolys{i}=[PRMsum(1),sum(PRMsum(2:3)),sum(PRMsum(4:5))]; % Sum up filaments
@@ -579,7 +608,6 @@ function trueparams=gettrueparams(params,alphakp,kp,nparams)
     end
 
     trueparams=[log10(kcap), trueparams];
-
 end
 
 function fitTF=checkfit(type,data,rates,params,nondim,divdatapoint)
@@ -675,5 +703,4 @@ function fitTF=checkfit(type,data,rates,params,nondim,divdatapoint)
             fitTF=0;
         end
     end
-
 end

@@ -1,4 +1,31 @@
 function reloadmatfile(matfileloc,mem,replaceTF)
+%RELOADMATFILE reloads in a .mat file and then saves it again in order to
+%get rid of the extra data being stored from using matfile
+%
+%   RELOADMATFILE(matfileloc) reloads and replaces matfileloc, assumes
+%   memoery of 15.5GB
+%
+%   RELOADMATFILE(matfileloc,mem) reloads and replaces matfileloc, reading
+%   things in based on the specified mem
+%
+%   RELOADMATFILE(matfileloc,mem,0) reloads but does not replace matfileloc, reading
+%   things in based on the specified mem
+%
+%   Inputs:
+%       matfileloc : path to the target .mat file with MCMC output
+%       mem        : GB of RAM to guide how much of each array is loaded
+%           into memory at once (default is 15.5)
+%       replaceTF  : whether or not to replace the .mat file or to keep the
+%           new one as matfileloc/temp.mat (default is true)
+%       
+%   Attempts to load the whole file in at once, but if that fails (the file
+%   is too big), then loads in small variables and saves the workspace,
+%   then saves the larger variables to the new .mat file (as a matfile) in
+%   increments according to the specified memory (which should result in a
+%   smaller file if the memory is larger than the memory of the computer
+%   that ran the MCMCParamfit).
+% 
+% See also VISUALIZEPOSTERIORS, MATFILE, MCMCPARAMFIT.
     arguments
         matfileloc
         mem=15.5 % GB of RAM

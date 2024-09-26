@@ -1,3 +1,10 @@
+%REPLICATEFIG3 reads in values from csv file and uses them to replicate
+%courtemanche figure 3 scatter plot with error bars
+% 
+%   Reads in data from "Courtemanche plot digitizer data F3.csv"
+%
+%   See also REPLICATEFIG4A, REPLICATEFIG4C.
+
 values=readmatrix("Courtemanche plot digitizer data F3.csv");
 PConc=values(:,1);
 K_18=values(:,2);

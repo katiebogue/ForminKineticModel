@@ -1,8 +1,13 @@
-% compares effects of different dimerization forces 
-% for length = 32
-% all simulated filiments have 2 strands
-
-% calls dmr_force_explr
+% DIMF_COMPARISON creates scatterplots of occlusion probabilities vs. PRM
+% location for polymer-c simulations run using different dimerization
+% forces
+% 
+% all simulated filiments have 2 strands and are of length 32
+% 
+% Loads file dmr_force_explr.mat
+% 
+% Reads in occlusion probability values from the file using the old
+% lookuptable indexing format.
 
 err = 0;
 NFil = 2; N = 32;

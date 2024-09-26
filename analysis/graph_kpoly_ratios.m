@@ -1,7 +1,7 @@
-% Plots in bar chart
-% the ratio of double and dimerized kpolys
-
-% uses: fh1_info_u200.mat; kp_ratiou200.mat; all_names.mat;
+% GRAPH_KPOLY_RATIOS creates bargraphs of dimer/double Kpoly ratios
+% simulated for a list of formins
+% 
+% Reads in data from fh1_info_u200.mat; kp_ratiou200.mat; all_names.mat;
 % kp_ratio_all.mat
 
 %% for all with length under 200
@@ -11,9 +11,7 @@
 load('fh1_info_u200.mat');
 load('kp_ratio_u200.mat');
 
-
 X1 = categorical(fh1_info_u200);
-
 c = parula(21); %?
 
 figure()
@@ -37,13 +35,10 @@ hold off
 
 %% all the formins
 
-
 load('all_names.mat');
 load('kp_ratio_all.mat');
 
-
 X2 = categorical(all_names);
-
 c = parula(25); %?
 
 figure()

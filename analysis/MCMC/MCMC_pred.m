@@ -1,15 +1,27 @@
 function MCMC_pred(Exp,mcmcfile,saveTF)
-% 
-    %   out = 
-    %   
-    %   Inputs:
-    %         : 
-    %
-    %   
-    %   
-    %   See 
-
-
+%MCMC_PRED generate histograms of calculated kpoly values for formin in
+%experiment using the parameter cloud from the mcmc file
+%
+%   TRUEPARAMCONVERT(Exp,mcmcfile) generate histograms of calculated kpoly
+%   values for formin in Exp using the parameter cloud in mcmcfile
+%
+%   TRUEPARAMCONVERT(Exp,mcmcfile,1) generate and save histograms of
+%   calculated kpoly values for formin in Exp using the parameter cloud in
+%   mcmcfile 
+%
+%   Inputs:
+%       Exp : Experiment file, should only have one formin
+%       mcmcfile: .mat file result from mcmcparamfit, must have the
+%           following parameters: nparams, nkpolyparams, nsigma, type, nondim,
+%           parameters_all, rates, divdatapoint, divkpoly
+%       saveTF : whether or not to save the histograms
+%
+%   Generates a histogram for Kpoly single, double, dimer, and ratio, and
+%   includes lines indicating the mean, mode, and standard deviation.
+%
+%   Runs trueparamconvert.
+%
+% See also TRUEPARAMCONVERT.
     NBINS=30;
 
     opts=Exp.opts;

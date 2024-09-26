@@ -1,3 +1,11 @@
+%COURTEMANCHE_FIG3_LSQ plots least squares regression for simplified Kpoly
+%calculation and approximate values from courtemanche figure 3
+% 
+%   Approximate values from [profilin] = 2.5uM data from figure 3
+% 
+%   Makes two plots, one using the actual PRM locations, the other using
+%   the values reported in the courtemanche paper.
+
 K_court=[9.5, 8, 2.5]; %Kpoly from courtemanche graph
 %K_court=[9.5, 8, 2, 2.5]; %Kpoly from courtemanche graph
 
@@ -24,8 +32,6 @@ options.FunctionTolerance = 1e-20;
 options.OptimalityTolerance = 1e-14;
 options.MaxFunctionEvaluations = 1e5;
 options.MaxIterations = 1e3;
-
-
 
 c = lsqcurvefit(fun_court,c0,N_court,YData,lb,ub,options)
 

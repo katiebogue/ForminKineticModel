@@ -1,3 +1,15 @@
+%COURTEMANCHE_FIG3_LSQ1 reads in plot digitizer values for courtemanche data
+%and plots least squares regression for simplified Kpoly calculation
+% 
+%   Does a fit and makes plots for each [profilin-actin] from figure 3,
+%   reading in values from "Courtemanche plot digitizer data F3.csv"
+% 
+%   Makes two plots for each concentration, one using the actual PRM locations, the other using
+%   the values reported in the courtemanche paper.
+%
+%   Creates a pdf file (name specified in script) with all of the generated
+%   plots
+
 %%Get values
 pdf_name = "Courtemanche LSQ plots.pdf"
 
@@ -89,8 +101,7 @@ for NLOOP=1:2 %for our N and court N
     hl=subtitle(subtitle1)
     set(hl ,'Interpreter','latex')
     
-    saveas(gcf, append('temp.pdf'))
-    append_pdfs(pdf_name, append('temp.pdf'))
+    exportgraphics(gcf,pdf_name,'Append',true);
 end
 
 C1_ncourt=[C1_ncourt;C1(1)];
@@ -103,6 +114,4 @@ end
 T = table(C1_ncourt,C2_ncourt,C1_n,C2_n);
 
 T2=[vals(:,1) T vals(:,[2:width(vals)])];
-
-delete 'temp.pdf'
 

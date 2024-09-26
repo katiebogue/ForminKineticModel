@@ -1,5 +1,14 @@
-% PRVEC0_FMIN .
-    % 
+% PRVEC0_FMIN Run fminsearch 1000 times for each prvec0 option.
+%
+    %   Runs Experiment.runfminsearch 1000 times for each prvec0 option
+    %   specified in the script (this can be modified).
+    %
+    %   Be sure to set an experiment object with appropriate lookuptable
+    %   and data added
+    %
+    %   Adds the outputs to tables_capudimerdist_3st and
+    %   tables_capudimerdist_4st_krelscale, table variables that should
+    %   already exist before running the script.
     %
     % See also FORMIN, EXPERIMENT, LOOKUPTABLE, OPTIONS, EXPDATABAR,
     % KPOLYMERIZATION, PRM, EXPERIMENT/RUNFMINSEARCH.

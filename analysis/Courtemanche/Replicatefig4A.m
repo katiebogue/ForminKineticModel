@@ -1,3 +1,10 @@
+%REPLICATEFIG4A reads in values from csv file and uses them to replicate
+%courtemanche figure 4a scatter plot with error bars
+% 
+%   Reads in data from "Courtemanche plot digitizer data F4A.csv"
+%
+%   See also REPLICATEFIG3, REPLICATEFIG4C.
+
 values=readmatrix("Courtemanche plot digitizer data F4A.csv");
 PConc=values(:,1);
 K_B=values(:,2);

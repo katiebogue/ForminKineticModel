@@ -1,4 +1,25 @@
 function out_struct=readinExp(Exp)
+%READINEXP helper function for MCMCParamfit, reads information from
+%Experiment object into a useful struct
+%
+%   out_struct = READINEXP(Exp) create output structure from values in Exp,
+%   to be used in MCMCParamfit
+%
+%   Inputs:
+%       Exp : Experiment containing the fit data and options to be used in
+%       the MCMC fit
+%       
+%   Outputs:
+%       out_struct : structure with the following fields: 
+%           data - Exp.data 
+%           rates - struct with rate values using 1 for all rate constants
+%           opts - Exp.opts
+%           fh1sizes - cell array of FH1 sizes of formins in data (indexed
+%               by each PRM)
+%           prmlocs - cell array of PRM locations of formins in data (indexed
+%               by each PRM)
+%   
+% See also MCMCPARAMFIT, EXPERIMENT, OPTIONS.
     % read in formin info 
     ogtable=struct('k_cap',Exp.opts.k_cap,'k_del',Exp.opts.k_del,'r_cap',Exp.opts.r_cap,'r_cap_exp',Exp.opts.r_cap_exp,'r_del',Exp.opts.r_del,'k_rel',Exp.opts.k_rel);
     Exp.opts.k_cap= 1;

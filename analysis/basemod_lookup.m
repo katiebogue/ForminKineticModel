@@ -1,4 +1,11 @@
-%script to look at lookuptables made when changing basesep distance
+% BASEMOD_LOOKUP collects prvec0 values from lookuptables for base
+% separation distances 10 and 20, and makes scatterplots for the prvec0
+% ratio (dimer/double) vs. FH1 length for each table
+    % 
+    % Uses the tables generated from the old format. The table files used
+    % are double_basesep10_1,10,20-250.txt,
+    % dimer_basesep10_1,10,20-250.txt, double_basesep20_1,10,20-250.txt,
+    % and dimer_basesep20_1,10,20-250.txt 
 
 %% base sep 10
 numErr = 0; 

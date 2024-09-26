@@ -1,4 +1,24 @@
 function params_all = trueparamconvert(mcmcfile)
+%TRUEPARAMCONVERT convert nondimensionalized parameters into orignal scales
+%
+%   params_all = TRUEPARAMCONVERT(mcmcfile) convert nondimensionalized
+%   parameters in the specified file into the orignal parameter values
+%
+%   Inputs:
+%       mcmcfile : .mat file result from mcmcparamfit, must have the
+%       following parameters: nparams, nkpolyparams, nsigma, type, nondim,
+%       parameters_all, rates, divdatapoint, divkpoly 
+%       
+%   Outputs:
+%       params_all : matrix with orignally scaled parameters
+%
+%   Loads values from .mat file, computes scaled kpoly values for each
+%   parameter, and then converts the parameters into regular dimensions.
+%
+%   If the fit did not use nondimensionalization (nondim=0), then
+%   params_all simply returns the parameters_all variable in the .mat file.
+%
+% See also MCMC_PRED.
     load(mcmcfile,'nparams')
     load(mcmcfile,'nkpolyparams')
     load(mcmcfile,'nsigma')
@@ -39,18 +59,14 @@ function params_all = trueparamconvert(mcmcfile)
             krels=kcaps;
             kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./kdel) + ((kdel + rcap)./(kdel.*kcap))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
         end
-        
     
         for j=1:length(kpolys)
             PRMsum=sum(kpolys{j},1); % sum up PRMs
             kpolys{j}=[PRMsum(1),sum(PRMsum(2:3)),sum(PRMsum(4:5))]; % Sum up filaments
         end
-
         kpoly_scale=kpolys{1}(2);
     end
-
 end
-
 
 function trueparams=gettrueparams(params,alphakp,kp,nparams)
     %must be 3 state method

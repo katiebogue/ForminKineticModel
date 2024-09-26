@@ -1,7 +1,14 @@
-%creates gradient map for P_Occlusion for single filament
+% PLOT_SINGLE generates 3D scatter plots of probability of occlusion
+% vs PRM location and FH1 length from old lookup tables for single filament
+%
+%   Reads in occlusion probabilities using old lookuptable format.
+%
+%   Reads in data from single1_300.txt
+%
+%   Note that higher probability of occlusion corresponds to slower
+%   polymerization rate
 
-
-%initialization
+%% initialization
 
 clear all
 A=dlmread('single1_300.txt');
@@ -11,6 +18,7 @@ N_Array = 1:300;
 N_vec = [];
 iSite_vec = [];
 
+%% Read in vals
 %POcc1(iN, isite)=[occlusion probability of the iNth N value at isite]
 for iN=1:300
     N = N_Array(iN);
@@ -22,6 +30,7 @@ for iN=1:300
     end
 end    
 
+%% Make plots
 figure()
 X(:,1) = transpose(N_vec);
 X(:,2) = transpose(iSite_vec);

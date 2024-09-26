@@ -1,4 +1,37 @@
 function updateMCMCoutput(matfileloc,mem)
+%UPDATEMCMCOUTPUT modified variables in target MCMCParamfit output (.mat
+%file) to remove empty elements arising from preallocation as well as
+%convert things into non log scale if needed.
+%
+%   UPDATEMCMCOUTPUT(matfileloc) modify variables in matfileloc, stepping
+%   through arrays assuming a memory of 15.5GB
+%
+%   UPDATEMCMCOUTPUT(matfileloc, mem) modify variables in matfileloc, stepping
+%   through arrays based on specified mem
+%
+%   Inputs:
+%       matfileloc : path to the target .mat file with MCMC output
+%       mem        : GB of RAM to guide how much of each array is loaded
+%           into memory at once (default is 15.5)
+%       
+%   Loads file as a matfile and then does the following:
+%       - removes trailing zeros in paccept_matrix
+%       - removes trailing zeros in ksvals
+%       - removes trailing zeros in paramHistCounts_matrices_nts
+%       - removes empty sheets in paramHistCounts_matrices
+%       - creates logparams_all_trun, which is logparams_all without
+%       traliling zeros
+%       - creates corruptindex, which contains the locations of any
+%       corruptions in logparams_all, for which logparams_all_trun contains
+%       NaN
+%       - if it does not exist, creates parameters_all, with values from
+%       logparams_all_trun not in log space; or, truncates parameters_all
+%       - creates containsInf, which is a series of bools saying whether
+%       there is a +/- Inf value in the parameters
+%       - creates updatedone and sets it to true
+%       - sets logparams_all to an empty array
+% 
+% See also VISUALIZEPOSTERIORS, MATFILE, MCMCPARAMFIT.
 arguments
     matfileloc
     mem=15.5 % GB RAM
@@ -30,8 +63,6 @@ end
         clear temp
     end
 
-
-    
     [nrows,ncols]=size(m,'logparams_all');
     
     maxrow=m.nt;
@@ -54,7 +85,6 @@ end
 
     corruptindex=[];
     i=1;
-
 
     STEP=uint64(mem*(1024^3)/(ncols*8));
     disp("starting truncation")
@@ -163,14 +193,10 @@ end
         end
         disp("made containsInf")
     end
-
     disp("made parameters_all")
-    
-    
-    m.logparams_all=[];
 
+    m.logparams_all=[];
     disp("removed logparams_all")
 
     m.updatedone=1;
-
 end
