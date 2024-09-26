@@ -190,7 +190,7 @@ classdef Filament
         function r = exp(obj)
             %EXP applies the exponential (e^x) operator to a and b of a filament.
             %
-            %   fil=EXP(obj) raises e to the power of obj.a and obj.b and
+            %   fil=EXP(obj) raises e to the power of obj and
             %   returns a new filament object
             %
             %   Inputs:

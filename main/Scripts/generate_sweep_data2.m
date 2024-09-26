@@ -1,12 +1,5 @@
-% GENERATE_SWEEP_DATA2 ...
-    % 
-    % ...
-    %
-    % See also .
-
-    % rows:
-    % 1) settings
-    %
+% GENERATE_SWEEP_DATA2 creates and saves table with rates for formins of
+% various configurations across random parameter value sweeps
 
 new_opts=false;
     %% generate table of possible opts

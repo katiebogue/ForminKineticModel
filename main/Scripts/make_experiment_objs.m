@@ -16,7 +16,7 @@ ltfile="prvec_runs_lookup.mat"; % output file from polymer-c; must be on matlab 
 
 pythonpath="/Users/katiebogue/MATLAB/GitHub/ForminKineticModel/main/python"; % path to python files
 resultsloc="/Users/katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results"; % path to location to save results
-resultsloc="/Users/katiebogue/MATLAB/GitHub/kpolyMCMC";
+%resultsloc="/Users/katiebogue/MATLAB/GitHub/kpolyMCMC";
 forminfile="Experimental constructs.txt"; % file containing sequences
 %forminfile="Quinlan_FHODB variations.txt"; % file containing sequences
 %forminfile="BNI1 FHOD CAPU.txt";
@@ -31,8 +31,8 @@ ertype='SEM';
 lt=(load(ltfile,'lookuptable').lookuptable);
 lt=Lookuptable(lt);
   lt2=(load(ltfile2,'lookuptable').lookuptable);
-  lt.addN(lt2.dimer.N123);
-% lt.addN(lt2.dimer.N255);
+  %lt.addN(lt2.dimer.N123);
+ lt.addN(lt2.dimer.N255);
 
 %% create options object
 % modify this line to change the rate constants:

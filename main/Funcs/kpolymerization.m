@@ -17,6 +17,9 @@ function output = kpolymerization(type,kcap,kdel,rcap,rdel,krel)
     %
     %   Output is either double or FilType (depending on inputs)
     %
+    %   Note-- all calculations are done with matrix multiplication or
+    %   division if the input is not of class "FilType"
+    %
     %   See also KPOLY, PRM, FORMIN, FILTYPE.
 arguments
     type (1,1) string {mustBeMember(type,{'capture','3st','4st'})}

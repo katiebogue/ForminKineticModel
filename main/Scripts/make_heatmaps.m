@@ -1,8 +1,12 @@
 % MAKE_HEATMAPS generates and saves kpoly heatmap figures
     % 
-    % ... 
+    % Creates heatmaps using the function kpolyheatmaps.
+    % Makes heatmaps with various kcap and kdel values, trying to capture
+    % ranges where each are rate limiting.
+    % The lookuptable to use is specified and can be modified, as well as
+    % the location to save results.
     %
-    % See also .
+    % See also KPOLYHEATMAP, FORMIN, MAKE_EXPERIMENT_OBJS, OPTIONS, LOOKUPTABLE.
 
 %% Set variables
 ltfile="prvec_runs_lookup.mat"; % output file from polymer-c; must be on matlab path
@@ -40,6 +44,11 @@ newheatmap(opts,1000,0.01,1,true,0.58)
 newheatmap(opts,10000,0.01,1,true,0.58)
 
 function newheatmap(opts,kcap,kdel,rcap,smooth,smoothfac)
+% NEWHEATMAP  Generates and saves a kpolyheatmap figure using specified inputs.
+%   NEWHEATMAP(opts,kcap,kdel,rcap,smooth,smoothfac) creates a kpolyheatmap using the specified kcap, kdel, and rcap values, 
+%   with the specified smoothfac if smooth is set to true. Saves the file
+%   in the results location specified by opts.
+
     %opts.update_results_folder
     %opts.resultsfolder=strcat(opts.resultsfolder,"heatmap",num2str(kcap));
     opts.k_cap=kcap;

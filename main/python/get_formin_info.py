@@ -18,7 +18,7 @@ arguments for main:
     6) Minimum number of Ps 
     7) FH1 NT definition options:
         1 - first instance of PRM with at least 4 Ps with max 1 interruption of length 1 (in sequence of at least 3 PRMs no father than 100 amino acids apart)
-        2 - first instance of PRM (as defined by args 3 and 4) (uin sequence of at least 3 PRMs no father than 100 amino acids apart)
+        2 - first instance of PRM (as defined by args 3 and 4) (in sequence of at least 3 PRMs no father than 100 amino acids apart)
         3 - Uniprot defined FH1 start (or option 1 if no FH1)
         4 - Uniprot defined FH1 start (or option 2 if no FH1)
         5 - Start of sequence (for input sequences)

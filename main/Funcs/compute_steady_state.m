@@ -1,4 +1,18 @@
 function pi = compute_steady_state(Q)
+% COMPUTE_STEADY_STATE  computes the fraction of time spent in each state
+% of the transition matrix at steady state
+    %
+    %   pi=COMPUTE_STEADY_STATE(Q) computes the fraction of time spent in 
+    %        each state of the transition matrix, Q, at steady state
+    %
+    %   Input:
+    %       Q    : (sparse matrix) transition matrix, NxN
+    %
+    %   Output:
+    %       pi : matrix of fraction of time spent in each state
+    % 
+    %   See also FORMIN, FORMINTRANSITIONMAT, PMULTIBIND.
+
     % Q: Transition rate matrix (NxN matrix)
 
     % Transpose the matrix Q

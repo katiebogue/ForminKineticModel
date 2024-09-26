@@ -1,13 +1,55 @@
 function [fig,h]=kpolyheatmap(options,sweep_type,col,smooth,smoothfac,save)
-% KPOLYHEATMAP  ...
+% KPOLYHEATMAP  creates heatmap of kpoly ratios for a fictitious formin
+% construct swept across formin and/or rate parameters as specified by the
+% input
     %
-    %   KPOLYHEATMAP() ...
+    %   [fig,h]=KPOLYHEATMAP(options,sweep_type,col) creates heatmap of sweep
+    %   specified by sweep_type with the specified colormap options, uses
+    %   smoothing factor of 0.58
+    %
+    %   [fig,h]=KPOLYHEATMAP(options,sweep_type,col,0) creates heatmap of sweep
+    %   specified by sweep_type with the specified colormap options, with
+    %   no smoothing
+    %
+    %   [fig,h]=KPOLYHEATMAP(options,sweep_type,col,1,smoothfac) creates heatmap of
+    %   sweep specified by sweep_type with the specified colormap options, 
+    %   uses specified smoothing factor 
+    %
+    %   [fig,h]=KPOLYHEATMAP(options,sweep_type,col,0,x,1) creates and saves
+    %   heatmap of sweep specified by sweep_type with the specified
+    %   colormap options, with no smoothing
+    %
+    %   [fig,h]=KPOLYHEATMAP(options,sweep_type,col,1,smoothfac,1) creates and
+    %   saves heatmap of sweep specified by sweep_type with the specified
+    %   colormap options, uses specified smoothing factor
     %
     %   Inputs:
-    %       options  : 
+    %       options    : Options object with parameters and rate equations
+    %       sweep_type : (string) the type of sweep to run (currently only
+    %                    set to work with "NT dist v r_cap")
+    %       col        : (double) colormap type
+    %                       1- use jet
+    %                       2- use parula, if smooth not true, set all increasing value to red
+    %                       3- load 'customcolorbar_red_blue.mat' and set color limits to min values
+    %                       [x, x] - use 'customcolorbar_red_blue.mat' and
+    %                               set colorlimits to [x, x]
+    %       smooth     : (logical) whether or not to use smoothing on the
+    %                     heatmap (default is true)
+    %       smoothfac  : (double) smoothing factor, applied if smooth=true
+    %                    (default is 0.58)
+    %       save       : (logical) whether or not to save the resulting
+    %                    heatmap (default is false)
     %
+    %   Outputs:
+    %       fig : Figure with heatmap
+    %       h   : heatmap object
     %
-    %   See also .
+    %   Currently only works with sweeps across NT distance and r_cap
+    %
+    %   Calls figuresave
+    %   Loads customcolorbar_red_blue.mat
+    % 
+    %   See also FORMIN, OPTIONS, PRM, FIGURESAVE, FILAMENTSCHEMATIC, FORMINKPOLYBAR, KPOLYMERIZATION.
 
 arguments
     options Options

@@ -1,11 +1,20 @@
 classdef Lookuptable <handle 
-    %LOOKUPTABLE Summary of this class goes here
-    %   Detailed explanation goes here
+    %LOOKUPTABLE Holds formatted polymer statistics from polymer-c   
+    %   
+    %   Construction:
+    %       obj = LOOKUPTABLE(ltvar) 
+    %           Inputs:
+    %               ltvar : (struct) contains single, double, and/or dimer
+    %               fields full of N struct objects to be added to the
+    %               lookuptable; struct should be created from
+    %               makeLookupMat and reading in polymer-c outputs
+    % 
+    % See also MAKELOOKUPMAT. 
 
     properties (GetAccess=public, SetAccess=protected)
-        single 
-        dimer 
-        double 
+        single % struct with structs for single filament simulations
+        dimer % struct with structs for dimer filament simulations
+        double % struct with structs for double filament simulations
     end
 
     properties (SetAccess=private, SetObservable, AbortSet)
@@ -20,16 +29,33 @@ classdef Lookuptable <handle
     end
 
     properties (SetAccess=protected)
-        interpolant struct
+        interpolant struct % contains extrapolation functions for stats (indexed by stat)
     end
 
     properties (SetAccess=protected,GetAccess=private)
-        holdratio logical=false %if true, do not update ratio when called
+        holdratio logical=false % if true, do not update ratio when called
         ratiostore % holds the ratio value
     end
 
     methods 
         function obj = Lookuptable(ltvar)
+            %LOOKUPTABLE Construct an instance of Lookuptable class
+            %   
+            % obj = LOOKUPTABLE(ltvar)
+            %
+            %   Converts lookuptable structure object into a class object.
+            %   Modifies double and dimer input properties to be of
+            %   Filament class if applicable.
+            % 
+            %   Inputs:
+            %       ltvar : (struct) contains single, double, and/or dimer
+            %       fields full of N struct objects to be added to the
+            %       lookuptable; struct should be created from
+            %       makeLookupMat and reading in polymer-c outputs
+            %
+            %   Runs updateAddedNs and updateAddedStats.
+            % 
+            % See also LOOKUPTABLE/UPDATEADDEDNS, LOOKUPTABLE/UPDATEADDEDSTATS, MAKELOOKUPMAT.
             % any fields in the input struct that are arrays must be 1x# or, only if there are different values for different filaments, 2xN
             if nargin>0
                 if class(ltvar)~="struct"
@@ -82,6 +108,8 @@ classdef Lookuptable <handle
         end
 
         function value= get.max_length(obj)
+            % compute the maximum N value present for each filament type,
+            % returns a FilType object
             value=FilType(find_maxN("single"),find_maxN("double"),find_maxN("dimer"));
             function max=find_maxN(type)
                 if isempty(obj.(type))
@@ -100,6 +128,18 @@ classdef Lookuptable <handle
         end
 
         function obj = getmissingNs(obj)
+            %GETMISSINGNS updates the obj.missingNs property to contain any
+            %N values that are missing for each filament type (single,
+            %double, dimer)
+            %
+            %   out = LOOKUPTABLE.GETMISSINGNS
+            %
+            %   Scans through every entry and adds the N values
+            %   accordingly. An N value is considered missing if it is not
+            %   present in one of the types but is less than the maximum N
+            %   value for that type. 
+            %
+            % See also LOOKUPTABLE.
             addNs("single");
             addNs("double");
             addNs("dimer");
@@ -115,6 +155,18 @@ classdef Lookuptable <handle
         end
 
         function updateNList(obj)
+            %UPDATENLIST creates a FilType object for the NList property
+            %that contains the N values present in single, double, and
+            %dimer
+            %
+            %   out = LOOKUPTABLE.UPDATENLIST
+            %
+            %   Scans through every entry and adds the N values
+            %   accordingly.
+            %
+            %   Runs getmissingNs.
+            %
+            % See also LOOKUPTABLE, FILTYPE, LOOKUPTABLE/GETMISSINGNS.
             obj.NList=FilType(find_N("single"),find_N("double"),find_N("dimer"));
             obj.NList.intersectratio=true;
             obj.getmissingNs;
@@ -133,6 +185,16 @@ classdef Lookuptable <handle
         end
 
         function updateAddedStats(obj)
+            %UPDATEADDEDSTATS populates the AddedStats and StatNames properties with
+            %entries from single, double, and dimer.
+            %
+            %   out = LOOKUPTABLE.UPDATEADDEDSTATS
+            %
+            %   Does not modify data, but rearranges how the information in
+            %   single, double, and dimer is stored/ accessed for ease of
+            %   access. Now indexed by Lookuptable.(stat).(type).(N)
+            %
+            % See also LOOKUPTABLE.
             value=struct;
             addstats("single")
             addstats("double")
@@ -158,6 +220,18 @@ classdef Lookuptable <handle
         end
 
         function updateAddedNs(obj)
+            %UPDATEADDEDNS populates the AddedNs and NNames properties with
+            %entries from single, double, and dimer.
+            %
+            %   out = LOOKUPTABLE.UPDATEADDEDNS
+            %       
+            %   Runs updateNList.
+            %
+            %   Does not modify data, but rearranges how the information in
+            %   single, double, and dimer is stored/ accessed for ease of
+            %   access. Now indexed by Lookuptable.(N).(type).(stat)
+            %
+            % See also LOOKUPTABLE, LOOKUPTABLE/UPDATENLIST.
             value=struct;
             addNs("single")
             addNs("double")
@@ -179,9 +253,24 @@ classdef Lookuptable <handle
                 end
             end
         end
-
         
         function addN(obj,Nstruct)
+            %ADDN adds the input N struct, overwrites any existing struct
+            %for that N and type entry
+            %
+            %   out = LOOKUPTABLE.ADDN(Nstruct)
+            %
+            %   Inputs:
+            %       Nstruct : (struct) a singular N struct with
+            %       corresponding polymer stat values. Must have a 'type'
+            %       and 'N' property.
+            %       
+            %   Runs updateAddedNs and updateAddedStats.
+            %
+            %   For any entries with 2 rows/ columns, splits them into
+            %   filament objects
+            %
+            % See also LOOKUPTABLE, LOOKUPTABLE/UPDATEADDEDNS, LOOKUPTABLE/UPDATEADDEDSTATS.
             Ntype=Nstruct.type;
             N=num2str(Nstruct.N(1));
             obj.(Ntype).(strcat("N",N))=Nstruct;
@@ -211,12 +300,33 @@ classdef Lookuptable <handle
         end
 
         function delN(obj,N,type)
+            %DELN removes the entry for the specified N value (FH1 length) and type
+            %
+            %   out = LOOKUPTABLE.DELN(N,type)
+            %
+            %   Inputs:
+            %       N     : (double) N value to delete
+            %       type  : (String) type to delete (single, double, or dimer)
+            %       
+            %   Runs updateAddedNs and updateAddedStats.
+            %
+            % See also LOOKUPTABLE, LOOKUPTABLE/UPDATEADDEDNS, LOOKUPTABLE/UPDATEADDEDSTATS.
             obj.(type)=rmfield(obj.(type),(strcat("N",num2str(N))));
             obj.updateAddedNs();
             obj.updateAddedStats();
         end
 
         function out=copytable(obj)
+            %COPYTABLE create new Lookuptable with the same properties but
+            %not the same object (since this is a handle class)
+            %
+            %   out = LOOKUPTABLE.COPYTABLE
+            %
+            %   Copies the following properties: holdratio, ratio, single,
+            %   double, dimer, StatNames, NNames, AddedStats, AddedNs,
+            %   NList, interpolant, missingNs
+            %
+            % See also LOOKUPTABLE.
             out=Lookuptable();
             out.holdratio=obj.holdratio;
             out.ratio=obj.ratio;
@@ -233,6 +343,20 @@ classdef Lookuptable <handle
         end
 
         function out=stattable(obj,stat,type)
+            %STATTABLE create matrix of lookuptable stats for a specific type 
+            %
+            %   out = LOOKUPTABLE.STATTABLE(stat,type)
+            %
+            %   Inputs:
+            %       stat  : (String) lookup table stat to retrieve
+            %       type  : (String) single, double, dimer, or ratio
+            %       
+            %   Output is table with 3 columns: [FH1 size, PRM location,
+            %   stat value]
+            %
+            %   Uses getstat, AddedStats, and NList
+            %
+            % See also LOOKUPTABLE, LOOKUPTABLE/GETSTAT, LOOKUPTABLE/UPDATEADDEDSTATS.
             obj.holdratio=true;
             stats=struct2cell(obj.AddedStats.(stat).(type));
             if class(stats{1})=="Filament"
@@ -262,7 +386,6 @@ classdef Lookuptable <handle
                         looplen=N;
                     end
                     
-                    
                     for j=1:looplen
                         mat(istart+j,1)=N;
                         mat(istart+j,2)=j;
@@ -278,16 +401,18 @@ classdef Lookuptable <handle
         end
 
         function value = get.ratio(obj)
+            % compute (or retrive) element by element ratio dimer/double
             if isempty(obj.ratiostore)
                 value=getratio(obj);
                 obj.ratiostore=value;
             elseif obj.holdratio
-                value=obj.ratiostore;
+                value=obj.ratiostore; % use the stored ratio value (instead of re calculating) if holdratio is true
             else
                 value=getratio(obj);
-                obj.ratiostore=value;
+                obj.ratiostore=value; 
             end
             function out= getratio(input)
+                % compute element by element ratio dimer/double
                 if class(input.dimer)=="struct"
                     fieldsdimer=fieldnames(input.dimer);
                     fieldsdouble=fieldnames(input.double);

@@ -1,4 +1,28 @@
 function output = getstat(obj,NameValueArgs)
+% GETSTAT retrieve polymer stat value at any level from a lookuptable
+% 
+% output = LOOKUPTABLE.GETSTAT(NameValueArgs)
+%
+%   Inputs (NameValueArgs): 
+%       N       : (double) FH1 length
+%       type    : (string) filament type ('single','double','dimer','ratio')
+%       Stat    : (string) polymer stat
+%       iSite   : (double) PRM location
+%       Fil     : (string) filament, a or b
+%       NName   : (string) N in string format, with "N" at front, reduces
+%       runtime if added
+% 
+%   Outputs in order of precedence: 
+%       If type is not specified, output is FilType 
+%       If N is not specified, output is struct of N__
+%       If Stat is not specified, output is struct of polymer stats
+%       If Fil is not specified, output is Filament
+%       If iSite is not specified, output is numerical array
+% 
+%   If N is beyond the maximum N values for the relevent filament types,
+%   extrapolation is used.
+% 
+% See also LOOKUPTABLE, LOOKUPTABLE/EXTRAPOLATE.
     arguments
         obj Lookuptable
         NameValueArgs.N double =[]

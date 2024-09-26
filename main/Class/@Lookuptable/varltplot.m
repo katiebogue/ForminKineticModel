@@ -1,8 +1,31 @@
 function fig=varltplot(obj,xval,stat,skip)
+% VARLTPLOT create scatterplots of ways of looking at the variance of a     
+% polymer stat (for the purpose of computing ratios) vs. an FH1 property
+% 
+% fig = LOOKUPTABLE.VARLTPLOT(xval,stat,skip)
+%
+%   Inputs: 
+%       xval        : (string) FH1 property to scatter points by (options:
+%                   'length','NTdist','CTdist')
+%       stat        : (string) polymer stat to plot, must be a lookuptable
+%                   property of Filament type
+%       skip        : (double) plot points from 1:skip:end to improve plot
+%                   readability (default is 1-- aka no skip)
+% 
+%   Output is a figure holding the scatterplot.
+%
+%   The scatterplot contains the following (all on the same plot):
+%       1 - abs(double b - dimer b)
+%       2 - abs(double a - dimer a)
+%       3 - abs(dimer a - dimer b)
+%       4 - abs(double a - double b)
+%       5 - abs(double a - dimer a) - abs(dimer a - dimer b)
+% 
+% See also LOOKUPTABLE, LOOKUPTABLE/STATTABLE.
     arguments
         obj Lookuptable
         xval string {mustBeMember(xval,{'length','NTdist','CTdist'})}
-        stat string %need to figure out validation
+        stat string 
         skip double =1 % will plots points from 1:skip:end
     end
     obj.holdratio=true;
@@ -69,7 +92,6 @@ function fig=varltplot(obj,xval,stat,skip)
             y=log(y);
             ratioline=0;
         end
-        
         
         s=scatter(x(1:skip:end),y(1:skip:end), 'filled','DisplayName',label);
         % lne=yline(ratioline,'LineWidth',2);

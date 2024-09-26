@@ -1,4 +1,21 @@
 function [Qstruct,nbound]=formintransitionmat(formin1)
+% FORMINTRANSITIONMAT  creates transition matrix for the 3 state model of
+% the given formin
+    %
+    %   [Qstruct,nbound]=FORMINTRANSITIONMAT(formin1) creates transition 
+    %                   matrix for the 3 state model of formin1
+    %
+    %   Inputs:
+    %       formin1    : Formin object, with rates caluclated according to
+    %       the formin's options property
+    %
+    %   Outputs:
+    %       Qstruct : (FilType) sparse transition matrices for the single,
+    %                 dimer, and double models of the 3 state model
+    %       nbound  : (FilType) binary vectors of number of PRMs bound for
+    %                 every possible state in the transition matrix
+    % 
+    %   See also FORMIN, PMULTIBIND, COMPUTE_STEADY_STATE.
     arguments
         formin1 Formin
     end

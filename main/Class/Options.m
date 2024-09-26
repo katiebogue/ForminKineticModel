@@ -1,12 +1,30 @@
 classdef Options <handle
-    %OPTIONS Summary of this class goes here
-    %   Detailed explanation goes here
+    %OPTIONS Contains options for reading in formins, calculating rates,
+    %including all of the rate constants
+    %
+    %   Construction:
+    %       obj = OPTIONS(lookup,python_path,kpoly_type,resultsdir,k_cap,k_del,r_cap,r_del,k_rel)
+    %           lookup      : (Lookuptable) refrence lookup table
+    %                          object
+    %           python_path : (String) path to python files
+    %           kpoly_type  : (String) kpoly model type (capture, 3st,
+    %                          or 4st)
+    %           resultsdir  : (String) where to save results
+    %           k_cap       : (double) capture rate constant
+    %           k_del       : (double) delivery rate constant
+    %           r_cap       : (double) reverse capture rate constant
+    %           r_del       : (double) revsere delivery rate constant
+    %           k_rel       : (double) release rate constant
+    %           r_cap_exp   : (double) constant in front of PRM size in r_cap (if applicable, default is 1)
+    % 
+    % 
+    %   See also EXPERIMENT, FORMIN.
 
     properties (SetObservable, AbortSet)
-        python_path string
-        kpoly_type string {mustBeMember(kpoly_type,{'capture','3st','4st'})}='3st'
-        equations struct
-        lookup Lookuptable
+        python_path string % location of python files
+        kpoly_type string {mustBeMember(kpoly_type,{'capture','3st','4st'})}='3st' % model for kpoly
+        equations struct % equations used to calculate rates
+        lookup Lookuptable % lookup table with polymer stats
 
         % reading sequence options (see get_formin_info.py):
         min_lenPRM double % minimum PRM length (including interruptions)
@@ -35,14 +53,45 @@ classdef Options <handle
         r_cap_exp double % constant in front of PRM size in r_cap (if applicable)
 
         % delivery location, only used if added to kpoly calcs
-        del_x double=0
-        del_y double=0
+        del_x double=0 % x location (parallel to FH2) for delivery, only used if in kpoly calcs
+        del_y double=0 % y location (perpendicular to FH2) for delivery, only used if in kpoly calcs
     end
 
     methods
-        function obj = Options(lookup,python_path,kpoly_type,resultsdir,k_cap,k_del,r_cap,r_del,k_rel)
-            %UNTITLED2 Construct an instance of this class
-            %   Detailed explanation goes here
+        function obj = Options(lookup,python_path,kpoly_type,resultsdir,k_cap,k_del,r_cap,r_del,k_rel,r_cap_exp)
+            %OPTIONS Construct an instance of options class
+            %    
+            %   obj = OPTIONS(lookup,python_path,kpoly_type,resultsdir,k_cap,k_del,r_cap,r_del,k_rel)
+            % 
+            %   Inputs:
+            %       lookup      : (Lookuptable) refrence lookup table
+            %                      object
+            %       python_path : (String) path to python files
+            %       kpoly_type  : (String) kpoly model type (capture, 3st,
+            %                     or 4st)
+            %       resultsdir  : (String) where to save results
+            %       k_cap       : (double) capture rate constant
+            %       k_del       : (double) delivery rate constant
+            %       r_cap       : (double) reverse capture rate constant
+            %       r_del       : (double) revsere delivery rate constant
+            %       k_rel       : (double) release rate constant
+            %       r_cap_exp   : (double) constant in front of PRM size in r_cap (if applicable, default is 1)
+            % 
+            %   Sets input variables, runs update_points, update_results_folder, and set_fh1
+            % 
+            % See also OPTIONS/SET_FH1, LOOKUPTABLE, OPTIONS/UPDATE_POINTS, OPTIONS/UPDATE_RESULTS_FOLDER.
+            arguments
+              lookup Lookuptable
+              python_path string
+              kpoly_type string
+              resultsdir string
+              k_cap double
+              k_del double
+              r_cap double
+              r_del double
+              k_rel double
+              r_cap_exp double =1
+            end
             if nargin>0
             obj.lookup=lookup;
             obj.python_path=python_path;
@@ -55,22 +104,65 @@ classdef Options <handle
             obj.r_cap = r_cap;
             obj.r_del = r_del;
             obj.k_rel = k_rel;
+            obj.r_cap_exp=r_cap_exp;
             obj.set_FH1();
             end
         
         end
 
         function update_results_folder(obj)
+            %UPDATE_RESULTS_FOLDER update results folder to current time
+            % 
+            % OPTIONS.UPDATE_RESULTS_FOLDER
+            % 
+            %   Format is "RESULTS_yyyy-MM-dd HH-mm"
+            % 
+            % See also OPTIONS.m.
             time= datetime('now', 'Format','yyyy-MM-dd HH-mm');
             time= string(time);
             obj.resultsfolder= 'RESULTS_' + time;
         end
 
         function out=getconsts(obj)
+            %GETCONSTS get array of rate constants
+            %
+            %   OPTIONS.GETCONSTS
+            %
+            %   output is this array: [k_cap,k_del,r_cap,r_del,k_rel,r_cap_exp]
+            %
+            % See also OPTIONS.m.
             out=[obj.k_cap,obj.k_del,obj.r_cap,obj.r_del,obj.k_rel,obj.r_cap_exp];
         end
 
         function set_FH1(obj,NameValueArgs)
+            % SET_FH1 set options for reading in FH1 sequences
+            %
+            %   OPTIONS.SET_FH1 sets FH1 options properties to the default
+            %   values 
+            % 
+            %   OPTIONS.SET_FH1(NameValueArgs) sets FH1 options properties
+            %   to the values specified plus other default values
+            %   
+            %   NameValueArgs:
+            %       min_lenPRM : (double) minimum PRM length (including interruptions), use instead of opts property (default is 4)
+            %       nInt       : (double) number of allowed interruptions (counts once for each amino acid-- i.e. if the max int len is 2, AA is acceptable but counts as 2 interruptions), use instead of opts property (default is 1)
+            %       max_lenInt : (double) maximum interruption length, use instead of opts property (default is 1)
+            %       min_nP     : (double) minimum number of Ps in PRM, use instead of opts property (default is 4)
+            %       NTopt      : (double) FH1 NT definition options , use instead of opts property (default is 1)
+            %                   1 - first instance of PRM with at least 4 Ps with max 1 interruption of length 1 (in sequence of at least 3 PRMs no father than 100 amino acids apart) (default)
+            %                   2 - first instance of PRM (as defined by args 3 and 4) (uin sequence of at least 3 PRMs no father than 100 amino acids apart)
+            %                   3 - Uniprot defined FH1 start (or option 1 if no FH1)
+            %                   4 - Uniprot defined FH1 start (or option 2 if no FH1)
+            %                   5 - Start of sequence (for input sequences)
+            %       CTopt      : (double) FH1 CT definition options, use instead of opts property (default is 1)
+            %                   1 - Uniprot defined FH2 start (default)
+            %                   2 - Uniprot defined FH1 end (or option 1 if no FH1)
+            %                   3 - End of sequence (for input sequences)
+            %       PRMscanopt : (double) PRM scan options, use instead of opts property (default is 1)
+            %                   1 - Search for PRMs starting from the FH2 (CT) (default)
+            %                   2 - Search for PRMs starting from the FH1 NT
+            %
+            % See also OPTIONS.m, FORMIN.
             arguments
                 obj Options
                 NameValueArgs.min_lenPRM double=4 % minimum PRM length (including interruptions)
@@ -91,6 +183,65 @@ classdef Options <handle
         end
 
         function set_equation(obj,preset,step,vars)
+            %SET_EQUATION set equation(s) for rate calculations
+            % 
+            % OPTIONS.SET_EQUATION(preset) set equations based on preset
+            %   value
+            %       preset 1 : 
+            %           kcap= (1-POcclude)*c_PA
+            %           kdel= (1-POcclude_base)*(1.0e33*Prvec0/27*6.022e23)*gating
+            %           rcap= e^-size*r_cap_exp
+            %       preset 2 : 
+            %           kcap= (1-POcclude)*c_PA
+            %           kdel= (1-POcclude_base)*gating
+            %           rcap= e^-size*r_cap_exp
+            %       preset 3 : 
+            %           kcap= (1-POcclude)*c_PA
+            %           kdel= (1-POcclude_base)*(Pr_calc)*gating (uses the calculated Pr value)
+            %           rcap= e^-size*r_cap_exp
+            % 
+            % OPTIONS.SET_EQUATION(0,step,{var1,type1,var2,type2,...}) set equation for
+            %   step as equal to the product of each of the input vars
+            %   implemented accoridng to the following types. Can have as
+            %   many repeating var,type as you want. 
+            %
+            % OPTIONS.SET_EQUATION(0,step1,{var1,type1,var2,type2,...},step2, {var,type...},...) 
+            %   set equations for each step as equal to the product of each 
+            %   of the input vars implemented accoridng to the following types. 
+            %   Can have as many repeating var,type as you want. Can have as many
+            %   repeating step,{var,type,...} as you want.
+            % 
+            % Note: all equations are still multiplied by the corresponding
+            % rate constant
+            %
+            % If a variable is set for r_cap using negexp, the resulting
+            % equation is e^-var*r_cap_exp
+            % 
+            % Inputs:
+            %       preset : (double) preset to use (1,2,3) or, if 0, don't
+            %               use a preset and instead use input values
+            %       step   : (String) step to set equation to (repeating)
+            %               options- 'kcap','kdel','rcap','rdel','krel'
+            %       vars   : (cell) of format {var1,type1,var2,type2,...}
+            %               indicating the variables and how to implement 
+            %               them into the equations
+            %           var must be a lookuptable property or 'dist_FH2','dist_NT', 'size','gating','c_PA','dist_FH2_start'
+            %           type must be one of the following:
+            %               "linear"    : var
+            %               "negexp"    : e^-var (or e^-var*r_cap_exp if the step is r_cap)
+            %               "exp"       : e^var
+            %               "1-"        : (1-var)
+            %               "amino"     : (1.0e33*var/27*6.022e23)
+            %               "1-base"    : (1-var_base) (var at PRM loc 0)
+            %               "prveccalc" : PRM.prval (calculated pr value)
+            %
+            %   Sets equations and equationstext for all of the inputs, and
+            %   sets equations equal to 1 for any rate equation not yet
+            %   specified (if an eqaution already exists but is not
+            %   specified, no changes are made)
+            %
+            %
+            % See also OPTIONS.m, LOOKUPTABLE.
             arguments
                 obj
                 preset double {mustBeMember(preset,[0,1,2,3])}
@@ -99,8 +250,6 @@ classdef Options <handle
                 step string {mustBeMember(step,{'kcap','kdel','rcap','rdel','krel'})}
                 vars (1,:) cell 
             end
-            
-                
             
             if isempty(obj.equations)
                 obj.equations=struct;
@@ -120,7 +269,7 @@ classdef Options <handle
                     end
                 end
                 valid_vars=obj.lookup.StatNames;
-                scale_types={'linear','negexp','exp','1-','amino','1-base'};
+                scale_types={'linear','negexp','exp','1-','amino','1-base','prveccalc'};
                 for k=1:2:length(vars)
                     if ~ismember(vars{k},valid_vars) && ~ismember(vars{k},{'dist_FH2','dist_NT', 'size','gating','c_PA','dist_FH2_start'})
                         eid = 'validvars:varNotValid';
@@ -190,7 +339,6 @@ classdef Options <handle
                 end
             end
             
-
             function fxn = makeeq()
                 fxn=@(PRM) 1;
                 for i=1:2:length(invars)
@@ -215,10 +363,16 @@ classdef Options <handle
                     end
                 end
             end
-            
         end
 
         function cleareq(obj)
+            %CLEAREQ remove all rate equations and replace them with 1
+            %
+            %   OPTIONS.CLEAREQ
+            %
+            %   Updates obj.equations and removed all fields from obj.equationstext
+            %
+            % See also OPTIONS.m.
             eqfields=fieldnames(obj.equationstext);
             for i=1:length(eqfields)
                 obj.equationstext=rmfield(obj.equationstext,eqfields{i});
@@ -230,10 +384,43 @@ classdef Options <handle
         end
 
         function update_points(obj,input,overwrite)
+            % UPDATE_POINTS set the colors and shapes properties for
+            % graphics
+            %
+            %   OPTIONS.UPDATE_POINTS set colors and shapes to 37
+            %   distinguishable colors with an array of shapes of at least
+            %   length 37
+            %
+            %   OPTIONS.UPDATE_POINTS(x) set colors and shapes to x
+            %   distinguishable colors with an array of shapes of at least
+            %   length x
+            %
+            %   OPTIONS.UPDATE_POINTS(formin) set colors and shapes to the
+            %   number of PRMs of the formin distinguishable colors with an 
+            %   array of shapes of at least the number of PRMs
+            %
+            %   OPTIONS.UPDATE_POINTS(experiment) set colors and shapes to
+            %   the number of formins of the experiment distinguishable
+            %   colors with an array of shapes of at least the number of
+            %   formins
+            %
+            %   OPTIONS.UPDATE_POINTS(input,1) set colors and shapes
+            %   according to the input unless the new number is less than
+            %   the current length of obj.colors
+            %
+            %   Uses the function makepoints.
+            %
+            %   Inputs:
+            %       input: either a double, Formin, or Experiment to
+            %               detrmine the length of colors/shapes (defult is 37)
+            %       overwrite: (logical) if true, will only enact change if
+            %               the new number of colors is greater than the old 
+            %
+            % See also OPTIONS.m, MAKEPOINTS.
             arguments
                 obj Options
                 input {mustBeA(input,["double","Formin","Experiment"])}=37
-                overwrite logical=false % if false, will only change if the new number of colors is less than the old
+                overwrite logical=false % if true, will only change if the new number of colors is greater than the old
             end
             if overwrite
                 oldmin=0;
@@ -262,7 +449,15 @@ classdef Options <handle
         end
 
         function tab=optionstable(obj)
-            
+            % OPTIONSTABLE create a table with properties of the options
+            % object
+            %
+            %   tab = OPTIONS.OPTIONSTABLE
+            %
+            %   Table entry for every property that is a double or string
+            %   (of length 1) as well as every entry in obj.equationstext
+            %
+            % See also OPTIONS.m.
             tabstruct=struct;
 
             addel(obj);
@@ -287,6 +482,20 @@ classdef Options <handle
         end
 
         function applytable(obj,row)
+            % APPLYTABLE modify object properties to allign with those
+            % listed in a table
+            %
+            %   OPTIONS.APPLYTABLE(tab) modify object properties to allign
+            %   with those in the table tab
+            %
+            %   Searches for table variables with the same name as an
+            %   Options property and applies them.
+            %   Searches for table variables corresponding to any of the
+            %   rate equations and runs obj.set_equation accordingly. These
+            %   entries are assumed to have the name "rate_eq" and be of
+            %   the format of obj.equationstext entries.
+            %
+            % See also OPTIONS.m, OPTIONS/OPTIONSTABLE, OPTIONS/SET_EQUATION.
             arguments
                 obj Options
                 row table
@@ -310,7 +519,5 @@ classdef Options <handle
                 end
             end
         end
-
     end
-
 end

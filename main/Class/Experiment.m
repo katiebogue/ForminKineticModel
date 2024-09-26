@@ -1,22 +1,54 @@
 classdef Experiment 
-    %EXPERIMENT Summary of this class goes here
-    %   Detailed explanation goes here
+    %EXPERIMENT Contains a group of formins and accompanying experimental
+    % data, plus functions for plotting, calculating, fitting, etc
+    %   
+    % Construction:
+    %   obj = EXPERIMENT(options,file,type,cPA)
+    %       Inputs:
+    %           options : Options object
+    %           file    : (String).txt file with comma separated values 
+    %                       of the format 'name','sequence' or 'name','uniprotID'
+    %           type    : (String) which type ('seq' or 'uniprot') the
+    %                       information in file is in
+    %           cPA     : (double) concentration of profilin-actin to
+    %                       set each of the input formins to (default is 0.88)
+    % 
+    % Following general construction, likely need to set gating factors and
+    % add experimental data:
+    %   EXPERIMENT.set_gating(forminname, gating)
+    %   obj = EXPERIMENT.add_data(forminname,value,type,NameValueArgs)
+    % 
+    % See also FORMIN, OPTIONS, PRM.
 
     properties
-        ForminList (:,:) Formin
-        opts Options
-        data (:,:) struct
+        ForminList (:,:) Formin % Formins to group together in this experiment
+        opts Options % Options object
+        data (:,:) struct % experimental data for formin constructs, struct with properties type, formin, value, groups, errtop, and errbot
     end
 
     methods
         function obj = Experiment(options,file,type,cPA)
-            %UNTITLED5 Construct an instance of this class
-            %   Detailed explanation goes here
+            %EXPERIMENT Construct an instance of Experiment class
+            %   
+            % obj = EXPERIMENT(options,file,type,cPA)
+            %
+            %   Sets formins according to input file.
+            % 
+            %   Inputs:
+            %       options : Options object
+            %       file    : (String).txt file with comma separated values 
+            %                   of the format 'name','sequence' or 'name','uniprotID'
+            %       type    : (String) which type ('seq' or 'uniprot') the
+            %                   information in file is in
+            %       cPA     : (double) concentration of profilin-actin to
+            %                   set each of the input formins to (default is 0.88)
+            % 
+            % See also EXPERIMENT, FORMIN.
             arguments
                 options Options
                 file string % .txt file, comma separated
                 type string {mustBeMember(type,{'seq','uniprot'})}
-                cPA double =2.5 % [profilin-actin] to assign to all formins
+                cPA double =0.88 % [profilin-actin] to assign to all formins
             end
             if nargin>0
                 obj.opts=options;
@@ -37,6 +69,14 @@ classdef Experiment
         end
 
         function obj=add_formin(obj,formin)
+            %ADD_FORMIN add a formin to obj.ForminList
+            %
+            %   obj = EXPERIMENT.ADD_FORMIN(formin)
+            %
+            %   Does not change the existing object, function output must
+            %   be set to itself (or a new object)
+            %
+            % See also FORMIN, EXPERIMENT.
             arguments
                 obj Experiment
                 formin Formin
@@ -45,11 +85,21 @@ classdef Experiment
         end
 
         function obj= set.opts(obj,input)
+            % run syncforminsettings whenever setting the opts property
             obj.opts=input;
             obj.syncforminsettings;
         end
 
         function syncforminsettings(obj)
+            %SYNCFORMINSETTINGS updates the opts property of each formin in
+            %   ForminList to be the opts property of the Experiment object
+            %
+            %   EXPERIMENT.SYNCFORMINSETTINGS
+            %
+            %   Results in running update_FH1 for each formin since there
+            %   are listeners for changes in opts
+            %
+            % See also FORMIN, EXPERIMENT, FORMIN/UPDATE_FH1.
             if isfield(obj,"ForminList")
                 for i=1:length(obj.ForminList)
                     if obj.ForminList(i).opts~=obj.opts
@@ -60,6 +110,25 @@ classdef Experiment
         end
 
         function T=formintable(obj,save)
+            %FORMINTABLE create formin property table
+            %
+            %   tab = EXPERIMENT.FORMINTABLE create table with all of the
+            %   properties of the formins in ForminList
+            %
+            %   tab = EXPERIMENT.FORMINTABLE(1) create and save table with all of the
+            %   properties of the formins in ForminList 
+            %
+            %   Saves "Per Formin Data.csv" to obj.opts.resultsdir,obj.opts.resultsfolder
+            %
+            %   Does not save the lastkpoly property.
+            %   
+            %   If the property is a FilType, saves a separate variable for
+            %   single, double, dimer, and dimer/double.
+            %   
+            %   Rows are formin names, columns are properties.
+            % 
+            % 
+            % See also FORMIN, EXPERIMENT, OPTIONS.
             arguments
                 obj Experiment
                 save logical=false
@@ -85,17 +154,36 @@ classdef Experiment
                 end
             end
             
-            
             if save
                 if ~exist(fullfile(obj.opts.resultsdir,obj.opts.resultsfolder),'dir')
                     mkdir (obj.opts.resultsdir,obj.opts.resultsfolder)
                 end
                 writetable(T,fullfile(obj.opts.resultsdir,obj.opts.resultsfolder,"Per Formin Data.csv"))
             end
-
         end
 
         function T=PRMtable(obj,save)
+            %PRMTABLE create PRM property table
+            %
+            %   tab = EXPERIMENT.PRMTABLE create table with all of the
+            %   properties of the PRMs in PRMList of each ForminList
+            %
+            %   tab = EXPERIMENT.PRMTABLE(1) create and save table with all of the
+            %   properties of the PRMs in PRMList of each ForminList
+            %
+            %   Saves "Per PRM Data.csv" to obj.opts.resultsdir,obj.opts.resultsfolder
+            %
+            %   Does not save the lastkpoly property.
+            %   
+            %   If the property is a FilType, saves a separate variable for
+            %   single, double, dimer, and dimer/double.
+            %   
+            %   If the property is a Filament, saves a separate variable for
+            %   a and b.
+            %   
+            %   Row for every PRM, columns are properties.
+            % 
+            % See also FORMIN, EXPERIMENT, OPTIONS, PRM, PRM.GETFIELDS, PRM.GETPROP.
             arguments
                 obj Experiment
                 save logical=false
@@ -139,17 +227,43 @@ classdef Experiment
                 end
             end
             
-            
             if save
                 if ~exist(fullfile(obj.opts.resultsdir,obj.opts.resultsfolder),'dir')
                     mkdir (obj.opts.resultsdir,obj.opts.resultsfolder)
                 end
                 writetable(T,fullfile(obj.opts.resultsdir,obj.opts.resultsfolder,"Per PRM Data.csv"))
             end
-
         end
 
         function obj = add_data(obj,forminname,value,type,NameValueArgs)
+            %ADD_DATA add data for a specific formin to obj.data
+            %
+            %   obj = EXPERIMENT.ADD_DATA(forminname,value,type,NameValueArgs)
+            %
+            %   Inputs:
+            %       forminname  : (String) name of the formin, must match
+            %                       one and only one name in ForminList
+            %       value       : (double) experimental data value
+            %       type        : (String) kpoly data type, either 'single','double','dimer', or 'ratio'
+            %       errplus     : (double) how much to add to value to get the top of the error bars (NameValueArgs)
+            %       errminus    : (double) how much to subtract from value to get the bottom of the error bars (NameValueArgs)
+            %       errtop      : (double) the value of the top of the error bars  (NameValueArgs)
+            %       errbot      : (double) the value of the bottom of the error bars (NameValueArgs)
+            %       errperc     : (double) percent error (must be less than or equal to 1) (NameValueArgs)
+            %       groups      : (String) experiment groups, will be plotted together (NameValueArgs, default is empty string)
+            %
+            %   Can only supply one type of error values, either errperc or
+            %   a combination of (errtop or errplus) and (errbot and
+            %   errminus)
+            %
+            %   obj.data is updated to have an additional entry. Each entry
+            %   is a struct object with properties type, formin, value,
+            %   groups, errtop, and errbot
+            % 
+            %   Does not change the existing object, function output must
+            %   be set to itself (or a new object)
+            %
+            % See also FORMIN, EXPERIMENT.
             arguments
                 obj Experiment
                 forminname string 
@@ -190,7 +304,6 @@ classdef Experiment
                 error("cannot enter two types of minus error")
             end
 
-
             errtop=0;
             errbot=0;
             if isfield(NameValueArgs,"errperc")
@@ -228,10 +341,48 @@ classdef Experiment
             else
                 obj.data(1,1+end)=datastruct;
             end
-
         end
 
         function fig=kpolyplot(obj,type,parameter,xlab,lab_limit,scale,save)
+            %KPOLYPLOT create a scatterplot of polymerization vs. a
+            %parameter for either all formins or all PRMs
+            %
+            %   fig = EXPERIMENT.KPOLYPLOT(type,parameter,xlab) creates
+            %   scatterplots of kpoly vs parameter with specified xlabel
+            %   xlab
+            %
+            %   fig = EXPERIMENT.KPOLYPLOT(type,parameter,xlab,lab_limit) creates
+            %   scatterplots of kpoly vs parameter with specified xlabel
+            %   xlab and, if type = "formin," with points above value 
+            %   lab_limit labeled by formin
+            %
+            %   fig = EXPERIMENT.KPOLYPLOT(type,parameter,xlab,lab_limit,scale) creates
+            %   scatterplots of kpoly (scaled) vs parameter with specified xlabel
+            %   xlab and, if type = "formin," with points above value 
+            %   lab_limit labeled by formin
+            %
+            %   fig = EXPERIMENT.KPOLYPLOT(type,parameter,xlab,lab_limit,scale,1)
+            %   creates and saves scatterplots of kpoly (scaled) vs parameter with specified xlabel
+            %   xlab and, if type = "formin," with points above value 
+            %   lab_limit labeled by formin
+            %
+            %   Inputs:
+            %       type      : (string) whether to plot based on 'formin'
+            %                   (kpolyplot) or 'PRM' (PRMplot)
+            %       parameter : (string) x axes parameter, must be member
+            %                   of PRM or Formin properties
+            %       xlab      : (string) label for x axes
+            %       lab_limit : (double) upper limit (in parameter) to
+            %                   label points with formin name, only applies
+            %                   if type of 'formin' (default is 1) 
+            %       scale     : (string) kpoly axis scale (can be none,
+            %                   log2, log10, ln) (default is "none")
+            %       save      : (logical) whether or not to save figures
+            %                   (default is false)
+            %
+            %   Uses kpolyplot or PRMplot based on type.
+            % 
+            % See also FORMIN, EXPERIMENT, KPOLYPLOT, PRMPLOT.
             arguments
                 obj Experiment
                 type string {mustBeMember(type,{'formin','PRM'})}
@@ -249,6 +400,35 @@ classdef Experiment
         end
 
         function fig=NTDplot(obj,type,parameter,xlab,scale,save)
+            %NTDPLOT create a scatterplot of change in polymerization vs. a
+            %parameter for either all formins or all PRMs
+            %
+            %   fig = EXPERIMENT.NTDPLOT(type,parameter,xlab) creates
+            %   scatterplots of change in kpoly vs parameter with specified xlabel
+            %   xlab
+            %
+            %   fig = EXPERIMENT.NTDPLOT(type,parameter,xlab,scale) creates
+            %   scatterplots of change in kpoly (scaled) vs parameter with specified xlabel
+            %   xlab 
+            %
+            %   fig = EXPERIMENT.NTDPLOT(type,parameter,xlab,scale,1)
+            %   creates and saves scatterplots of change in kpoly (scaled) vs parameter with specified xlabel
+            %   xlab 
+            %
+            %   Inputs:
+            %       type      : (string) whether to plot based on 'formin'
+            %                   (NTDplot) or 'PRM' (PRM_NTD_plot)
+            %       parameter : (string) x axes parameter, must be member
+            %                   of PRM or Formin properties
+            %       xlab      : (string) label for x axes
+            %       scale     : (string) kpoly axis scale (can be none,
+            %                   log2, log10, ln) (default is "log2")
+            %       save      : (logical) whether or not to save figures
+            %                   (default is false)
+            %
+            %   Uses PRM_NTD_plot or NTDplot based on type.
+            % 
+            % See also FORMIN, EXPERIMENT, PRM_NTD_PLOT, NTDPLOT.
             arguments
                 obj Experiment
                 type string {mustBeMember(type,{'formin','PRM'})}
@@ -265,6 +445,39 @@ classdef Experiment
         end
 
         function fig=forminbar(obj,save,kpolyscale,ratioscale)
+            %FORMINBAR creates overview bargraphs for formins in ForminList
+            %
+            %   fig = EXPERIMENT.FORMINBAR creates overview bargraphs with
+            %   kpoly axes not scaled and ratio axes log2 scaled
+            %
+            %   fig = EXPERIMENT.FORMINBAR(1) creates and saves overview bargraphs with
+            %   kpoly axes not scaled and ratio axes log2 scaled
+            %
+            %   fig = EXPERIMENT.FORMINBAR(save, kpolyscale) creates and 
+            %   (if save) saves overview bargraphs with kpoly axes scaled 
+            %   as specified and ratio axes log2 scaled
+            %
+            %   fig = EXPERIMENT.FORMINBAR(save, kpolyscale, ratioscale) creates and 
+            %   (if save) saves overview bargraphs with kpoly axes and
+            %   ratio axes each scaled as specified 
+            %
+            %   Inputs:
+            %       save      : (logical) whether or not to save figures
+            %                   (default is false)
+            %       kpolyscale: (string) kpoly axis scale (can be none,
+            %                   log2, log10, ln) (default is "none")
+            %       kpolyscale: (string) change in kpoly axis scale (can be
+            %                   none, log2, log10, ln) (default is "log2")
+            %   
+            %   Makes 3 bargraphs:
+            %       1. Single, double, and dimer polymerization rates side-by-side 
+            %          for each formin
+            %       2. Change upon NTD for each formin
+            %       3. Number of PRMs for each formin (with PRMs)
+            %
+            %   Uses forminbar.
+            % 
+            % See also FORMIN, EXPERIMENT, FORMINBAR.
             arguments
                 obj Experiment
                 save logical=false
@@ -275,6 +488,51 @@ classdef Experiment
         end
 
         function fig=polymerstat_change_plot(obj,parameter,stat,xlab,ylab,scale,minus,save)
+            %POLYMERSTAT_CHANGE_PLOT sreates 2 scatterplots of change in a polymer statistic vs. a parameter.
+            %
+            %   fig = EXPERIMENT.POLYMERSTAT_CHANGE_PLOT(parameter,stat,xlab,ylab) 
+            %   creates 2 scatterplots of change in stat (scaled as log2) vs. parameter. 
+            %
+            %   fig = EXPERIMENT.POLYMERSTAT_CHANGE_PLOT(parameter,stat,xlab,ylab,scale) 
+            %   creates 2 scatterplots of change in stat (scaled as specified) vs. parameter. 
+            %
+            %   fig = EXPERIMENT.POLYMERSTAT_CHANGE_PLOT(parameter,stat,xlab,ylab,scale,true) 
+            %   creates 2 scatterplots of change in 1-stat (scaled as 
+            %   specified) vs. parameter. 
+            %
+            %   fig = EXPERIMENT.POLYMERSTAT_CHANGE_PLOT(parameter,stat,xlab,ylab,scale,false,true) 
+            %   creates and saves 2 scatterplots of change in stat (scaled as 
+            %   specified) vs. parameter. 
+            %
+            %   fig = EXPERIMENT.POLYMERSTAT_CHANGE_PLOT(parameter,stat,xlab,ylab,scale,true,true) 
+            %   creates and saves 2 scatterplots of change in 1-stat (scaled as 
+            %   specified) vs. parameter. 
+            %   
+            %   Creates 2 scatterplots:
+            %       1. labeled by submodel
+            %       2. labeled by formin
+            %
+            %   if saving, it is recomended to set groot 'defaultfigureposition' to 
+            %   [400 250 900 750] in order to avoid the figure being cut off when 
+            %   saving as a pdf.
+            %   
+            %   Inputs:
+            %       parameter   : (string) name of parameter containing values to plot against
+            %                     stat (must be a property in the PRM class)
+            %       stat        : (string)  name of polymerstat to plot (must be a property 
+            %                     in the Lookuptable class)
+            %       xlab        : (string) x-axis (parameter) label 
+            %       ylab        : (string) y-axis (stat) label 
+            %       scale       : y-axis scale (can be none, log2, log10,
+            %                     ln) (default is log2)
+            %       minus       : (logical) whether or not to use 1-stat 
+            %                     values (deafult is false)
+            %       save        : (logical) whether or not to save the plot 
+            %                     to the results pdf in opts (deafult is false)
+            %
+            %   Uses polymerstat_change_plot.
+            % 
+            % See also FORMIN, EXPERIMENT, POLYMERSTAT_CHANGE_PLOT.
             arguments
                 obj Experiment
                 parameter string
@@ -289,6 +547,18 @@ classdef Experiment
         end
 
         function fig=formingraphic(obj,save)
+            %FORMINGRAPHIC creates figures with formin schematic and kpoly
+            % bar graphs for each formin in ForminList
+            %
+            %   fig = EXPERIMENT.FORMINGRAPHIC creates figures with formin schematic and kpoly
+            % bar graphs for each formin in ForminList
+            %
+            %   fig = EXPERIMENT.FORMINGRAPHIC(1) creates and saves figures with formin schematic and kpoly
+            % bar graphs for each formin in ForminList
+            %
+            %   Uses formin.formingraphic.
+            % 
+            % See also FORMIN, EXPERIMENT, FORMIN/FORMINGRAPHIC.
             arguments
                 obj Experiment
                 save logical=false
@@ -301,6 +571,61 @@ classdef Experiment
         end
 
         function fig=expdatabar(obj,scale,save,NameValueArgs)
+            %EXPDATABAR creates side by side bargraphs of simulated and experimental 
+            % rates.
+            %   fig = EXPERIMENT.EXPDATABAR creates side by side
+            %   bargraphs of simulated and experimental data in obj.data. Making
+            %   all 6 plots.
+            %
+            %   fig = EXPERIMENT.EXPDATABAR(scale) creates side by side
+            %   bargraphs of simulated and experimental data (scaled as specified) 
+            %   in obj.data. Making all 6 plots. 
+            %
+            %   fig = EXPERIMENT.EXPDATABAR(scale,true) creates and 
+            %   saves side by side bargraphs of simulated and experimental data 
+            %   (scaled as specified) in obj.data. Making all 6 plots.
+            %
+            %   fig = EXPERIMENT.EXPDATABAR(group='grp') creates side by 
+            %   side bargraphs of simulated and experimental data in obj.data 
+            %   with the specified group. Makes 2 plots (see below) unless all 
+            %   entries have type="ratio".
+            %
+            %   fig = EXPERIMENT.EXPDATABAR(scale,group='grp') creates 
+            %   side by side bargraphs of simulated and experimental data (scaled
+            %   as specified) in obj.data with the specified group. Makes 2 plots
+            %   (see below) unless all entries have type="ratio".
+            %
+            %   fig = EXPERIMENT.EXPDATABAR(scale,true,group='grp')
+            %   creates and saves side by side bargraphs of simulated and 
+            %   experimental data (scaled as specified) in obj.data with the 
+            %   specified group. Makes 2 plots (see below) unless all entries have type="ratio".
+            %   
+            %   Unless a group is specified, will generate plots for the following:
+            %       1. All entries in input obj.data
+            %       2. All entries in input obj.data with type="single"
+            %       3. All entries in input obj.data with type="double"
+            %       4. All entries in input obj.data with type="dimer"
+            %       5. All entries in input obj.data with type="ratio"
+            %       6. All entries in input obj.data with the same group (2 plots
+            %          per group as below)
+            %
+            %   Will generate 2 plots for every "group" (unless the type="ratio")
+            %       1. raw values of experiment and simulation
+            %       2. raw experimental values and scaled simulation values
+            %           (scaled so the smallest experimental value in the group is
+            %           equal to the simulated value)
+            %
+            %   Inputs:
+            %       scale      : method of scaling the polymerization values. Can
+            %                    be 'none','log2','log10','ln' (default is 'none')
+            %       save       : whether or not to save the plot to the results
+            %                    pdf in settings (true/false); deafult is false
+            %       group      : value for the "groups" property of objects in 
+            %                    data to plot (Name-value argument)
+            %
+            %   Uses expdatabar.
+            % 
+            % See also FORMIN, EXPDATABAR.
             arguments
                 obj Experiment
                 scale string {mustBeMember(scale,{'none','log2','log10','ln'})}="none"
@@ -315,9 +640,21 @@ classdef Experiment
         end
 
         function fig=alldataplot(obj,scaledTF)
+            % ALLDATAPLOT creates side by side bargraphs of simulated and
+            % experimental rates for the groups "NTD data,""Fig 3 5," "Fig 3," "Fig
+            % 4a," and "Fig 4c, and puts them all in one tiled layout
+            %
+            %   fig = EXPERIMENT.ALLDATAPLOT creates side by side bargraphs
+            %   for the groups (does not include scaled plots generated by
+            %   expdatabar)
+            %
+            %   fig = EXPERIMENT.ALLDATAPLOT(1) creates side by side bargraphs
+            %   for the groups and includes the scaled plots as well
+            % 
+            % See also FORMIN, EXPERIMENT, EXPERIMENT/EXPDATABAR, EXPDATABAR.
             arguments
                 obj Experiment
-                scaledTF=0 %wether ot not to include the scaled plots
+                scaledTF=0 %whether or not to include the scaled plots
             end
 
             fig=figure('units','centimeters','position',[5,5,45,30],'Name','Experimental Fits');hold on;
@@ -347,7 +684,6 @@ classdef Experiment
             close(fig3)
             p=p-1;
         
-            
             fig35=obj.expdatabar(group="Fig 3 5");
             ax_temp = copyobj(copyobj(fig35(1).Children, get(fig35(1).Children,'Type')), tiles);
             ax_temp(2).Layout.Tile=p;
@@ -382,6 +718,22 @@ classdef Experiment
         end
 
         function makeresults(obj)
+            % MAKERESULTS make the figures that were generated by the old
+            % wholepackage code 
+            % 
+            % EXPERIMENT.MAKERESULTS
+            % 
+            % Creates and saves:
+            %   - formin schematics for each formin
+            %   - overview figures 
+            %   - correlation plots per PRM and per formin
+            %   - polymer stat plots
+            %   - experimental data bargraphs
+            %   - per formin and per PRM tables
+            % 
+            % See also EXPERIMENT, FORMIN, LOOKUPTABLE, EXPERIMENT/FORMINGRAPHIC,
+            % EXPERIMENT/FORMINBAR, EXPERIMENT/NTDPLOT, EXPERIMENT/KPOLYPLOT, EXPERIMENT/POLYMERSTAT_CHANGE_PLOT,
+            % EXPERIMENT/EXPDATABAR, EXPERIMENT/FORMINTABLE, EXPERIMENT/PRMTABLE.
             arguments
                 obj Experiment
             end
@@ -463,6 +815,15 @@ classdef Experiment
         end
 
         function set_gating_file(obj,file)
+            %SET_GATING_FILE set gating factors for formins according to an
+            %input file
+            %
+            %   EXPERIMENT.SET_GATING_FILE(file)
+            %
+            %   Set gating factors according to .txt file with formin names
+            %   followed by gating factors (delimated by whitespace)
+            %
+            % See also FORMIN, EXPERIMENT, EXPERIMENT/SET_GATING.
             filestruct = importdata(file); 
             forminlist = filestruct.textdata;
             for i = 1:length(forminlist)
@@ -473,6 +834,16 @@ classdef Experiment
         end
 
         function set_gating(obj,forminname,gating)
+            %SET_GATING set gating factor for formin
+            %
+            %   EXPERIMENT.SET_GATING(forminname, gating)
+            %
+            %   Inputs:
+            %       forminname : (string) name of formin to set gating
+            %                   factor, must be a name in ForminList
+            %       gating     : (double) gating factor
+            %
+            % See also FORMIN, EXPERIMENT.
             arguments
                 obj Experiment
                 forminname string 
@@ -488,8 +859,37 @@ classdef Experiment
             formin.gating=gating;
         end
 
-
         function out=SOSlist(obj,scaled,NameValueArgs)
+            %SOSLIST compute individual squared errors for values in data based
+            %on simulated kpolys of the corresponding formins
+            %
+            %   out= EXPERIMENT.SOSLIST compute SOS for all
+            %   data points in obj.data
+            %
+            %   out= EXPERIMENT.SOSLIST(group='grp') compute SOS for all
+            %   data points of the group type 'grp'
+            %
+            %   out= EXPERIMENT.SOSLIST(true, group='grp') compute SOS for all
+            %   data points of the group type 'grp' and scales values by the smallest kpoly
+            %   (no scaling if the type is ratio)
+            %
+            %   out= EXPERIMENT.SOSLIST(formin='form') compute the squared
+            %   difference for the formin with name 'form'
+            %
+            %   out= EXPERIMENT.SOSLIST(...,recalc=false) compute SOS as
+            %   specified using the last calculated kpoly instead of recalculating.
+            %
+            %   Note: the SOS value is set to 0 if its within error bars
+            %   
+            %   Inputs:
+            %       scaled : (logical) whether to scale all points (only
+            %               applies if group is specified, default is false)
+            %       formin : (string) formin to compute SOS (NameValueArgs)
+            %       group  : (string) group to compute SOS (NameValueArgs)
+            %       recalc : (Formin) whether or not to reculate kpoly
+            %               values (NameValueArgs, default is true)
+            %
+            % See also FORMIN, EXPERIMENT.
             arguments
                 obj Experiment
                 scaled logical=false %only applies if group is specified
@@ -553,6 +953,9 @@ classdef Experiment
             end
 
             function val=getSOS(datastruct,scaler)
+                % compute squared difference between experimental and
+                % simulated kpoly, scaling the simulated value if specified
+                % and setting val to 0 if within error bars
                 if scaler==0
                     scaler=1;
                 end
@@ -570,6 +973,37 @@ classdef Experiment
         end
 
         function out=SOS(obj,scaled,NameValueArgs)
+            %SOS compute sum of squared errors for values in data based
+            %on simulated kpolys of the corresponding formins (sums output
+            %of obj.SOSlist)
+            %
+            %   out= EXPERIMENT.SOS compute and sum SOS for all
+            %   data points in obj.data
+            %
+            %   out= EXPERIMENT.SOS(group='grp') compute and sum SOS for all
+            %   data points of the group type 'grp'
+            %
+            %   out= EXPERIMENT.SOS(true, group='grp') compute and sum  SOS for all
+            %   data points of the group type 'grp' and scales values by the smallest kpoly
+            %   (no scaling if the type is ratio)
+            %
+            %   out= EXPERIMENT.SOS(formin='form') compute the squared
+            %   difference for the formin with name 'form'
+            %
+            %   out= EXPERIMENT.SOS(...,recalc=false) compute SOS as
+            %   specified using the last calculated kpoly instead of recalculating.
+            %
+            %   Note: the SOS value is set to 0 if its within error bars
+            %   
+            %   Inputs:
+            %       scaled : (logical) whether to scale all points (only
+            %               applies if group is specified, default is false)
+            %       formin : (string) formin to compute SOS (NameValueArgs)
+            %       group  : (string) group to compute SOS (NameValueArgs)
+            %       recalc : (Formin) whether or not to reculate kpoly
+            %               values (NameValueArgs, default is true)
+            %
+            % See also FORMIN, EXPERIMENT, EXPERIMENT/SOSLIST.
             arguments
                 obj Experiment
                 scaled logical=false %only applies if group is specified
@@ -591,6 +1025,29 @@ classdef Experiment
         end
 
         function T=runfminsearch(obj,NameValueArgs)
+            %RUNFMINSEARCH run fminsearch on SOS to fit parameters in obj.opts based
+            %on data in obj.data
+            %
+            %   tab= EXPERIMENT.RUNFMINSEARCH(NameValueArgs)
+            %
+            %   Note: runs fminsearch on all 6 rate parameters, even if the
+            %   3 state model is used (k_cap, k_del, r_cap, r_cap_exp,
+            %   r_del, k_rel)
+            %   
+            %   Inputs:
+            %       options     : optimset for fminsearch (default is optimset('MaxFunEvals',5000,'MaxIter',5000,'TolX',10^(-4),'TolFun',10^(-4)))
+            %       groups      : groups to use for fit, if none specified, use all data in obj.data
+            %       rbot        : lower bound on parameters in log10 space (default is -2)
+            %       rtop        : upper bound on parameters in log10 space (default is 4)
+            %       iterations  : number of fminsearch runs to run (default is 1)
+            %       weight      : group to have SOS values multiplied by 10 (weighted more heavily in the fit)
+            %       ogtable     : if true, just return a table with the current settings (default is false)
+            %   
+            %   Output is a table with entries generated by modifing 
+            %   the results of opts.optionstable for the fminsearch 
+            %   resulted set of options
+            %
+            % See also FORMIN, EXPERIMENT, EXPERIMENT/SOS, OPTIONS/OPTIONSTABLE.
             arguments
                 obj Experiment
                 NameValueArgs.options struct=optimset('MaxFunEvals',5000,'MaxIter',5000,'TolX',10^(-4),'TolFun',10^(-4))  % optimset for fminsearch
@@ -707,6 +1164,25 @@ classdef Experiment
         end
 
         function applytable(obj,row)
+            %APPLYTABLE update properties (formin and options) accoridng to
+            %the input table
+            %
+            %   tab= EXPERIMENT.APPLYTABLE(row)
+            %
+            %   Inputs:
+            %       row: table to apply
+            %
+            %   Searches for table variables with the same name as an
+            %   Options property and applies them.
+            %   Searches for table variables corresponding to any of the
+            %   rate equations and runs obj.set_equation accordingly. These
+            %   entries are assumed to have the name "rate_eq" and be of
+            %   the format of obj.equationstext entries.
+            %   Searches for table variables corresponding to formin
+            %   properties and applies them. These entries are assumed to 
+            %   have the name "forminname - property"
+            %
+            % See also FORMIN, EXPERIMENT, OPTIONS.
             arguments
                 obj Experiment
                 row table
@@ -741,6 +1217,12 @@ classdef Experiment
         end
 
         function names = forminnames(obj)
+            %FORMINNAMES returns array of the names of formins in
+            %ForminList
+            %
+            %   names= EXPERIMENT.FORMINNAMES
+            %
+            % See also FORMIN, EXPERIMENT.
             L=length(obj.ForminList);
             names=[];
             for i=1:L
@@ -749,6 +1231,18 @@ classdef Experiment
         end
 
         function fracs = fracmultibind(obj)
+            %FRACMULTIBIND computes fraction of time with multiple
+            %simultaneous binding for each formin in ForminList
+            %
+            %   fracs= EXPERIMENT.FRACMULTIBIND
+            %
+            %   Output in an Nx3 array where N is the number of formins. 
+            %   A fraction is calculated for the single, double, and dimer
+            %   filament types (hence the x3)
+            %
+            %   Uses pmultibind
+            %
+            % See also FORMIN, EXPERIMENT, PMULTIBIND.
             L=length(obj.ForminList);
             fracs=zeros(L,3);
 
@@ -761,6 +1255,13 @@ classdef Experiment
         end
 
         function [fig,fracs] = plotmultibind(obj)
+            %PLOTMULTIBIND creates bargraph of the fraction of time spent
+            %with multiple PRMs bound for single, double, and dimer
+            %filaments for each formin in ForminList
+            %
+            %   fracs= EXPERIMENT.PLOTMULTIBIND
+            %
+            % See also FORMIN, EXPERIMENT, PMULTIBIND, EXPERIMENT/FRACMULTIBIND.
             fracs=obj.fracmultibind;
             fh1names=obj.forminnames;
             fig=figure;

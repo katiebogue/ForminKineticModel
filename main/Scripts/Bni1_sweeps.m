@@ -1,6 +1,13 @@
-% BNI1_SWEEPS generates Lookuptable, Options, and Experiment...
+% BNI1_SWEEPS generates Lookuptable, Options, and Experiment for
+% Bni1 constructs and creates scatterplots for predicted kpoly ratios using
+% specific best fit parameters obtained from fminsearch
     % 
-    % 
+    % Make sure to set the lookuptable file and forminfile (with Bni1 sequence) 
+    %
+    % Loads and uses applytable for best fits in "best fits.mat"
+    %
+    % Sweeps through possible NTD locations and generates scatterplots of
+    % ratios vs. NTD location
     %
     % See also FORMIN, EXPERIMENT, LOOKUPTABLE, OPTIONS, EXPDATABAR,
     % KPOLYMERIZATION, PRM, EXPERIMENT/EXPDATABAR.
@@ -49,6 +56,9 @@ Bni1=Experiment1.ForminList;
 [doubles_4st_krel,dimers_4st_krel,ratios_4st_krel,NTD_dists_4st_krel]=NTD_predictions(Bni1,"4st_krel");
 
 function [doubles,dimers,ratios,NTD_dists]=NTD_predictions(formin,fit)
+% NTD_PREDICTIONS creates kpoly ratio predictions for the input formin
+% across NTD distances up to 489, and makes scatterplots of these
+% predictions
     doubles=zeros(1,489);
     dimers=zeros(1,489);
     ratios=zeros(1,489);

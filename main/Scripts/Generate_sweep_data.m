@@ -1,14 +1,6 @@
-% GENERATE_SWEEP_DATA ...
-    % 
-    % ...
-    %
-    % See also .
-
-    % rows:
-    % 1) settings
-    %
-
-
+% GENERATE_SWEEP_DATA creates and saves table with rates for formins of
+% various configurations across random parameter value sweeps
+  
     table_num=233;
     tab=addformin(opts,1,1,1,1);
     tab = table('Size',[3000 length(tab.Properties.VariableNames)],'VariableNames',tab.Properties.VariableNames,'VariableTypes',varfun(@class,tab,'OutputFormat','cell'));

@@ -1,4 +1,31 @@
 function output=extrapolate(obj,stat)
+% EXTRAPOLATE generate extrapolation function for the specified polymer
+% statistic
+% 
+% output = LOOKUPTABLE.EXTRAPOLATE(stat)
+%
+%   Inputs: 
+%       stat : (string) lookuptable property to extrapolate
+%
+%   Output is a FilType with an extrapolation function for each filament
+%   entry (as well as filament a and b if dimer or double)
+%
+%   If the lookuptable property is a string, the functions will be a string
+%   that says "unable to extrapolate," unless the property is 'type,' in
+%   which case the function will return the type.
+%
+%   If the stat is dependent on PRM location, uses scatteredInterpolant
+%   ('linear','nearest' setting)and output functions can be accessed with
+%   fxn(FH1 size, PRM loc). 
+%   
+%   If the stat is the same for the same FH1 size, uses polyfit, and the
+%   output functions can be accessed with fxn(FH1 size).
+% 
+%   Adds the output to obj.interpolant. If obj.interpolant.(stat) already
+%   exists, the output will be the preexisting value and new calculations
+%   will not be done. 
+%
+% See also LOOKUPTABLE, POLYFIT, SCATTEREDINTERPOLANT.
     tempNList=obj.NList;
     if isfield(obj.interpolant,stat)
         output=obj.interpolant.(stat);

@@ -1,13 +1,36 @@
 function fig=kpolysweep(options,sweep,scale,save)
-% KPOLYSWEEP  ...
+% KPOLYSWEEP creates sweep plots of kpoly ratios for a fictitious formin
+% construct swept across formin and/or rate parameters as specified by the
+% input
     %
-    %   KPOLYSWEEP() ...
+    %   fig=KPOLYSWEEP(options,sweep) creates specified sweep, with ratios
+    %   plotted using log2 scaling, does not save the figure
+    %
+    %   fig=KPOLYSWEEP(options,sweep,scale) creates specified sweep, with ratios
+    %   plotted using the specified scale, does not save the figure
+    %
+    %   fig=KPOLYSWEEP(options,sweep,scale,1) creates and saved specified sweep, with ratios
+    %   plotted using the specified scale
     %
     %   Inputs:
-    %       formin  : 
+    %       options    : Options object with parameters and rate equations
+    %       sweep      : (string) the type of sweep to run (can be "PRM
+    %                     size", "FH1 length", "FH2 dist", "NT dist", or a 
+    %                     rate variable that is a fieldname of options
+    %       sacle      : (string) how to scale the Kpoly ratios (can be none,
+    %                     log2, log10, ln; deafult is log2)
+    %       save       : (logical) whether or not to save the resulting
+    %                    plot (default is false)
     %
+    %   Output is the sweep figure
     %
-    %   See also .
+    %   For each sweep, multiple ficitious formin constructs of various FH1
+    %   sizes, PRM sizes, and PRM locations (as applicable) are used and
+    %   plotted simultaneuously. 
+    %
+    %   Calls figuresave
+    % 
+    %   See also FORMIN, OPTIONS, PRM, FIGURESAVE, KPOLYMERIZATION.
 
 arguments
     options Options

@@ -1,8 +1,29 @@
 function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
+% LTPLOT create scatterplots of the specified polymer stat vs. an FH1 property
+% 
+% fig = LOOKUPTABLE.LTPLOT(xval,stat,skip,NameValueArgs)
+%
+%   Inputs: 
+%       xval        : (string) FH1 property to scatter points by (options:
+%                   'length','NTdist','CTdist')
+%       stat        : (string) polymer stat to plot, must be a lookuptable
+%                   property
+%       skip        : (double) plot points from 1:skip:end to improve plot
+%                   readability (default is 1-- aka no skip)
+%       ratioscale  : (string) how to scale ratio y axis (none, log2,
+%                   log10,ln), if not specified, used the same scale as
+%                   specifed by scale (NameValueArgs) 
+%       scale       : (string) how to scale stat property y axis (none, log2,
+%                   log10,ln), if not specified, no scaling is applied (NameValueArgs)
+%       ax1         : (axes) axes to put the plot on (NameValueArgs)
+% 
+%   Output is an array of figures holding the scatterplots.
+% 
+% See also LOOKUPTABLE, LOOKUPTABLE/STATTABLE.
     arguments
         obj Lookuptable
         xval string {mustBeMember(xval,{'length','NTdist','CTdist'})}
-        stat string %need to figure out validation
+        stat string 
         skip double =1 % will plots points from 1:skip:end
         NameValueArgs.type string {mustBeMember(NameValueArgs.type,{'single','dimer','double','ratio'})}
         NameValueArgs.ratioscale string {mustBeMember(NameValueArgs.ratioscale,{'none','log2','log10','ln'})} % scale for ratio plot
@@ -94,7 +115,6 @@ function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
                 ratioline=0;
             end
             
-            
             s=scatter(ax1,x(1:skip:end),y(1:skip:end), 'filled','DisplayName',label);
             if type=="ratio"
                 lne=yline(ax1,ratioline,'LineWidth',1,'Color',[0 0 0]);
@@ -106,6 +126,4 @@ function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
             ylabel(ax1,ylab)
         end
     end
-
-
 end
