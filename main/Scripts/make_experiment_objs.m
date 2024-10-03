@@ -21,6 +21,7 @@ forminfile="Experimental constructs.txt"; % file containing sequences
 %forminfile="Quinlan_FHODB variations.txt"; % file containing sequences
 %forminfile="BNI1 FHOD CAPU.txt";
 
+addlt2=false;
 %ltfile2="basesep_35.5_output.mat"; % need to use base sep 35.5 runs for capu and fhod dimer
 ltfile2="dimerdisttest.mat"; % test with larger dimerdist runs for capu and fhod dimer
 
@@ -30,9 +31,11 @@ ertype='SEM';
 %% create lookuptable
 lt=(load(ltfile,'lookuptable').lookuptable);
 lt=Lookuptable(lt);
-  lt2=(load(ltfile2,'lookuptable').lookuptable);
-  %lt.addN(lt2.dimer.N123);
- lt.addN(lt2.dimer.N255);
+if addlt2
+    lt2=(load(ltfile2,'lookuptable').lookuptable);
+    %lt.addN(lt2.dimer.N123);
+    lt.addN(lt2.dimer.N255);
+end
 
 %% create options object
 % modify this line to change the rate constants:

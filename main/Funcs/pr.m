@@ -27,13 +27,13 @@ function pval=pr(n1,fh1length,FH2size,k,x,y,type)
     b=FH2size;
     x2=b;
     y2=0;
-    dotprod=(x*x2)+(y*y2);
+    dotprod=(x.*x2)+(y.*y2);
     pval_dimer= (...
         (3./(2*pi.*nprime.*(k.^2))).^(3/2) .* ...
         exp( (3.*(b^2)) ./ (2*(k^2).*(n1+nN)) ).*...
-        exp( (-3./(2.*(k^2))) .* ( ((x^2+y^2)./n1) + ((x^2+y^2+b^2-2.*dotprod)./nN) ) )...
+        exp( (-3./(2.*(k^2))) .* ( ((x.^2+y.^2)./n1) + ((x.^2+y.^2+b^2-2.*dotprod)./nN) ) )...
     );
-    pval_double=( ( 3./(2*pi.*n1.*(k^2)) ).^(3/2)) .* exp( -3.*(x^2+y^2)./(2.*n1.*(k^2)) ) ;
+    pval_double=( ( 3./(2*pi.*n1.*(k^2)) ).^(3/2)) .* exp( -3.*(x.^2+y.^2)./(2.*n1.*(k^2)) ) ;
 
     pval_dimer=pval_dimer.*6.1503*10^7;
     pval_double=pval_double.*6.1503*10^7;

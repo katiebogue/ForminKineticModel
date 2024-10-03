@@ -211,6 +211,8 @@ else
                         scat=scatter(log10(yvals),yscale(kpolyratios),20,'filled',options.shapes(j),'MarkerFaceColor',colors(i),'MarkerFaceAlpha',0.7);
                     end
                     plt=plot(log10(yvals),yscale(kpolyratios),'Color',colors(i));
+                    hold on
+                    xline(log10(ogopt),'--',num2str(ogopt),'HandleVisibility','off','LineWidth',1)
                     % scat=scatter(log10(yvals),yscale(kpolyratios),'filled',options.shapes(j),'MarkerFaceColor',options.colors(scatn));
                     % plt=plot(log10(yvals),yscale(kpolyratios),'Color',options.colors(scatn));
                     plt.Annotation.LegendInformation.IconDisplayStyle='off';
