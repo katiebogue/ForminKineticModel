@@ -1,0 +1,1 @@
+Diap1--Mouse O08808 Diap2--Mouse O70566 Diap3--Mouse Q9Z207 CAPU--FruitFly Q24120 FHOD1--Human Q9Y613 BNR1--Yeast P40450 CDC12P--Yeast Q10059 BNI1P--Yeast P41832 FHODB--FruitFly Q9VSQ0 Delphinin--Human A4D2P6 Delphinin--Mouse Q0QWG9 FMNL1--Mouse Q9JL26

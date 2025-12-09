@@ -128,6 +128,7 @@ end
 
     disp("logparams_all_trun successfully made")
 
+    
     if isempty(who(m,'parameters_all'))||length(m.parameters_all)==1
         memarraysize=16*(1024^3)/(2*8); %limit to the largest possible in memory array size for 2 rows (so hist3 works)
         thirdarraysize=ceil(maxrow/3)*2;
@@ -183,15 +184,17 @@ end
             clear x
         end
     else
-        nparams=m.nparams;
-        m.containsInf=zeros(nparams,1);
-        len=size(m,'parameters_all',1);
-        for i=1:nparams
-            if max(m.parameters_all(1:len,i))==Inf || min(m.parameters_all(1:len,i))==-Inf
-                m.containsInf(i,1)=1;
+        if isempty(who(m,'containsInf'))
+            nparams=m.nparams;
+            m.containsInf=zeros(nparams,1);
+            len=size(m,'parameters_all',1);
+            for i=1:nparams
+                if max(m.parameters_all(1:len,i))==Inf || min(m.parameters_all(1:len,i))==-Inf
+                    m.containsInf(i,1)=1;
+                end
             end
+            disp("made containsInf")
         end
-        disp("made containsInf")
     end
     disp("made parameters_all")
 

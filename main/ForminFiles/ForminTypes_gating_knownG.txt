@@ -1,0 +1,12 @@
+Diap1--Mouse	1
+Diap2--Mouse	0.2
+Diap3--Mouse	.26
+CAPU--FruitFly	1
+FHOD1--Human	0.04
+BNR1--Yeast	1
+CDC12P--Yeast	0.05
+BNI1P--Yeast	0.5
+FHODB--FruitFly	0.5
+Delphinin--Human	0.04
+Delphinin--Mouse	0.03
+FMNL1--Mouse	0.55

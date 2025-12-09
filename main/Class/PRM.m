@@ -251,8 +251,8 @@ classdef PRM < handle & dynamicprops
             %   single, double, and dimer.
             %
             %   See also FORMIN, PR, FILTYPE.
-            prdob=pr(obj.dist_FH2,obj.fh1length,35.5,1,obj.formin.opts.del_x,obj.formin.opts.del_y,"double");
-            prdim=pr(obj.dist_FH2,obj.fh1length,35.5,1,obj.formin.opts.del_x,obj.formin.opts.del_y,"dimer");
+            prdob=pr(obj.dist_FH2,obj.fh1length,35.5,1,obj.formin.opts.del_x,obj.formin.opts.del_y,"double",1);
+            prdim=pr(obj.dist_FH2,obj.fh1length,35.5,1,obj.formin.opts.del_x,obj.formin.opts.del_y,"dimer",1);
             out=FilType(prdob,prdob,prdim,prdob,prdim);
         end
 

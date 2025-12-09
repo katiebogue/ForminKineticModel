@@ -8,7 +8,7 @@
     % See also KPOLYSWEEP, FORMIN, MAKE_EXPERIMENT_OBJS, OPTIONS, LOOKUPTABLE/LTPLOT.
 
 %% Set variables
-opts=opts;
+opts=Experiment1.opts;
 
 %bestfits={fit_3st,fit_4st,fit_4st_krel};
 bestfits=1;

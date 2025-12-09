@@ -52,16 +52,30 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         filename='mcmc_results.mat';
     end
 
-    updateMCMCoutput(fullfile(foldername,filename));
-    reloadmatfile(fullfile(foldername,filename))
+    mfname=fullfile(foldername,filename);
+    if isempty(who('-file',mfname,'updatedone'))
+        updateMCMCoutput(mfname);
+        reloadmatfile(mfname)
+    else
+        load(mfname,'updatedone')
+            if updatedone
+                disp("update already done, not updating")
+            else
+                updateMCMCoutput(mfname);
+                reloadmatfile(mfname)
+            end
+    end    
 
-    load(fullfile(foldername,filename),'nparams')
-    load(fullfile(foldername,filename),'nsigma')
-    load(fullfile(foldername,filename),'containsInf')
-    load(fullfile(foldername,filename),'NTCHECK')
-    load(fullfile(foldername,filename),'type')
-    load(fullfile(foldername,filename),'nondim')
-    load(fullfile(foldername,filename),'prcalc')
+    load(mfname,'nparams')
+    load(mfname,'nsigma')
+    load(mfname,'containsInf')
+    load(mfname,'NTCHECK')
+    load(mfname,'type')
+    load(mfname,'nondim')
+    load(mfname,'prcalc')
+    load(mfname,'prfit')
+    load(mfname,'xloc')
+    load(mfname,'yloc')
 
     inmemTF=[0,0];
     % logparams_all_trun=0;
@@ -102,7 +116,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         
     end
 
-    if prcalc
+    if prfit
         parameter_names=[parameter_names,"del site, x", "del site, y"];
     end
 
@@ -252,7 +266,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         end
         if(saveTF)
             %saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.fig'),'fig');
-            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.eps'),'epsc');
+            %saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.eps'),'epsc');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_First.png'),'png');
         end
 
@@ -272,7 +286,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         end
         if(saveTF)
             %saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.fig'),'fig');
-            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.eps'),'epsc');
+            %saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.eps'),'epsc');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations_Last.png'),'png');
         end
         close all
@@ -295,7 +309,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
         end
         if(saveTF)
             %saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.fig'),'fig');
-            saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.eps'),'epsc');
+            %saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.eps'),'epsc');
             saveas(gcf,fullfile(savefigfolder,'ParameterVSIterations.png'),'png');
         end
         close all
@@ -340,7 +354,7 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
             
             if(saveTF)
                 saveas(gcf,fullfile(savefigfolder,'ParameterECDFs.fig'),'fig');
-                saveas(gcf,fullfile(savefigfolder,'ParameterECDFs.eps'),'epsc');
+                %saveas(gcf,fullfile(savefigfolder,'ParameterECDFs.eps'),'epsc');
             end
         end
 
@@ -392,13 +406,13 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     
         if saveTF
             saveas(gcf,fullfile(savefigfolder,strcat("KStestfig_",num2str(nt),".png")'),'png');
-            saveas(gcf,fullfile(savefigfolder,strcat("KStestfig_",num2str(nt),".eps")),'epsc');
+            %saveas(gcf,fullfile(savefigfolder,strcat("KStestfig_",num2str(nt),".eps")),'epsc');
         end
         close all
     
     end
 
-    maxlikelihoodplot(foldername,prcalc)
+    maxlikelihoodplot(foldername)
         
 end
 

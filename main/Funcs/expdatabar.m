@@ -95,6 +95,7 @@ function fig = expdatabar(datastruct,settings,scale,save,NameValueArgs)
 
     if isfield(NameValueArgs,"group")
         makegroupplot(NameValueArgs.group);
+        %fontsize(18,"points")
         return
     end
     makeplot("all",datastruct,simdata,1);
@@ -175,7 +176,7 @@ function fig = expdatabar(datastruct,settings,scale,save,NameValueArgs)
 
         typeformins=[typevalues.formin];
     
-        set(gca,'xticklabel',[typeformins.name]);
+        set(gca,'XTick',1:length(typesimdata),'xticklabel',[typeformins.name]);
         hold on
         
         erlocs=(0:(length(typesimdata)-1))+0.85;

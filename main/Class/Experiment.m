@@ -38,8 +38,9 @@ classdef Experiment
             %       options : Options object
             %       file    : (String).txt file with comma separated values 
             %                   of the format 'name','sequence' or 'name','uniprotID'
-            %       type    : (String) which type ('seq' or 'uniprot') the
-            %                   information in file is in
+            %       type    : (String) which type ('seq' or 'uniprot' or 'null') the
+            %                   information in file is in, if null, creates
+            %                   empty Experiment
             %       cPA     : (double) concentration of profilin-actin to
             %                   set each of the input formins to (default is 0.88)
             % 
@@ -47,23 +48,25 @@ classdef Experiment
             arguments
                 options Options
                 file string % .txt file, comma separated
-                type string {mustBeMember(type,{'seq','uniprot'})}
+                type string {mustBeMember(type,{'seq','uniprot','null'})}
                 cPA double =0.88 % [profilin-actin] to assign to all formins
             end
             if nargin>0
                 obj.opts=options;
-                forminlist = char(importdata(file)); 
-                forminlist = strsplit(forminlist);
-                obj.ForminList=Formin.empty((length(forminlist)/2),0);
-                for i = 1:length(forminlist)/2
-                    forminname = convertCharsToStrings(forminlist(2*i -1));   %takes the names (every other string)
-                    input = convertCharsToStrings(forminlist(2*i));  
-                    if type=="seq"
-                        tempFormin=Formin(forminname,obj.opts,c_PA=cPA,sequence=input);
-                    elseif type=="uniprot"
-                        tempFormin=Formin(forminname,obj.opts,c_PA=cPA,uniprotID=input);
+                if type~="null"
+                    forminlist = char(importdata(file)); 
+                    forminlist = strsplit(forminlist);
+                    obj.ForminList=Formin.empty((length(forminlist)/2),0);
+                    for i = 1:length(forminlist)/2
+                        forminname = convertCharsToStrings(forminlist(2*i -1));   %takes the names (every other string)
+                        input = convertCharsToStrings(forminlist(2*i));  
+                        if type=="seq"
+                            tempFormin=Formin(forminname,obj.opts,c_PA=cPA,sequence=input);
+                        elseif type=="uniprot"
+                            tempFormin=Formin(forminname,obj.opts,c_PA=cPA,uniprotID=input);
+                        end
+                        obj.ForminList(i)=tempFormin;
                     end
-                    obj.ForminList(i)=tempFormin;
                 end
             end
         end
@@ -886,8 +889,9 @@ classdef Experiment
             %               applies if group is specified, default is false)
             %       formin : (string) formin to compute SOS (NameValueArgs)
             %       group  : (string) group to compute SOS (NameValueArgs)
-            %       recalc : (Formin) whether or not to reculate kpoly
+            %       recalc : (Bool) whether or not to reculate kpoly
             %               values (NameValueArgs, default is true)
+            %       incerr : (Bool) whether or not to make a point within error bars have SOS=0 (NameValueArgs, default is true)
             %
             % See also FORMIN, EXPERIMENT.
             arguments
@@ -896,6 +900,7 @@ classdef Experiment
                 NameValueArgs.formin string
                 NameValueArgs.group string
                 NameValueArgs.recalc logical=true
+                NameValueArgs.incerr logical=true
             end
             if isfield(NameValueArgs,"formin")
                 for i=1:length(obj.data)
@@ -962,7 +967,7 @@ classdef Experiment
                 simvalue=datastruct.formin.lastkpoly.(datastruct.type)./scaler;
                 max=datastruct.value+datastruct.errtop;
                 min=datastruct.value-datastruct.errbot;
-                if (simvalue<=max) && (simvalue>=min)
+                if (simvalue<=max) && (simvalue>=min) && NameValueArgs.incerr
                     val=0;
                 elseif isnan(simvalue)
                     val=10000;
@@ -1002,6 +1007,7 @@ classdef Experiment
             %       group  : (string) group to compute SOS (NameValueArgs)
             %       recalc : (Formin) whether or not to reculate kpoly
             %               values (NameValueArgs, default is true)
+            %       incerr : (Bool) whether or not to make a point within error bars have SOS=0 (NameValueArgs, default is true)
             %
             % See also FORMIN, EXPERIMENT, EXPERIMENT/SOSLIST.
             arguments
@@ -1010,18 +1016,122 @@ classdef Experiment
                 NameValueArgs.formin string
                 NameValueArgs.group string
                 NameValueArgs.recalc logical=true
+                NameValueArgs.incerr logical=true
             end
             if isfield(NameValueArgs,"formin")
-                out=obj.SOSlist(formin=NameValueArgs.formin,recalc=NameValueArgs.recalc);
+                out=obj.SOSlist(formin=NameValueArgs.formin,recalc=NameValueArgs.recalc, incerr=NameValueArgs.incerr);
                 return
             end
             if isfield(NameValueArgs,"group")
-                list=obj.SOSlist(scaled,group=NameValueArgs.group,recalc=NameValueArgs.recalc);
+                list=obj.SOSlist(scaled,group=NameValueArgs.group,recalc=NameValueArgs.recalc, incerr=NameValueArgs.incerr);
             else
-                list=obj.SOSlist(scaled,recalc=NameValueArgs.recalc);
+                list=obj.SOSlist(scaled,recalc=NameValueArgs.recalc, incerr=NameValueArgs.incerr);
             end
 
             out=sum([list.value]);
+        end
+
+        function out=getRMSE(obj,scaled,NameValueArgs)
+            %SOSLIST compute root mean square errors for values in data based
+            %on simulated kpolys of the corresponding formins
+            %
+            %   out= EXPERIMENT.GETRMSE compute RMSE for all
+            %   data points in obj.data
+            %
+            %   out= EXPERIMENT.GETRMSE(group='grp') compute RMSE for all
+            %   data points of the group type 'grp'
+            %
+            %   out= EXPERIMENT.GETRMSE(true, group='grp') compute RMSE for all
+            %   data points of the group type 'grp' and scales values by the smallest kpoly
+            %   (no scaling if the type is ratio)
+            %
+            %   out= EXPERIMENT.GETRMSE(...,recalc=false) compute RMSE as
+            %   specified using the last calculated kpoly instead of recalculating.
+            %
+            %   
+            %   Inputs:
+            %       scaled : (logical) whether to scale all points (only
+            %               applies if group is specified, default is false)
+            %       group  : (string) group to compute SOS (NameValueArgs)
+            %       recalc : (Bool) whether or not to reculate kpoly
+            %               values (NameValueArgs, default is true)
+            %       weighted : (Bool) whether or not to weight RMSE based on the size of the error bars (weighted by 1/(SE)^2) (NameValueArgs, default is false)
+            %       selfweighted : (Bool) whether or not to weight each indidivual residual in the RMSE based on the size of the error bars (residual/SE)^2 (NameValueArgs, default is false)
+            %
+            % See also FORMIN, EXPERIMENT.
+            arguments
+                obj Experiment
+                scaled logical=false %only applies if group is specified
+                NameValueArgs.group string
+                NameValueArgs.recalc logical=true
+                NameValueArgs.weighted  logical=false
+                NameValueArgs.selfweighted  logical=false
+            end
+            out=-1;
+
+            if NameValueArgs.recalc
+                kpolys=obj.ForminList.kpoly;
+            end
+            if isfield(NameValueArgs,"group")
+                groupdata=obj.data;
+                for i=length(groupdata):-1:1
+                    if ~ismember(NameValueArgs.group,groupdata(i).groups)
+                        groupdata(i)=[];
+                    end
+                end
+                if scaled
+                    if groupdata(1).type=="ratio"
+                        scaler=1;
+                    else
+                        expdata=[groupdata.value];
+                        minloc=expdata==min(expdata);
+                        scaler=groupdata(minloc).formin.lastkpoly.(groupdata(minloc).type)/min(expdata);
+                    end
+                else
+                    scaler=1;
+                end
+                expvals=zeros(1,length(groupdata));
+                simvals=zeros(1,length(groupdata));
+                weights=zeros(1,length(groupdata));
+                SEs=zeros(1,length(groupdata));
+                for i=1:length(groupdata)
+                    expvals(1,i)=groupdata(i).value;
+                    simvals(1,i)=groupdata(i).formin.lastkpoly.(groupdata(i).type);
+                    SEs(1,i)=((groupdata(i).errbot+groupdata(i).errtop)/2);
+                    weights(1,i)=1/((SEs(1,i))^2);
+                end
+                if NameValueArgs.weighted
+                    if NameValueArgs.selfweighted
+                        error("cannot do weighting and self weighting at same time")
+                    end
+                    out=rmse(expvals,simvals,Weight=weights);
+                elseif NameValueArgs.selfweighted
+                    out=rms((expvals-simvals)./SEs);
+                else
+                    out=rmse(expvals,simvals);
+                end
+            else
+                expvals=zeros(1,length(obj.data));
+                simvals=zeros(1,length(obj.data));
+                weights=zeros(1,length(obj.data));
+                SEs=zeros(1,length(obj.data));
+                for i=1:length(obj.data)
+                    expvals(1,i)=obj.data(i).value;
+                    simvals(1,i)=obj.data(i).formin.lastkpoly.(obj.data(i).type);
+                    SEs(1,i)=((obj.data(i).errbot+obj.data(i).errtop)/2);
+                    weights(1,i)=1/(( SEs(1,i) )^2);
+                end
+                if NameValueArgs.weighted
+                    if NameValueArgs.selfweighted
+                        error("cannot do weighting and self weighting at same time")
+                    end
+                    out=rmse(expvals,simvals,Weight=weights);
+                elseif NameValueArgs.selfweighted
+                    out=rms((expvals-simvals)./SEs);
+                else
+                    out=rmse(expvals,simvals);
+                end
+            end
         end
 
         function T=runfminsearch(obj,NameValueArgs)

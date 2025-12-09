@@ -53,6 +53,13 @@ end
     
     sampleCDF1  =  sumCounts1(1:end-1);
     sampleCDF2  =  sumCounts2(1:end-1);
+
+    if length(sumCounts2)==1
+        sampleCDF2=1;
+    end
+    if length(sumCounts1)==1
+        sampleCDF1=1;
+    end
     
     %
     % Compute the test statistic of interest.

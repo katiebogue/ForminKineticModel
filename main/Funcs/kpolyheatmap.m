@@ -57,7 +57,7 @@ arguments
     col double
     smooth logical=true
     smoothfac double =0.58
-    save logical=false
+    save logical=true
 end
 fig=figure;
 
@@ -169,10 +169,129 @@ if sweep_type=="NT dist v r_cap"
     h.YDisplayLabels = CustomYLabels;
     s = struct(h); 
     s.XAxis.TickLabelRotation = 0;   % horizontal
+elseif sweep_type=="NT dist v CT dist"
+    x_label="Distance from PRM to FH2";
+    y_label="Distance from PRM to N-term";
+    scatn=0;
+    PRM_size=10;
+
+    PRM_lab=strcat("PRM size: ",num2str(PRM_size));
+
+    yvals=1:300;
+    xvals=1:300;
+
+    LMAX=600;
+
+    kpolyratios=zeros(length(yvals)*length(xvals),1);
+    yvals_matrix=kpolyratios;
+    xvals_matrix=kpolyratios;
+
+    index=0;
+
+    for i=1:length(xvals)
+        PRM_loc=xvals(i);
+        % if PRM_loc>200
+        %     PRM_loc=PRM_loc;
+        % end
+        formin1=Formin("formin1",options,c_PA=1,gating=1,length=PRM_loc,PRMloc=PRM_loc,PRMsize=PRM_size);
+        for n=1:length(yvals)
+            FH1_length=PRM_loc+yvals(n);
+            if FH1_length>LMAX
+                index=index+1;
+                kpolyratios(index,1)=nan;
+                yvals_matrix(index,1)=yvals(n);
+                xvals_matrix(index,1)=xvals(i);
+            else
+                addlen=FH1_length-formin1.length;
+                formin1.add_length(addlen);
+                %formin1=Formin("formin1",options,c_PA=1,gating=1,length=FH1_length,PRMloc=PRM_loc,PRMsize=PRM_size);
+                index=index+1;
+                kpolyratios(index,1)=formin1.kpoly.ratio;
+                yvals_matrix(index,1)=yvals(n);
+                xvals_matrix(index,1)=xvals(i);
+            end
+        end
+    end
+
+    if smooth
+        for n=1:length(yvals)
+            index=yvals_matrix==yvals(n);
+            vals=kpolyratios(index);
+            smootheddata=smoothdata(vals,"lowess","SmoothingFactor",smoothfac);
+            smootheddata(smootheddata<0)=vals(smootheddata<0);
+            kpolyratios(index)=smootheddata;
+        end
+        kpoly_lab=strcat(kpoly_lab," (smoothed:",num2str(smoothfac),")");
+    end
+
+    tbl=table(xvals_matrix,yvals_matrix,log2(kpolyratios));
+
+    h = heatmap(tbl,'xvals_matrix','yvals_matrix','ColorVariable','Var3');
+    h.XLabel = x_label;
+    h.YLabel = y_label;
+    h.ColorMethod = 'none';
+    h.GridVisible="off";
+    h.NodeChildren(3).YDir='normal'; 
+    if col==1
+        h.Colormap=[jet];
+    elseif col==2
+        h.Colormap=[parula];
+        
+        if not(smooth)
+            red = [1 0 0];
+            h.Colormap=[parula;red];
+            h.ColorLimits = [min(log2(kpolyratios)) 0];
+        end
+    elseif col==3
+        load('customcolorbar_red_blue.mat');
+        h.Colormap=CustomColormap;
+        minn=min(log2(kpolyratios(kpolyratios~=0)));
+        h.ColorLimits=[minn abs(minn)];
+    elseif length(col)==2
+        load('customcolorbar_red_blue.mat');
+        h.Colormap=CustomColormap;
+        h.ColorLimits=col;
+    end
+    
+
+    prvec=getmeanstat(options.lookup,'Prvec0',PRM_loc);
+    pocc=getmeanstat(options.lookup,'POcclude',PRM_loc);
+    pocc0=getmeanstat(options.lookup,'POcclude',1);
+
+    kcapavg=log10(options.k_cap*(1-pocc));
+    kdelavg=log10(options.k_del*(1.0e33*(prvec)/(27*6.022e23))*(1-pocc0));
+
+    lab_avg=strcat("kcap avg: ",num2str(kcapavg)," kdel avg: ",num2str(kdelavg));
+
+    lab=strcat("k_cap: ",num2str(options.k_cap)," k_del: ",num2str(options.k_del)," r_cap: ",num2str(options.r_cap));
+
+    h.Title = {kpoly_lab,PRM_lab,lab,lab_avg};
+
+    % Convert each number in the array into a string
+    CustomXLabels = string(xvals);
+    CustomYLabels = string(yvals);
+    % Replace all but the fifth elements by spaces
+    CustomXLabels(mod(xvals,20) ~= 0) = " ";
+    CustomYLabels(mod(yvals,20) ~= 0) = " ";
+    % Set the 'XDisplayLabels' property of the heatmap 
+    % object 'h' to the custom x-axis tick labels
+    h.XDisplayLabels = CustomXLabels;
+    h.YDisplayLabels = CustomYLabels;
+    s = struct(h); 
+    s.XAxis.TickLabelRotation = 0;   % horizontal
+
+    if save
+        figuresave(gcf,options,append("heatmapsweep_bounds_",sweep_type,"kcap ", num2str(options.k_cap)," kdel ", num2str(options.k_del)," rcap ", num2str(options.r_cap),'.fig'),true);
+    end
+
+    load('customcolorbar_red_blue.mat');
+    h.Colormap=CustomColormap;
+    minn=min(log2(kpolyratios(kpolyratios~=0)));
+    h.ColorLimits=[minn abs(minn)];
 end
 
 if save
-    figuresave(gcf,options,append("heatmapsweep_",sweep_type," ", num2str(options.k_cap)," kdel ", num2str(options.k_del),'.fig'),true);
+    figuresave(gcf,options,append("heatmapsweep_",sweep_type,"kcap ", num2str(options.k_cap)," kdel ", num2str(options.k_del)," rcap ", num2str(options.r_cap),'.fig'),true);
 end
 end
 

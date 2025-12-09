@@ -15,6 +15,12 @@ classdef Formin < handle
     %                    if giving length and PRMsize (NameValueArgs)
     %           PRMsize  : (double) number of amino acids in PRM, must be provided
     %                    if giving length and PRMloc (NameValueArgs)
+    %       c_actin      : (double) concentration of actin
+    %                   (NameValueArgs)
+    %       c_profilin   : (double) concentration of profilin 
+    %                   (NameValueArgs)
+    %       kd_PA        : (double) kd for profilin-actin binding
+    %                   (NameValueArgs)
     %       
     %       3 sequence options:
     %           obj = FORMIN(name, opts, 'sequence',seq) construct a formin 
@@ -37,6 +43,9 @@ classdef Formin < handle
         length double % number of amino acids in the FH1
         c_PA double=1 % concentration of profilin-actin | μM
         opts Options % Options object to use
+        c_actin double % (initial) concentraion of actin | μM 
+        c_profilin double % (initial) concentraion of profilin | μM
+        kd_PA double % kd for profilin-actin binding
     end
 
     properties (SetAccess=protected)
@@ -82,6 +91,12 @@ classdef Formin < handle
             %                  if giving length and PRMsize (NameValueArgs)
             %       PRMsize  : (double) number of amino acids in PRM, must be provided
             %                  if giving length and PRMloc (NameValueArgs)
+            %       c_actin  : (double) concentration of actin
+            %                   (NameValueArgs)
+            %       c_profilin: (double) concentration of profilin 
+            %                   (NameValueArgs)
+            %       kd_PA     : (double) kd for profilin-actin binding
+            %                   (NameValueArgs)
             %   
             %   Assigns input values to properties, adds listeners for options, and then runs update_FH1
             %   
@@ -96,13 +111,41 @@ classdef Formin < handle
                 NameValueArgs.length double
                 NameValueArgs.PRMloc double
                 NameValueArgs.PRMsize double
+                NameValueArgs.c_actin double
+                NameValueArgs.c_profilin double
+                NameValueArgs.kd_PA double
                
             end
             if nargin>0
                 obj.name=name;
                 obj.opts=opts;
                 if isfield(NameValueArgs,"c_PA")
-                    obj.c_PA=NameValueArgs.c_PA;
+                    if isfield(NameValueArgs,"c_actin")
+                        error("cannot provide both c_PA and c_actin inputs")
+                    elseif isfield(NameValueArgs,"c_profilin")
+                        error("cannot provide both c_PA and c_profilin inputs")
+                    elseif isfield(NameValueArgs,"kd_PA")
+                        error("cannot provide both c_PA and kd_PA inputs")
+                    else
+                        obj.c_PA=NameValueArgs.c_PA;
+                    end
+                else
+                    if isfield(NameValueArgs,["c_actin","c_profilin","kd_PA"])
+                        obj.c_actin=NameValueArgs.c_actin;
+                        obj.c_profilin=NameValueArgs.c_profilin;
+                        obj.kd_PA=NameValueArgs.kd_PA;
+                        obj.c_PA=calcCPA(obj.c_actin,obj.c_profilin,obj.kd_PA);
+                    else
+                        if isfield(NameValueArgs,"c_actin")
+                            obj.c_actin=NameValueArgs.c_actin;
+                        end
+                        if isfield(NameValueArgs,"c_profilin")
+                            obj.c_profilin=NameValueArgs.c_profilin;
+                        end
+                        if isfield(NameValueArgs,"kd_PA")
+                            obj.kd_PA=NameValueArgs.kd_PA;
+                        end
+                    end
                 end
                 if isfield(NameValueArgs,"gating")
                     obj.gating=NameValueArgs.gating;
@@ -246,6 +289,40 @@ classdef Formin < handle
         function value=get.numPs(obj)
             % calculate the total number of prolines in the FH1
             value=obj.PRMCount * obj.meanPRMsize;
+        end
+
+        function set.c_actin(obj,value)
+            obj.c_actin=value;
+            update_cpa(obj)
+        end
+
+        function set.c_profilin(obj,value)
+            obj.c_profilin=value;
+            update_cpa(obj)
+        end
+
+        function set.kd_PA(obj,value)
+            obj.kd_PA=value;
+            update_cpa(obj)
+        end
+
+        function addPA(obj,c_actin,c_profilin,kd_PA)
+            obj.c_actin=c_actin;
+            obj.c_profilin=c_profilin;
+            obj.kd_PA=kd_PA;
+        end
+
+        function set.c_PA(obj,value)
+            obj.c_PA=value;
+            if ~isempty(obj.c_actin) && ~isempty(obj.c_profilin) && ~isempty(obj.kd_PA)
+                warning("you are overwriting the results of the input c_actin, c_profilin, and kd_PA values; They will no longer reflect the c_PA used in calculations until they are modified again or update_cpa is run")
+            end
+        end
+
+        function update_cpa(obj)
+            if ~isempty(obj.c_actin) && ~isempty(obj.c_profilin) && ~isempty(obj.kd_PA)
+                obj.c_PA=calcCPA(obj.c_actin,obj.c_profilin,obj.kd_PA);
+            end
         end
         
         function add_length(obj,added_length)
@@ -451,6 +528,32 @@ classdef Formin < handle
                 figuresave(gcf,obj.opts,append(obj.name,'.fig'));
             end
 
+        end
+
+        function out=copyformin(obj)
+            %COPYFORMIN create new Formin with the same properties but
+            %not the same object (since this is a handle class)
+            %
+            %   out = FORMIN.COPYFORMIN
+            %
+            % See also FORMIN.
+            if obj.uniprotID~="-1"
+                out=Formin(obj.name,obj.opts,c_PA=obj.c_PA,uniprotID=obj.uniprotID);
+            elseif obj.sequence~="-1"
+                out=Formin(obj.name,obj.opts,c_PA=obj.c_PA,sequence=obj.sequence);
+            else
+                out=Formin(obj.name,obj.opts);
+            end
+            out.c_actin=obj.c_actin;
+            out.c_profilin=obj.c_profilin;
+            out.kd_PA=obj.kd_PA;
+            if ~isempty(obj.c_actin) && ~isempty(obj.c_profilin) && ~isempty(obj.kd_PA)
+                        out.c_PA=calcCPA(obj.c_actin,obj.c_profilin,obj.kd_PA);
+            end
+            out.gating=obj.gating;
+            out.c_PA=obj.c_PA;
+            out.opts_over=obj.opts_over;
+            out.update_FH1;
         end
     end
 

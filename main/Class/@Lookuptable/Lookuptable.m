@@ -413,7 +413,9 @@ classdef Lookuptable <handle
             end
             function out= getratio(input)
                 % compute element by element ratio dimer/double
-                if class(input.dimer)=="struct"
+                if isempty(input.dimer)
+                    out=[];
+                elseif class(input.dimer)=="struct"
                     fieldsdimer=fieldnames(input.dimer);
                     fieldsdouble=fieldnames(input.double);
                     fields=intersect(fieldsdimer,fieldsdouble);

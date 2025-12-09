@@ -1,4 +1,4 @@
-function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,KSCRITICAL,nondim,prcalc)
+function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,KSCRITICAL,nondim,prcalc, prfit, xloc, yloc, titleadd,fitrexp)
 %MCMCPARAMFIT run an MCMC metropolis algorithm to explore parameter space,
 %using an adaptive step size, KS test for convergence, and a loglikelihood
 %function based on the sum of squared errors.
@@ -15,13 +15,24 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
 %       errtype   : how to integrate error into the loglikelihood function
 %               1 - use separate sigma values (fit params) for each group
 %               2 - divide each value by the SEM
+%               3 - use RMSE, which each residual divided by SEM before
+%               being squared
 %       matfileTF : whether to save to a matfile or to keep things in memory (default is false)
 %       NTCHECK   : Iterations to run before checking KS, triples each time (default is 3000)
 %       NTADAPT   : iterations to go in between modifying step size (before reaching the fitst NTCHECK) (defalt is 100)
 %       NTMAX     : maximum number of iterations (defalt is 10^7)
 %       KSCRITICAL: critical value for stopping criteria (stops when KS < KSCRITICAL) (defalt is 0.02)
 %       nondim    : whether to use nondimensionality (default is false)
-%       prcalc    : whether to use the equations for probability density, if not, then use values from the lookuptables (default is true)
+%       prcalc    : whether to use the equations for probability density, if not, then use values from the lookuptables (default is false)
+%       prfit     : wether or not to consider x and y delivery location as
+%                   a fit parameter (default is false)
+%       xloc      : x location for delivery site (default is 0), only used
+%                   if prfit is false
+%       yloc      : y location for delivery site (default is 0), only used
+%                   if prfit is false
+%       titleadd  : (string) additonal text to add to the save folder name
+%       fitrexp   : (bool) weather or not to fit the rcap exp parameter
+%       (default is true)
 %        
 %   Creates a folder opts.resultsdir/opts.resultsfolder and saves
 %   mcmc_results.mat there in addition to creating a subfolder "Figures"
@@ -39,24 +50,59 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         Exp
         exptype % 1= is an experiment, 2= is a struct with rates, data, and resultsfolder and resultsdir, and fh1sizes and prmlocs
         type
-        errtype % 1= use separate sigma values, 2= divide each by SEM
+        errtype % 1= use separate sigma values, 2= divide each by SEM, 3= rmse individually weighted
         matfileTF=0 % whether to save to a matfile or to keep things in memory
         NTCHECK = 3000
         NTADAPT =100
-        NTMAX =10^7
+        NTMAX =3*10^8 %10^7
         KSCRITICAL =0.02
         nondim= 0 % whether to use nondimensionality
-        prcalc= 1
+        prcalc= 0
+        prfit = 0
+        xloc = 0
+        yloc = 0
+        titleadd = "BNI1fit"
+        fitrexp = 1
     end
 
     
     NBINS = 200;
-    PARAMMAX = 20; % in log-space
-    PARAMMIN = -10; % in log-space
+
+    if nondim
+        PARAMMAX = 20; % in log-space
+        PARAMMIN = -100; % in log-space
+
+        KCAPMAX = 20; % in log-space
+        KCAPMIN = -20; % in log-space
+
+        KDELMAX = 15; % in log-space
+        KDELMIN = -100; % in log-space
+
+        RCAPMAX = 20; % in log-space
+        RCAPMIN = -20; % in log-space
+    else
+        PARAMMAX = 20; % in log-space
+        PARAMMIN = -10; % in log-space
+
+        KCAPMAX = 5; % in log-space
+        KCAPMIN = -5; % in log-space
+
+        KDELMAX = 1; % in log-space
+        KDELMIN = -6; % in log-space
+
+        RCAPMAX = 20; % in log-space
+        RCAPMIN = 2; % in log-space
+    end
+    
+    
+    
     SIGMAMAX = 2; % in log-space
     SIGMAMIN = -2; % in log-space
-    EXPMIN = 0.1; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
-    EXPMAX = 10; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
+    
+    EXPMIN = 0.01; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
+    EXPMAX = 4; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
+    
+    
     XLOCMAX= 35.5;
     XLOCMIN= 0;
     YLOCMAX= 20;
@@ -93,6 +139,34 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         error("invalid exptype")
     end
 
+    if prcalc
+        if prfit
+            
+        else
+            x1= xloc;
+            y1= yloc;
+
+            prdobs=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x1,y1,"double",1),prmlocs,fh1lengths,'UniformOutput',false);
+            prdims=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x1,y1 ...
+                ,"dimer",1),prmlocs,fh1lengths,'UniformOutput',false);
+            for i=1:length(rates.k_delbase)
+                prdob=prdobs{i};
+                prdim=prdims{i};
+                vals=rates.k_delbase{i};
+                for j=1:size(vals,1)
+                    vals(j,1)=vals(j,1)*prdob(j);
+                    vals(j,2)=vals(j,2)*prdob(j);
+                    vals(j,3)=vals(j,3)*prdob(j);
+                    vals(j,4)=vals(j,4)*prdim(j);
+                    vals(j,5)=vals(j,5)*prdim(j);
+                end
+                rates.k_delbase{i}=vals;
+            end
+        end
+    end
+
+    opts.resultsfolder=strcat(opts.resultsfolder,"_",type,"_nondim",num2str(nondim),"_prcalc",num2str(prcalc),"_prfit",num2str(prfit),"_errtype",num2str(errtype),"_fitrexp",num2str(fitrexp),"_",titleadd);
+
     data=struct2table(datatab);
     divdatapoint=0;
     if nondim
@@ -125,6 +199,8 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         nsigma=length(unique(data.type));
     elseif errtype==2
         nsigma=1;
+    elseif errtype==3
+        nsigma=0;
     else
         error("invalid error type")
     end
@@ -141,7 +217,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
             nkpolyparams=6;
         end
     end
-    if prcalc
+    if prfit
         nkpolyparams=nkpolyparams+2;
     end
     nparams=nkpolyparams+nsigma;
@@ -157,14 +233,21 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
     dx(1:3)=[0.1,0.1,0.1];
     if nondim
         params(1)=randi([11 14],1,1); % alpha_del initial
+        %params(1)=-3.1919;
         params(2)=-rand; % beta_cap initial
-        params(3)=1; %rcap exp initial
+        %params(2)=5.517;
+        params(3)=0.86; %rcap exp initial
+        %params(3)=2.0448;
+        rexpind=3;
         dx(3)=1;
     else
-        params(1)=randi([11 14],1,1); % kcap initial
-        params(2)=-rand; % kdel initial
-        params(3)=randi([13 15],1,1); %rcap initial
-        params(4)=1; %rcap exp initial
+        %params(1)=randi([11 14],1,1); % kcap initial
+        params(1)=2;
+        params(2)=-4; % kdel initial
+        %params(3)=randi([13 14],1,1); %rcap initial
+        params(3)=10;
+        params(4)=0.86; %rcap exp initial
+        rexpind=4;
         dx(4)=1;
     end
     if type=="4st"
@@ -179,7 +262,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         end
     end
 
-    if prcalc
+    if prfit
         params(nkpolyparams-1:nkpolyparams)=0; %initial delivery location
     end
 
@@ -226,7 +309,40 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
     currentntcheck=NTCHECK;
     paramHistCounts = zeros(nparams,NBINS);
     paramHistCountsPrevious = zeros(nparams,NBINS);
-    [logll_nt,divvalue]=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype,nondim,divdatapoint,prcalc,prmlocs,fh1lengths);
+
+    if nondim
+        data_clean = data;
+        data_clean(divdatapoint,:) = [];
+        data_clean.numtype=zeros(height(data_clean), 1);
+
+        for n=1:length(data_clean.ratiovalues)
+            if data_clean.type(n)=="double"
+                data_clean.numtype(n)=1;
+            elseif data_clean.type(n)=="dimer"
+                data_clean.numtype(n)=2;
+            elseif data_clean.type(n)=="single"
+                data_clean.numtype(n)=4;
+            elseif data_clean.type(n)=="ratio"
+                data_clean.numtype(n)=3;
+            end
+        end
+    else
+        data_clean = data; % same table, no row removed
+        data_clean.numtype=zeros(height(data_clean), 1);
+        for n=1:length(data_clean.value)
+            if data_clean.type(n)=="double"
+                data_clean.numtype(n)=1;
+            elseif data_clean.type(n)=="dimer"
+                data_clean.numtype(n)=2;
+            elseif data_clean.type(n)=="single"
+                data_clean.numtype(n)=4;
+            elseif data_clean.type(n)=="ratio"
+                data_clean.numtype(n)=3;
+            end
+        end
+    end
+
+    [logll_nt,divvalue]=loglikelihood(type,data_clean,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype,nondim,divdatapoint,prfit,prmlocs,fh1lengths, prcalc, xloc, yloc);
     minlogll=logll_nt;
     
     disp("starting MCMC loop")
@@ -278,18 +394,21 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         proposals(index)=proposals(index)+1;
         proposals_temp(index)=proposals_temp(index)+1;
 
-        if (prcalc && index==(nkpolyparams) && (proposal(index)>YLOCMAX || proposal(index)<YLOCMIN))... % del location thresholds
-                || (prcalc && index==(nkpolyparams-1) && (proposal(index)>XLOCMAX || proposal(index)<XLOCMIN))... %del location thresholds
-                || (index~=(4-nondim) && proposal(index)<PARAMMIN && index<=(nkpolyparams-prcalc-prcalc)) ...% regular param thresholds
-                || (index~=(4-nondim) && proposal(index)>PARAMMAX && index<=(nkpolyparams-prcalc-prcalc)) ... % regular param thresholds
+        if (prfit && index==(nkpolyparams) && (proposal(index)>YLOCMAX || proposal(index)<YLOCMIN))... % del location thresholds
+                || (prfit && index==(nkpolyparams-1) && (proposal(index)>XLOCMAX || proposal(index)<XLOCMIN))... %del location thresholds
+                || (index~=(4-nondim) && proposal(index)<PARAMMIN && index<=(nkpolyparams-prfit-prfit)) ...% regular param thresholds
+                || (index~=(4-nondim) && proposal(index)>PARAMMAX && index<=(nkpolyparams-prfit-prfit)) ... % regular param thresholds
                 || (index>nkpolyparams && (proposal(index)>SIGMAMAX || proposal(index)<SIGMAMIN)) ... % sigma thresholds
+                || (index==(1-nondim) && (proposal(index)>KCAPMAX || proposal(index)<KCAPMIN))... % kcap threshold
+                || (index==(2-nondim) && (proposal(index)>KDELMAX || proposal(index)<KDELMIN))... % kdel/acap threshold
+                || (index==(3-nondim) && (proposal(index)>RCAPMAX || proposal(index)<RCAPMIN))... % rcap/bcap threshold
                 || (index==(4-nondim) && (proposal(index)>EXPMAX || proposal(index)<EXPMIN)) % rcap exponent threshold
             
             % reject anything beyond the boundaries
             params_temp(nt_temp,:)=params;
         else
             %calculate logll of proposal
-            [logll_prop,divvalue]=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype,nondim,divdatapoint,prcalc,prmlocs,fh1lengths);
+            [logll_prop,divvalue]=loglikelihood(type,data_clean,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype,nondim,divdatapoint,prfit,prmlocs,fh1lengths, prcalc, xloc, yloc);
             % trueparams=gettrueparams(proposal,divvalue,divkpoly,nkpolyparams);
             % exptrueparams=10.^(trueparams);
             % exptrueparams(4)=trueparams(4);
@@ -309,7 +428,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
                 if logll_nt>minlogll
                     minlogll=logll_nt;
                     if nondim
-                        minlogll_params=gettrueparams(params,divvalue,divkpoly,nkpolyparams,prcalc);
+                        minlogll_params=gettrueparams(params,divvalue,divkpoly,nkpolyparams,prfit);
                         minlogll_params_raw=params;
                     else
                         minlogll_params=params;
@@ -390,7 +509,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
                 m.paccept_matrix(ntcheck_count,1)=nt;
                 m.paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
             else
-                logparams_all(last_nt+1:nt,:)=params_temp(1:nt_temp,:);;
+                logparams_all(last_nt+1:nt,:)=params_temp(1:nt_temp,:);
                 paccept_matrix(ntcheck_count,1)=nt;
                 paccept_matrix(ntcheck_count,2:end)=[accepts_temp./proposals_temp]';
             end
@@ -481,12 +600,17 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
                     m.paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
                 else
                     parameters_all=logparams_all(currentntcheck:3*currentntcheck,:);
+                    containsInf = any(isinf(parameters_all), 1).';
                     paramHistCounts_matrices(:,:,HistCountIndex:end)=[];
                     paramHistCounts_matrices_nts(HistCountIndex:end,:)=[];
                     save(wkspc)
                     disp("saved workspace to .mat")
+                    [logparams_all_trun, corruptindex, containsInf, updatedone] = updateMCMCoutput_internal();
+                    save(wkspc)
+                    disp("saved workspace to .mat")
                 end
                 visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
+                makeMCMCpreds(fullfile(opts.resultsdir,opts.resultsfolder))
                 return
             else
                 disp(ksStatistic)
@@ -517,11 +641,20 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         parameters_all=0;
         save(wkspc)
         disp("saved workspace to .mat")
+        [logparams_all_trun, corruptindex, containsInf, updatedone] = updateMCMCoutput_internal();
+        save(wkspc)
+        disp("saved workspace to .mat")
     end
     visualizePosteriors(fullfile(opts.resultsdir,opts.resultsfolder),1)
+    makeMCMCpreds(fullfile(opts.resultsdir,opts.resultsfolder))
 
     function [proposals,i]=generateproposal(params,dx)
         i=randi([1 length(params)]);
+        if ~fitrexp
+            while i==rexpind
+                i=randi([1 length(params)]);
+            end
+        end
         proposals=params;
         step=dx(i)*(2*rand-1);
         if step>0
@@ -547,10 +680,162 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         pause(20)
     end
 
+function [logparams_all_trun, corruptindex, containsInf1, updatedone] = updateMCMCoutput_internal()
+    %modifies variables in workspace remove empty elements arising from preallocation as well as
+    %convert things into non log scale if needed
+    mem=15.5;
+
+    paccept_matrix( ~any(paccept_matrix,2),:) = [];
+    disp("shortened paccept_matrix")
+
+    ksvals( ~any(ksvals,2),:) = [];
+    disp("shortened ksvals")
+    
+    paramHistCounts_matrices_nts( ~any(paramHistCounts_matrices_nts,2)) = [];
+    disp("shortened paramHistCounts_matrices_nts")
+    paramHistCounts_matrices=paramHistCounts_matrices(:,:,1:length(paramHistCounts_matrices_nts));
+    disp("shortened paramHistCounts_matrices")
+
+    [nrows,ncols]=size(logparams_all);
+    
+    maxrow=nt;
+    if all(logparams_all(maxrow,:)==0)
+       maxrow=maxrow-1;
+       while maxrow>0 && all(logparams_all(maxrow,:)==0)
+           maxrow=maxrow-1;
+       end
+    else
+       maxrow=maxrow+1;
+       len=size(logparams_all,1);
+       while maxrow<=len && ~all(logparams_all(maxrow,:)==0)
+           maxrow=maxrow+1;
+       end
+       maxrow=maxrow-1;
+    end
+    disp("found maxrow")
+
+    logparams_all_trun(maxrow,ncols)=0;
+
+    corruptindex=[];
+    i=1;
+
+    STEP=uint64(mem*(1024^3)/(ncols*8));
+    disp("starting truncation")
+    while i+STEP<=maxrow
+        try
+            logparams_all_trun(i:i+STEP,:)=logparams_all(i:i+STEP,:);
+        catch
+            disp("unable to load so trying to loop through each")
+            for j=i:uint64(i+STEP)
+                try
+                    logparams_all_trun(j,:)=logparams_all(j,:);
+                catch
+                    logparams_all_trun(j,:)=NaN;
+                    corruptindex=[corruptindex; j];
+                end
+            end
+        end
+        i=i+STEP+1;
+        disp(i)
+    end
+    disp("finished initial loop")
+    ind=i:maxrow;
+    try
+        logparams_all_trun(ind,:)=logparams_all(ind,:);
+    catch
+        for j=ind
+            
+            try
+                logparams_all_trun(j,:)=logparams_all(j,:);
+            catch
+                logparams_all_trun(j,:)=NaN;
+                corruptindex=[corruptindex; j];
+            end
+        end
+    end
+
+    disp("logparams_all_trun successfully made")
+
+    
+    if length(parameters_all)==1
+        memarraysize=16*(1024^3)/(2*8); %limit to the largest possible in memory array size for 2 rows (so hist3 works)
+        thirdarraysize=ceil(maxrow/3)*2;
+        if memarraysize>thirdarraysize
+            maxarraysize=thirdarraysize;
+        else
+            maxarraysize=memarraysize;
+        end
+        if maxarraysize<STEP
+            parameters_all=logparams_all_trun(maxrow-maxarraysize+1:maxrow,:);
+            containsInf1=zeros(nparams,1);
+            len=size(parameters_all,1);
+            for i=1:nparams
+                if max(parameters_all(1:len,i))==Inf || min(parameters_all(1:len,i))==-Inf
+                    containsInf1(i,1)=1;
+                end
+            end
+            disp("made containsInf")
+        else
+            disp("unable to do 1/3, so trying based on size")
+            nparams=nparams;
+            containsInf1=zeros(nparams,1);
+            parameters_all(maxarraysize,ncols)=0;
+            minrow=uint64(maxrow-maxarraysize+1);
+            %disp("starting loops to save parameters_all")
+            i=1;
+            while i+STEP<=maxarraysize
+                disp(i)
+                lowerbound=uint64(minrow+i-1);
+                %disp(lowerbound)
+                upperbound=uint64(minrow+STEP+i-1);
+                %disp(upperbound)
+                x=logparams_all_trun(lowerbound:upperbound,:);
+                parameters_all(i:uint64(i+STEP),:)=x;
+                for j=1:nparams
+                    if containsInf1(j,1) || max(x(:,j))==Inf || min(x(:,j))==-Inf
+                        containsInf1(j,1)=1;
+                    end
+                    disp("made containsInf")
+                end
+                i=i+STEP+1;
+            end
+            x=logparams_all_trun(minrow+i-1:maxrow,:);
+            parameters_all(i:maxarraysize,:)=x;
+            for j=1:nparams
+                if containsInf1(j,1) || max(x(:,j))==Inf || min(x(:,j))==-Inf
+                    containsInf1(j,1)=1;
+                end
+                %disp("made containsInf")
+            end
+            clear x
+        end
+    else
+        if isempty(who('containsInf'))
+            containsInf1=zeros(nparams,1);
+            len=size(m,'parameters_all',1);
+            for i=1:nparams
+                if max(parameters_all(1:len,i))==Inf || min(parameters_all(1:len,i))==-Inf
+                    containsInf1(i,1)=1;
+                end
+            end
+            disp("made containsInf")
+        else
+            containsInf1=containsInf;
+        end
+    end
+    disp("made parameters_all")
+
+    logparams_all=[];
+    disp("removed logparams_all")
+
+    updatedone=1;
+end
+
 end
 
 
-function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,nondim,divdatapoint,prcalc,prmlocs,fh1lengths)
+
+function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,nondim,divdatapoint,prfit,prmlocs,fh1lengths, prcalc, xloc, yloc)
     % calulcates log likelihood values for input parameters
 
     % SSE=sum((1.5-params).^2);
@@ -569,17 +854,17 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
     end
 
     % have all but delivery location be in log space
-    if prcalc
+    if prfit
         inputparams(end-1:end)=params(end-1:end);
     end
     
-    kpolys=calckpolys(type,rates,inputparams,nondim,prcalc,prmlocs,fh1lengths);
+    kpolys=calckpolys(type,rates,inputparams,nondim,prfit,prmlocs,fh1lengths, prcalc, xloc, yloc);
 
     sigma=10.^sigma;
     
     if nondim
         divvalue=kpolys{divdatapoint}(1,2);
-        data(divdatapoint,:)=[];
+        %data(divdatapoint,:)=[];
         kpolys(divdatapoint)=[];
         expdata=data.ratiovalues;
     else
@@ -589,25 +874,25 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
 
     simdata=zeros(size(expdata));
     for i=1:length(expdata)
-        if data.type(i)=="ratio"
+        if data.numtype(i)==3
             simdata(i)=kpolys{i}(1,3)/kpolys{i}(1,2);
         elseif nondim
-            if data.type(i)=="double"
+            if data.numtype(i)==1
                 simdata(i)=kpolys{i}(1,2);
-            elseif data.type(i)=="dimer"
+            elseif data.numtype(i)==2
                 simdata(i)=kpolys{i}(1,3);
-            elseif data.type(i)=="single"
+            elseif data.numtype(i)==4
                 simdata(i)=kpolys{i}(1,1);
             else
                 error('Error. \nNo valid experimental data type.')
             end
             simdata(i)=simdata(i)/divvalue;
         else
-            if data.type(i)=="double"
+            if data.numtype(i)==1
                 simdata(i)=kpolys{i}(1,2);
-            elseif data.type(i)=="dimer"
+            elseif data.numtype(i)==2
                 simdata(i)=kpolys{i}(1,3);
-            elseif data.type(i)=="single"
+            elseif data.numtype(i)==4
                 simdata(i)=kpolys{i}(1,1);
             else
                 error('Error. \nNo valid experimental data type.')
@@ -635,57 +920,129 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
             logll_i=(-SSE/(2*sigma2))-(0.5*log(2*pi*sigma2));
             logll=logll+logll_i;
         end
+    elseif errtype==3
+        vals=zeros(1,length(expdata));
+        for i=1:length(expdata)
+            SEM=(data.errtop(i)+data.errbot(i))/2;
+            vals(1,i)=abs(expdata(i)-simdata(i))/SEM;
+        end
+        logll=-(rms(vals))^2;
     else
         error("invalid error type")
     end
 end
 
-function kpolys=calckpolys(type,rates,params,nondim,prcalc,prmlocs,fh1lengths)
+function kpolys=calckpolys(type,rates,params,nondim,prfit,prmlocs,fh1lengths, prcalc, xloc, yloc)
     % calulcates kpolys for input parameters
     if prcalc
-        x=params(end-1);
-        y=params(end);
-        prdobs=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x,y,"double"),prmlocs,fh1lengths,'UniformOutput',false);
-        prdims=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x,y,"dimer"),prmlocs,fh1lengths,'UniformOutput',false);
-        for i=1:length(rates.k_delbase)
-            prdob=prdobs{i};
-            prdim=prdims{i};
-            vals=rates.k_delbase{i};
-            for j=1:size(vals,1)
-                vals(j,1)=vals(j,1)*prdob(j);
-                vals(j,2)=vals(j,2)*prdob(j);
-                vals(j,3)=vals(j,3)*prdob(j);
-                vals(j,4)=vals(j,4)*prdim(j);
-                vals(j,5)=vals(j,5)*prdim(j);
+        if prfit
+            x=params(end-1);
+            y=params(end);
+
+            prdobs=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x,y,"double",1),prmlocs,fh1lengths,'UniformOutput',false);
+            prdims=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x,y,"dimer",1),prmlocs,fh1lengths,'UniformOutput',false);
+            for i=1:length(rates.k_delbase)
+                prdob=prdobs{i};
+                prdim=prdims{i};
+                vals=rates.k_delbase{i};
+                for j=1:size(vals,1)
+                    vals(j,1)=vals(j,1)*prdob(j);
+                    vals(j,2)=vals(j,2)*prdob(j);
+                    vals(j,3)=vals(j,3)*prdob(j);
+                    vals(j,4)=vals(j,4)*prdim(j);
+                    vals(j,5)=vals(j,5)*prdim(j);
+                end
+                rates.k_delbase{i}=vals;
             end
-            rates.k_delbase{i}=vals;
         end
     end
 
     % calculate per PRM rates
     if nondim
         % params = alpha_del, deta_cap, rcapp_exp, (gamma_del, tau_rel)
-        kcaps=cellfun(@(x) x, rates.k_capbase,'UniformOutput',false); 
-        kdels=cellfun(@(x) x.*params(1), rates.k_delbase,'UniformOutput',false); 
-        rcaps=cellfun(@(x) ((x).^params(3)).*params(2), rates.r_capbase,'UniformOutput',false); 
+        %kcaps=cellfun(@(x) x, rates.k_capbase,'UniformOutput',false); 
+        kcaps = cell(size(rates.k_capbase));
+        for i = 1:numel(rates.k_capbase)
+            kcaps{i} = rates.k_capbase{i};
+        end
+
+        %kdels=cellfun(@(x) x.*params(1), rates.k_delbase,'UniformOutput',false); 
+        kdels = cell(size(rates.k_delbase));
+        for i = 1:numel(rates.k_delbase)
+            kdels{i} = rates.k_delbase{i} .* params(1);
+        end
+
+        %rcaps=cellfun(@(x) ((x).^params(3)).*params(2), rates.r_capbase,'UniformOutput',false); 
+        rcaps= cell(size(rates.r_capbase));
+        for i = 1:numel(rates.r_capbase)
+            rcaps{i} = ((rates.r_capbase{i}).^params(3)).*params(2);
+        end
     else
-        kcaps=cellfun(@(x) x.*params(1), rates.k_capbase,'UniformOutput',false);
-        kdels=cellfun(@(x) x.*params(2), rates.k_delbase,'UniformOutput',false);
-        rcaps=cellfun(@(x) ((x).^params(4)).*params(3), rates.r_capbase,'UniformOutput',false);
+        %kcaps=cellfun(@(x) x.*params(1), rates.k_capbase,'UniformOutput',false);
+        kcaps = cell(size(rates.k_capbase));
+        for i = 1:numel(rates.k_capbase)
+            kcaps{i} = rates.k_capbase{i} .* params(1);
+        end
+
+        %kdels=cellfun(@(x) x.*params(2), rates.k_delbase,'UniformOutput',false);
+        kdels = cell(size(rates.k_delbase));
+        for i = 1:numel(rates.k_delbase)
+            kdels{i} = rates.k_delbase{i} .* params(2);
+        end
+
+        %rcaps=cellfun(@(x) ((x).^params(4)).*params(3), rates.r_capbase,'UniformOutput',false);
+        rcaps= cell(size(rates.r_capbase));
+        for i = 1:numel(rates.r_capbase)
+            rcaps{i} = ((rates.r_capbase{i}).^params(4)).*params(3);
+        end
     end
     if type=="4st"
         if nondim
-            rdels=cellfun(@(x) x.*params(4), rates.r_delbase,'UniformOutput',false);
-            krels=cellfun(@(x) x.*params(5), rates.k_relbase,'UniformOutput',false);
+            %rdels=cellfun(@(x) x.*params(4), rates.r_delbase,'UniformOutput',false);
+            rdels = cell(size(rates.r_delbase));
+            for i = 1:numel(rates.r_delbase)
+                rdels{i} = rates.r_delbase{i} .* params(4);
+            end
+
+            %krels=cellfun(@(x) x.*params(5), rates.k_relbase,'UniformOutput',false);
+            krels = cell(size(rates.k_relbase));
+            for i = 1:numel(rates.k_relbase)
+                krels{i} = rates.k_relbase{i} .* params(5);
+            end
         else
-            rdels=cellfun(@(x) x.*params(5), rates.r_delbase,'UniformOutput',false);
-            krels=cellfun(@(x) x.*params(6), rates.k_relbase,'UniformOutput',false);
+            %rdels=cellfun(@(x) x.*params(5), rates.r_delbase,'UniformOutput',false);
+            rdels = cell(size(rates.r_delbase));
+            for i = 1:numel(rates.r_delbase)
+                kdels{i} = rates.r_delbase{i} .* params(5);
+            end
+
+            %krels=cellfun(@(x) x.*params(6), rates.k_relbase,'UniformOutput',false);
+            krels = cell(size(rates.k_relbase));
+            for i = 1:numel(rates.k_relbase)
+                krels{i} = rates.k_relbase{i} .* params(6);
+            end
         end
-        kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./krel) + ((rdel + krel)./(kdel .* krel)) + (((rcap .* rdel) + (rcap .* krel) + (kdel .* krel))./(kcap .* kdel .* krel))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+        %kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./krel) + ((rdel + krel)./(kdel .* krel)) + (((rcap .* rdel) + (rcap .* krel) + (kdel .* krel))./(kcap .* kdel .* krel))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+        kpolys = cell(size(kcaps));
+        for i = 1:numel(kcaps)
+            kcap = kcaps{i};
+            kdel = kdels{i};
+            rcap = rcaps{i};
+            rdel = rdels{i};
+            krel = krels{i};
+            kpolys{i} = 1./((1./krel) + ((rdel + krel)./(kdel .* krel)) + (((rcap .* rdel) + (rcap .* krel) + (kdel .* krel))./(kcap .* kdel .* krel)));
+        end
     elseif type=="3st"
-        rdels=kcaps;
-        krels=kcaps;
-        kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./kdel) + ((kdel + rcap)./(kdel.*kcap))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+        % rdels=kcaps;
+        % krels=kcaps;
+        %kpolys=cellfun(@(kcap,kdel,rcap) 1./((1./kdel) + ((kdel + rcap)./(kdel.*kcap))),kcaps,kdels,rcaps,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+        kpolys = cell(size(kcaps));
+        for i = 1:numel(kcaps)
+            kcap = kcaps{i};
+            kdel = kdels{i};
+            rcap = rcaps{i};
+            kpolys{i} = 1 ./ ((1 ./ kdel) + ((kdel + rcap) ./ (kdel .* kcap)));
+        end
     end
     
 
@@ -695,12 +1052,12 @@ function kpolys=calckpolys(type,rates,params,nondim,prcalc,prmlocs,fh1lengths)
     end
 end
 
-function trueparams=gettrueparams(params,alphakp,kp,nparams,prcalc)
+function trueparams=gettrueparams(params,alphakp,kp,nparams,prfit)
     %must be 3 state method
     kcap=kp/alphakp;
     trueparams=log10((10.^params)*kcap);
     trueparams(3)=params(3); %rcap_exp
-    if prcalc
+    if prfit
         trueparams(nparams-1:nparams)=params(nparams-1:nparams); %delivery locations
     end
 

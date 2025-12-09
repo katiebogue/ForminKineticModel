@@ -17,11 +17,11 @@ ltfile="prvec_runs_lookup.mat"; % output file from polymer-c; must be on matlab 
 pythonpath="/Users/katiebogue/MATLAB/GitHub/ForminKineticModel/main/python"; % path to python files
 resultsloc="/Users/katiebogue/MATLAB/GitHub/Data/ForminKineticmodel_data/Results"; % path to location to save results
 %resultsloc="/Users/katiebogue/MATLAB/GitHub/kpolyMCMC";
-forminfile="Experimental constructs.txt"; % file containing sequences
+%forminfile="Experimental constructs.txt"; % file containing sequences
 %forminfile="Quinlan_FHODB variations.txt"; % file containing sequences
-%forminfile="BNI1 FHOD CAPU.txt";
+forminfile="BNI1 FHOD CAPU.txt";
 
-addlt2=false;
+addlt2=true;
 %ltfile2="basesep_35.5_output.mat"; % need to use base sep 35.5 runs for capu and fhod dimer
 ltfile2="dimerdisttest.mat"; % test with larger dimerdist runs for capu and fhod dimer
 
@@ -33,8 +33,8 @@ lt=(load(ltfile,'lookuptable').lookuptable);
 lt=Lookuptable(lt);
 if addlt2
     lt2=(load(ltfile2,'lookuptable').lookuptable);
-    %lt.addN(lt2.dimer.N123);
-    lt.addN(lt2.dimer.N255);
+    lt.addN(lt2.dimer.N123);
+    %lt.addN(lt2.dimer.N255);
 end
 
 %% create options object

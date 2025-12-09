@@ -1,8 +1,9 @@
-function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initialguess,exptype,type,errtype, inputtype, nondim, NTCHECK,NTADAPT,NTMAX,KSCRITICAL)
+function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initialguess,exptype,type,errtype, inputtype, nondim, NTCHECK,NTADAPT,NTMAX,KSCRITICAL,prcalc, xloc, yloc, titleadd,fitrexp,NTDadjust,fig4pen, fig3pen)
 %SIMULATEANNEAL run simulated annealing algorithm to find best fit parameters,
 %using an adaptive step size, KS test for convergence, and a cosine annealing temperature function.
 %
-%   [minlogll_params, minlogll_params_raw,fitTF] = SIMULATEANNEAL(Exp,initialguess,exptype,type,errtype, inputtype, nondim, NTCHECK,NTADAPT,NTMAX,KSCRITICAL) 
+%   [minlogll_params, minlogll_params_raw,fitTF] =
+%   SIMULATEANNEAL(Exp,initialguess,exptype,type,errtype, inputtype, nondim, NTCHECK,NTADAPT,NTMAX,KSCRITICAL,prcalc, xloc, yloc, titleadd,fitrexp)
 %
 %   Inputs:
 %       Exp       : Either an Experiment object or a struct (see below),
@@ -23,6 +24,18 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
 %       NTADAPT   : iterations to go in between modifying step size (before reaching the fitst NTCHECK) (defalt is 100)
 %       NTMAX     : maximum number of iterations (defalt is 10^6)
 %       KSCRITICAL: critical value for stopping criteria (stops when KS < KSCRITICAL) (defalt is 0.01)
+%       prcalc    : whether to use the equations for probability density, if not, then use values from the lookuptables (default is false)
+%       xloc      : x location for delivery site (default is 0)
+%       yloc      : y location for delivery site (default is 0)
+%       titleadd  : (string) additonal text to add to the save folder name
+%       fitrexp   : (bool) weather or not to fit the rcap exp parameter
+%       (default is true)
+%       NTDadjust : how much to adjust loss function for NTD data (default
+%       is 100)
+%       fig4pen   : whether or not to add extra penatly for figure 4a
+%       (default is false)
+%       fig3pen   : whether or not to add extra penatly for figure 3
+%       (default is false)
 %       
 %   Outputs:
 %       minlogll_params     : the best fit parameters, nondimensionalized
@@ -50,41 +63,81 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
         inputtype % 1= nondimensionalize params, 2= regular params
         nondim= 1 % whether to use nondimensionality
         NTCHECK = 1000
-        NTADAPT =100
+        NTADAPT =200
         NTMAX =10^6
         KSCRITICAL =0.01
+        prcalc= 1
+        xloc = 6.1839697;
+        %xloc = 0;
+        %yloc = 0;
+        yloc = 12.5771768;
+        titleadd = ""
+        fitrexp = 0
+        NTDadjust = 100; % how much to adjust loss function for NTD data
+        fig4pen=0
+        fig3pen=0
     end
 
     
     NBINS = 200;
-    PARAMMAX = 30; % in log-space
+    PARAMMAX = 20; % in log-space
     PARAMMIN = -10; % in log-space
     SIGMAMAX = 2; % in log-space
     SIGMAMIN = -2; % in log-space
-    EXPMIN = 0.1; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
-    EXPMAX = 2; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
+    EXPMIN = 0.8; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
+    EXPMAX = 0.9; % non log-space, applies to the 4th parameter (or 3rd if nondimensional)
 
 
     % set up place to store data
     if exptype==1
         opts=Exp.opts;
+        if prcalc
+            opts.set_equation(2);
+        end
         out_struct=readinExp(Exp);
+        opts.set_equation(1);
         rates=out_struct.rates;
         datatab=out_struct.data;
         opts.update_results_folder
         opts.resultsfolder=strcat("MCMC_",opts.resultsfolder);
+        fh1lengths=out_struct.fh1sizes;
+        prmlocs=out_struct.prmlocs;
         clear Exp
         %disp("Read in information from Experiment object")
     elseif exptype==2
-        opts.resultsdir=Exp.resultsdir;
-        opts.resultsfolder=strcat("MCMC_",Exp.resultsfolder);
         rates=Exp.rates;
         datatab=Exp.data;
+        fh1lengths=Exp.fh1sizes;
+        prmlocs=Exp.prmlocs;
         clear Exp
         disp("Loaded in pre-determined rates, data, and opts")
     else
         error("invalid exptype")
     end
+
+    if prcalc
+        x1= xloc;
+        y1= yloc;
+
+        prdobs=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x1,y1,"double",1),prmlocs,fh1lengths,'UniformOutput',false);
+        prdims=cellfun(@(n1,fh1length) pr(n1,fh1length,35.5,1,x1,y1 ...
+            ,"dimer",1),prmlocs,fh1lengths,'UniformOutput',false);
+        for i=1:length(rates.k_delbase)
+            prdob=prdobs{i};
+            prdim=prdims{i};
+            vals=rates.k_delbase{i};
+            for j=1:size(vals,1)
+                vals(j,1)=vals(j,1)*prdob(j);
+                vals(j,2)=vals(j,2)*prdob(j);
+                vals(j,3)=vals(j,3)*prdob(j);
+                vals(j,4)=vals(j,4)*prdim(j);
+                vals(j,5)=vals(j,5)*prdim(j);
+            end
+            rates.k_delbase{i}=vals;
+        end
+    end
+
+    %opts.resultsfolder=strcat(opts.resultsfolder,"_",type,"_nondim",num2str(nondim),"_prcalc",num2str(prcalc),"_errtype",num2str(errtype),"_fitrexp",num2str(fitrexp),"_",titleadd);
 
     data=struct2table(datatab);
     divdatapoint=0;
@@ -155,8 +208,12 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
     dx(1:3)=[0.1,0.1,0.1];
     if nondim
         dx(3)=1;
+        
+        rexpind=3;
     else
         dx(4)=1;
+
+        rexpind=4;
     end
     if type=="4st"
         if nondim
@@ -193,7 +250,7 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
     currentntcheck=NTCHECK;
     paramHistCounts = zeros(nparams,NBINS);
     paramHistCountsPrevious = zeros(nparams,NBINS);
-    [logll_nt,divvalue]=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype,nondim,divdatapoint);
+    [logll_nt,divvalue]=loglikelihood(type,data,rates,params(1:nkpolyparams),params(nkpolyparams+1:nparams),errtype,nondim,divdatapoint,NTDadjust, fig4pen, fig3pen);
     minlogll=logll_nt;
     if nondim
         minlogll_params=gettrueparams(params,divvalue,divkpoly,nkpolyparams);
@@ -205,6 +262,14 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
 
     
     %disp("starting MCMC loop")
+    % hold off
+    % fig=figure;
+    % plt_accept=animatedline("LineStyle","none", "MarkerFaceColor",'blue',"Marker","o","MarkerSize",3);
+    % hold on
+    % plt_acceptrand=animatedline("LineStyle","none", "MarkerFaceColor",'cyan',"Marker","o","MarkerSize",3);
+    % plt_reject=animatedline("LineStyle","none", "MarkerFaceColor",'red',"Marker","o","MarkerSize",3);
+    % plt_newmin=animatedline("LineStyle","none", "MarkerFaceColor",'green',"Marker","o","MarkerSize",6);
+    % 
     while(nt<NTMAX)
         nt=nt+1;
         nt_temp=nt_temp+1;
@@ -219,17 +284,17 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
             
             p_accept=accepts./proposals;
             p_accept=accepts_new./proposals_new;
-            % disp("new acceptance probability:")
-            % disp(p_accept')
+             disp("new acceptance probability:")
+             disp(p_accept')
             p_accept(p_accept==0)=0.01;
             p_accept(proposals==0)=0.44;
             in=(p_accept>0.6 | p_accept<0.3);
-            % disp("previous step sizes: ")
-            % disp(dx')
+             disp("previous step sizes: ")
+             disp(dx')
             dx(in)=dx(in).*(p_accept(in)./0.44);
 
-            % disp("new step sizes: ")
-            % disp(dx')
+             disp("new step sizes: ")
+             disp(dx')
             proposals_adapt=proposals;
             accepts_adapt=accepts;
         end
@@ -243,7 +308,7 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
             % reject anything beyond the boundaries
         else
             %calculate logll of proposal
-            [logll_prop,divvalue]=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype,nondim,divdatapoint);
+            [logll_prop,divvalue]=loglikelihood(type,data,rates,proposal(1:nkpolyparams),proposal(nkpolyparams+1:nparams),errtype,nondim,divdatapoint, NTDadjust,fig4pen, fig3pen);
             % trueparams=gettrueparams(proposal,divvalue,divkpoly,nkpolyparams);
             % exptrueparams=10.^(trueparams);
             % exptrueparams(4)=trueparams(4);
@@ -261,13 +326,20 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
                 accepts(index)=accepts(index)+1;
                 accepts_temp(index)=accepts_temp(index)+1;
                 if logll_nt>minlogll
+                    % addpoints(plt_newmin,nt,logll_prop)
+                    % drawnow
+                    %disp(strcat("new params better:",num2str(params(1)),num2str(params(2))))
                     minlogll=logll_nt;
                     if nondim
                         minlogll_params=gettrueparams(params,divvalue,divkpoly,nkpolyparams);
                         minlogll_params_raw=params;
                     else
                         minlogll_params=params;
+                        minlogll_params_raw=params;
                     end
+                else
+                    % addpoints(plt_accept,nt,logll_prop)
+                    % drawnow
                 end
             elseif rand < exp((logll_prop-logll_nt)/kbt(nt))
                 % Boltzmann test, Accept 
@@ -276,6 +348,12 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
                 %kpolys_nt=kpolys_prop;
                 accepts(index)=accepts(index)+1;
                 accepts_temp(index)=accepts_temp(index)+1;
+                % addpoints(plt_acceptrand,nt,logll_prop)
+                % drawnow
+            else
+                % addpoints(plt_reject,nt,logll_prop)
+                % drawnow
+                 ylim([-100 inf])
             end
         end
 
@@ -368,26 +446,31 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
             ksvals(ksvalindex,:)=ksStatistic';
             ksvalindex=ksvalindex+1;
             if all(ksStatistic(:) < KSCRITICAL)
-                %disp('KS test successful')
-                maxlikelihoodplots(minlogll_params,type)
+                disp('KS test successful')
+                %maxlikelihoodplots(minlogll_params,type,prcalc, xloc,yloc)
                 fitTF=checkfit(type,data,rates,params(1:nkpolyparams),nondim,divdatapoint);
                 return
             else
-                %disp(ksStatistic')
-                %disp('KS test unsuccessful')
+                disp(ksStatistic')
+                disp('KS test unsuccessful')
                 currentntcheck=currentntcheck*3;
-                %fprintf('new currentntcheck: %d\n',currentntcheck)
+                fprintf('new currentntcheck: %d\n',currentntcheck)
                 paramHistCounts = zeros(nparams,NBINS);
                 paramHistCountsPrevious = zeros(nparams,NBINS);
             end
         end
     end
 
-    maxlikelihoodplots(minlogll_params,type)
+    %maxlikelihoodplots(minlogll_params,type,prcalc, xloc,yloc)
     fitTF=checkfit(type,data,rates,params(1:nkpolyparams),nondim,divdatapoint);
 
     function [proposals,i]=generateproposal(params,dx)
         i=randi([1 length(params)]);
+        if ~fitrexp
+            while i==rexpind
+                i=randi([1 length(params)]);
+            end
+        end
         proposals=params;
         step=dx(i)*(2*rand-1);
         if step>0
@@ -406,10 +489,11 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
 
 end
 
-function maxlikelihoodplots(minlogll_params,type)
+function maxlikelihoodplots(minlogll_params,type, prcalc, xloc,yloc)
     load('Users/katiebogue/MATLAB/GitHub/kpolyMCMC/Experiments_4c.mat')
 
     Experiment1.opts.set_equation(1);
+    %Experiment1.opts.set_equation(3);
     Experiment1.opts.k_cap=10^minlogll_params(1);
     Experiment1.opts.k_del=10^minlogll_params(2);
     Experiment1.opts.r_cap=10^minlogll_params(3);
@@ -419,6 +503,14 @@ function maxlikelihoodplots(minlogll_params,type)
     if type=="4st"
         Experiment1.opts.r_del=10^minlogll_params(5);
         Experiment1.opts.k_rel=10^minlogll_params(6);
+    end
+
+    if prcalc
+        Experiment1.opts.del_x=xloc;
+        Experiment1.opts.del_y=yloc;
+        Experiment1.opts.set_equation(3);
+    else
+        Experiment1.opts.set_equation(1);
     end
     
     figure('units','centimeters','position',[5,5,45,30],'Name','BestFit');hold on;
@@ -453,7 +545,7 @@ function maxlikelihoodplots(minlogll_params,type)
 end
 
 
-function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,nondim,divdatapoint)
+function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,nondim,divdatapoint, NTDadjust, fig4pen, fig3pen)
     % calulcates energy values for input parameters
 
     inputparams=10.^(params);
@@ -524,10 +616,10 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
             %     logll=logll+2*logll_i;
             % end
 
-            %extra penalty for NTD data
-            % if data.type=="ratio"
-            %     logll=logll-SSE;
-            % end
+            % extra penalty for NTD data
+            if data.type(rows)=="ratio"
+                logll=logll-NTDadjust*SSE;
+            end
         end
     elseif errtype==2
         for i=1:length(expdata)
@@ -541,53 +633,125 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
         error("invalid error type")
     end
 
-    % extra penalty for more trends
-    % rows = data.type == "double";
-    % logll=logll-sum(10.*(abs(diff(simdata(rows))-diff(expdata(rows))))); 
+    % extra penalty for fig 3 
+    if fig3pen
+        rows=[];
+        for i=1:length(expdata)
+            if data.groups{i}=="Fig 4a"
+            else
+                if data.type{i}=="double"
+                    rows=[rows, i];
+                end
+            end
+        end
+        logll=logll-sum(10.*(abs(diff(simdata(rows))-diff(expdata(rows))))); 
+    end
 
     % extra penalty for fig 4a data
-    rows=[];
-    for i=1:length(expdata)
-        if data.groups{i}=="Fig 4a"
-            rows=[rows, i];
+    if fig4pen
+        rows=[];
+        for i=1:length(expdata)
+            if data.groups{i}=="Fig 4a"
+                rows=[rows, i];
+            end
         end
+        logll=logll-sum(abs(diff(simdata(rows))-diff(expdata(rows))));
     end
-    logll=logll-sum(abs(diff(simdata(rows))-diff(expdata(rows))));
     
-    if sign(diff(simdata(rows))) ~= sign(diff(expdata(rows)))
-        logll=logll-sum((abs(diff(simdata(rows))-diff(expdata(rows)))));
-    end
 end
 
 function kpolys=calckpolys(type,rates,params,nondim)
     % calulcates kpolys for input parameters
-
+    
     % calculate per PRM rates
     if nondim
         % params = alpha_del, deta_cap, rcapp_exp, (gamma_del, tau_rel)
-        kcaps=cellfun(@(x) x, rates.k_capbase,'UniformOutput',false); 
-        kdels=cellfun(@(x) x.*params(1), rates.k_delbase,'UniformOutput',false); 
-        rcaps=cellfun(@(x) ((x).^params(3)).*params(2), rates.r_capbase,'UniformOutput',false); 
+        %kcaps=cellfun(@(x) x, rates.k_capbase,'UniformOutput',false); 
+        kcaps = cell(size(rates.k_capbase));
+        for i = 1:numel(rates.k_capbase)
+            kcaps{i} = rates.k_capbase{i};
+        end
+
+        %kdels=cellfun(@(x) x.*params(1), rates.k_delbase,'UniformOutput',false); 
+        kdels = cell(size(rates.k_delbase));
+        for i = 1:numel(rates.k_delbase)
+            kdels{i} = rates.k_delbase{i} .* params(1);
+        end
+
+        %rcaps=cellfun(@(x) ((x).^params(3)).*params(2), rates.r_capbase,'UniformOutput',false); 
+        rcaps= cell(size(rates.r_capbase));
+        for i = 1:numel(rates.r_capbase)
+            rcaps{i} = ((rates.r_capbase{i}).^params(3)).*params(2);
+        end
     else
-        kcaps=cellfun(@(x) x.*params(1), rates.k_capbase,'UniformOutput',false);
-        kdels=cellfun(@(x) x.*params(2), rates.k_delbase,'UniformOutput',false);
-        rcaps=cellfun(@(x) ((x).^params(4)).*params(3), rates.r_capbase,'UniformOutput',false);
+        %kcaps=cellfun(@(x) x.*params(1), rates.k_capbase,'UniformOutput',false);
+        kcaps = cell(size(rates.k_capbase));
+        for i = 1:numel(rates.k_capbase)
+            kcaps{i} = rates.k_capbase{i} .* params(1);
+        end
+
+        %kdels=cellfun(@(x) x.*params(2), rates.k_delbase,'UniformOutput',false);
+        kdels = cell(size(rates.k_delbase));
+        for i = 1:numel(rates.k_delbase)
+            kdels{i} = rates.k_delbase{i} .* params(2);
+        end
+
+        %rcaps=cellfun(@(x) ((x).^params(4)).*params(3), rates.r_capbase,'UniformOutput',false);
+        rcaps= cell(size(rates.r_capbase));
+        for i = 1:numel(rates.r_capbase)
+            rcaps{i} = ((rates.r_capbase{i}).^params(4)).*params(3);
+        end
     end
     if type=="4st"
         if nondim
-            rdels=cellfun(@(x) x.*params(4), rates.r_delbase,'UniformOutput',false);
-            krels=cellfun(@(x) x.*params(5), rates.k_relbase,'UniformOutput',false);
+            %rdels=cellfun(@(x) x.*params(4), rates.r_delbase,'UniformOutput',false);
+            rdels = cell(size(rates.r_delbase));
+            for i = 1:numel(rates.r_delbase)
+                rdels{i} = rates.r_delbase{i} .* params(4);
+            end
+
+            %krels=cellfun(@(x) x.*params(5), rates.k_relbase,'UniformOutput',false);
+            krels = cell(size(rates.k_relbase));
+            for i = 1:numel(rates.k_relbase)
+                krels{i} = rates.k_relbase{i} .* params(5);
+            end
         else
-            rdels=cellfun(@(x) x.*params(5), rates.r_delbase,'UniformOutput',false);
-            krels=cellfun(@(x) x.*params(6), rates.k_relbase,'UniformOutput',false);
+            %rdels=cellfun(@(x) x.*params(5), rates.r_delbase,'UniformOutput',false);
+            rdels = cell(size(rates.r_delbase));
+            for i = 1:numel(rates.r_delbase)
+                kdels{i} = rates.r_delbase{i} .* params(5);
+            end
+
+            %krels=cellfun(@(x) x.*params(6), rates.k_relbase,'UniformOutput',false);
+            krels = cell(size(rates.k_relbase));
+            for i = 1:numel(rates.k_relbase)
+                krels{i} = rates.k_relbase{i} .* params(6);
+            end
         end
-        kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./krel) + ((rdel + krel)./(kdel .* krel)) + (((rcap .* rdel) + (rcap .* krel) + (kdel .* krel))./(kcap .* kdel .* krel))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+        %kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./krel) + ((rdel + krel)./(kdel .* krel)) + (((rcap .* rdel) + (rcap .* krel) + (kdel .* krel))./(kcap .* kdel .* krel))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+        kpolys = cell(size(kcaps));
+        for i = 1:numel(kcaps)
+            kcap = kcaps{i};
+            kdel = kdels{i};
+            rcap = rcaps{i};
+            rdel = rdels{i};
+            krel = krels{i};
+            kpolys{i} = 1./((1./krel) + ((rdel + krel)./(kdel .* krel)) + (((rcap .* rdel) + (rcap .* krel) + (kdel .* krel))./(kcap .* kdel .* krel)));
+        end
     elseif type=="3st"
-        rdels=kcaps;
-        krels=kcaps;
-        kpolys=cellfun(@(kcap,kdel,rcap,rdel,krel) 1./((1./kdel) + ((kdel + rcap)./(kdel.*kcap))),kcaps,kdels,rcaps,rdels,krels,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+        % rdels=kcaps;
+        % krels=kcaps;
+        %kpolys=cellfun(@(kcap,kdel,rcap) 1./((1./kdel) + ((kdel + rcap)./(kdel.*kcap))),kcaps,kdels,rcaps,'UniformOutput',false); % using formin inputs, calculate double and dimer for all formins
+        kpolys = cell(size(kcaps));
+        for i = 1:numel(kcaps)
+            kcap = kcaps{i};
+            kdel = kdels{i};
+            rcap = rcaps{i};
+            kpolys{i} = 1 ./ ((1 ./ kdel) + ((kdel + rcap) ./ (kdel .* kcap)));
+        end
     end
     
+
     for i=1:length(kpolys)
         PRMsum=sum(kpolys{i},1); % sum up PRMs
         kpolys{i}=[PRMsum(1),sum(PRMsum(2:3)),sum(PRMsum(4:5))]; % Sum up filaments
@@ -696,8 +860,8 @@ function fitTF=checkfit(type,data,rates,params,nondim,divdatapoint)
             rows=[rows, i];
         end
     end
-    topvals=data.value(rows)+data.errtop(rows);
-    botvals=data.value(rows)-data.errbot(rows);
+    topvals=data.value+data.errtop;
+    botvals=data.value-data.errbot;
     for i=rows
         if simdata(i)>topvals(i) || simdata(i)+.01<botvals(i)
             fitTF=0;

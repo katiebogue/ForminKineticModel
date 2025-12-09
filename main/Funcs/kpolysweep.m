@@ -95,6 +95,7 @@ if sweep=="PRM size"
     end
     xlab="PRM size";
     xlabel(xlab)
+    ylim([-14 2])
 elseif sweep=="FH1 length"
     PRM_sizes=[4,7,10];
     scatn=0;
@@ -120,6 +121,7 @@ elseif sweep=="FH1 length"
     end
     xlab="FH1 length";
     xlabel(xlab)
+    ylim([-14 2])
 elseif sweep=="FH2 dist"
     FH1_lengths=[50,150,300,400];
     scatn=0;
@@ -144,6 +146,7 @@ elseif sweep=="FH2 dist"
     end
     xlab="Distance from PRM to FH2";
     xlabel(xlab)
+    ylim([-14 2])
 elseif sweep=="NT dist"
     FH1_lengths=[50,150,300,400];
     scatn=0;
@@ -168,6 +171,7 @@ elseif sweep=="NT dist"
     end
     xlab="Distance from PRM to N-term";
     xlabel(xlab)
+    ylim([-14 2])
 else
     if ismember(sweep,fieldnames(options))
         ogopt=options.(sweep);
