@@ -38,22 +38,74 @@ classdef Experiment
             %       options : Options object
             %       file    : (String).txt file with comma separated values 
             %                   of the format 'name','sequence' or 'name','uniprotID'
-            %       type    : (String) which type ('seq' or 'uniprot' or 'null') the
+            %       type    : (String) which type ('seq' or 'uniprot' or 'null' or 'combo') the
             %                   information in file is in, if null, creates
             %                   empty Experiment
             %       cPA     : (double) concentration of profilin-actin to
-            %                   set each of the input formins to (default is 0.88)
+            %                   set each of the input formins to (default is 0.88, not used if type is combo)
             % 
             % See also EXPERIMENT, FORMIN.
             arguments
                 options Options
                 file string % .txt file, comma separated
-                type string {mustBeMember(type,{'seq','uniprot','null'})}
+                type string {mustBeMember(type,{'seq','uniprot','null','combo'})}
                 cPA double =0.88 % [profilin-actin] to assign to all formins
             end
             if nargin>0
                 obj.opts=options;
-                if type~="null"
+                if type=="combo"
+                    inputT=readtable(file);
+                    obj.ForminList=Formin.empty(height(inputT),0);
+                    for i = 1:height(inputT)
+                        forminname = convertCharsToStrings(inputT.Formin(i));   %takes the name
+                        if inputT.Sequence(i)~=""
+                            tempFormin=Formin(forminname,obj.opts,sequence=inputT.Sequence(i),c_actin=inputT.c_actin(i),c_profilin=inputT.c_profilin(i),kd_PA=inputT.kd(i),gating=inputT.Gating(i));
+                        else
+                            if isnan(inputT.length(i))
+                                error("must provide either an input sequence or an input length, PRMloc, and PRMsize for each formin")
+                            else
+                                if inputT.PRMloc(i)~=""
+                                    PRMlocs=cellfun(@str2num,split(inputT.PRMloc(i),';'));
+                                else
+                                    error("must provide either an input sequence or an input length, PRMloc, and PRMsize for each formin")
+                                end
+
+                                if inputT.PRMsize(i)~=""
+                                    PRMsizes=cellfun(@str2num,split(inputT.PRMsize(i),';'));
+                                    if size(PRMsizes,1)~=size(PRMlocs,1) && size(PRMsizes,2)~=size(PRMlocs,2)
+                                        error("number of PRM sizes must match number of PRM locations")
+                                    end
+                                else
+                                    error("must provide either an input sequence or an input length, PRMloc, and PRMsize for each formin")
+                                end
+                            tempFormin=Formin(forminname,obj.opts,length=inputT.length(i),PRMloc=PRMlocs,PRMsize=PRMsizes,c_actin=inputT.c_actin(i),c_profilin=inputT.c_profilin(i),kd_PA=inputT.kd(i),gating=inputT.Gating(i));
+                            end
+                        end
+                        obj.ForminList(i)=tempFormin;
+                        groups=convertCharsToStrings(split(inputT.groups(i),';'))';
+                        nans=isnan([inputT.errplus(i),inputT.errminus(i),inputT.errtop(i),inputT.errbot(i),inputT.errperc(i)]);
+                        errmsg="for each formin, must provide either errplus and errminus, errtop and errbot, or errperc";
+                        if sum(nans)==4
+                            if isnan(inputT.errperc(i))
+                                error(errmsg)
+                            else
+                                obj=obj.add_data(forminname,inputT.value(i),inputT.type(i),errperc=inputT.errperc(i),groups=groups);
+                            end
+                        elseif sum(nans)==3
+                            if ~isnan(inputT.errplus(i)) && ~isnan(inputT.errminus(i))
+                                obj=obj.add_data(forminname,inputT.value(i),inputT.type(i),errminus=inputT.errminus(i),errplus=inputT.errplus(i),groups=groups);
+                            elseif ~isnan(inputT.errtop(i)) && ~isnan(inputT.errbot(i))
+                                obj=obj.add_data(forminname,inputT.value(i),inputT.type(i),errbot=inputT.errbot(i),errtop=inputT.errtop(i),groups=groups);
+                            else
+                                error(errmsg)
+                            end
+                        else
+                            error(errmsg)
+                        end
+                        
+
+                    end
+                elseif type~="null"
                     forminlist = char(importdata(file)); 
                     forminlist = strsplit(forminlist);
                     obj.ForminList=Formin.empty((length(forminlist)/2),0);
@@ -321,7 +373,7 @@ classdef Experiment
                 end
                 if isfield(NameValueArgs,"errtop")
                     if NameValueArgs.errtop<value
-                        error("top error cannot be greater than the value")
+                        error("top error must be greater than the value")
                     end
                     errtop=NameValueArgs.errtop-value;
                 end
@@ -330,7 +382,7 @@ classdef Experiment
                 end
                 if isfield(NameValueArgs,"errbot")
                     if NameValueArgs.errbot>value
-                        error("bottom error cannot be less than the value")
+                        error("bottom error must be less than the value")
                     end
                     errbot=value-NameValueArgs.errbot;
                 end

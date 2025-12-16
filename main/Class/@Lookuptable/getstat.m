@@ -143,14 +143,22 @@ function output = getstat(obj,NameValueArgs)
                         extrap=obj.extrapolate(Stat);
                         tempout.single=generateextrapolation("single");
                     else
-                        tempout.single=tempAddedStats.(Stat).single.(NName);
+                        if isempty(tempAddedStats.(Stat).single)
+                            tempout.single=tempAddedStats.(Stat).single;
+                        else
+                            tempout.single=tempAddedStats.(Stat).single.(NName);
+                        end
                     end
 
                     if ~isempty(obj.missingNs.double) && ismember(NName,obj.missingNs.double)
                         extrap=obj.extrapolate(Stat);
                         tempout.double=generateextrapolation("double");
                     else
-                        tempout.double=tempAddedStats.(Stat).double.(NName);
+                        if isempty(tempAddedStats.(Stat).double)
+                            tempout.double=tempAddedStats.(Stat).double;
+                        else
+                            tempout.double=tempAddedStats.(Stat).double.(NName);
+                        end
                         if ~isempty(Fil)
                             if class(tempout.double)=="Filament" 
                                 tempout.double=tempout.double.(Fil);
@@ -162,7 +170,11 @@ function output = getstat(obj,NameValueArgs)
                         extrap=obj.extrapolate(Stat);
                         tempout.dimer=generateextrapolation("dimer");
                     else
-                        tempout.dimer=tempAddedStats.(Stat).dimer.(NName);
+                        if isempty(tempAddedStats.(Stat).dimer)
+                            tempout.dimer=tempAddedStats.(Stat).dimer;
+                        else
+                            tempout.dimer=tempAddedStats.(Stat).dimer.(NName);
+                        end
                         if ~isempty(Fil)
                             if class(tempout.dimer)=="Filament"
                                 tempout.dimer=tempout.dimer.(Fil);
@@ -283,7 +295,7 @@ function output = getstat(obj,NameValueArgs)
         else
             size1=size(input,1);
             size2=size(input,2);
-            if size1==1 && size2==1
+            if (size1==1 && size2==1) || (size1==0 && size2==0)
                 out=input;
             elseif size1==1 && size2>1
                 if size2<iSite

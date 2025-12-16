@@ -140,6 +140,16 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
     %opts.resultsfolder=strcat(opts.resultsfolder,"_",type,"_nondim",num2str(nondim),"_prcalc",num2str(prcalc),"_errtype",num2str(errtype),"_fitrexp",num2str(fitrexp),"_",titleadd);
 
     data=struct2table(datatab);
+    if fig4pen
+        if ~any(contains(string([data.groups{:}]),"Fig 4a"))
+            erorr("cannot apply fig 4a penatly if input Exp does not include Fig 4a data")
+        end
+    end
+    if fig3pen
+        if ~any(contains([data.groups{:}],"Fig 3 5"))
+            erorr("cannot apply fig 3 penatly if input Exp does not include Fig 3 5 data")
+        end
+    end
     divdatapoint=0;
     if nondim
         for a=1:height(data)
@@ -167,6 +177,8 @@ function [minlogll_params, minlogll_params_raw,fitTF] = SimulateAnneal(Exp,initi
         nsigma=length(unique(data.type));
     elseif errtype==2
         nsigma=1;
+    elseif errtype==3
+        nsigma=0;
     else
         error("invalid error type")
     end
@@ -629,6 +641,14 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
             logll_i=(-SSE/(2*sigma2))-(0.5*log(2*pi*sigma2));
             logll=logll+logll_i;
         end
+    
+    elseif errtype==3
+        vals=zeros(1,length(expdata));
+        for i=1:length(expdata)
+            SEM=(data.errtop(i)+data.errbot(i))/2;
+            vals(1,i)=abs(expdata(i)-simdata(i))/SEM;
+        end
+        logll=-(rms(vals))^2;
     else
         error("invalid error type")
     end
@@ -637,7 +657,7 @@ function [logll,divvalue]=loglikelihood(type,data,rates,params,sigma,errtype,non
     if fig3pen
         rows=[];
         for i=1:length(expdata)
-            if data.groups{i}=="Fig 4a"
+            if data.groups{i}=="Fig 3 5"
             else
                 if data.type{i}=="double"
                     rows=[rows, i];
@@ -829,42 +849,54 @@ function fitTF=checkfit(type,data,rates,params,nondim,divdatapoint)
     fitTF=1;
 
     % check if trend is present for fig 4a
-    rows=[];
-    for i=1:length(expdata)
-        if data.groups{i}=="Fig 4a"
-            rows=[rows, i];
+    if any(contains([data.groups{:}],"Fig 4a"))
+        rows=[];
+        for i=1:length(expdata)
+            if data.groups{i}=="Fig 4a"
+                rows=[rows, i];
+            end
         end
-    end
-    %logll=logll-sum(abs(diff(simdata(rows))-diff(expdata(rows))));
-    if sign(diff(simdata(rows))) ~= sign(diff(expdata(rows)))
-        fitTF=0;
+        %logll=logll-sum(abs(diff(simdata(rows))-diff(expdata(rows))));
+        if sign(diff(simdata(rows))) ~= sign(diff(expdata(rows)))
+            fitTF=0;
+        end
+    else
+        warning("Fig 4a data is not present, so it is not being included in assessment of fit")
     end
 
 
     % check if trend is present for fig 3
-    rows=[];
-    for i=1:length(expdata)
-        if data.groups{i}=="Fig 3 5"
-            rows=[rows, i];
+    if any(contains([data.groups{:}],"Fig 3 5"))
+        rows=[];
+        for i=1:length(expdata)
+            if data.groups{i}=="Fig 3 5"
+                rows=[rows, i];
+            end
         end
-    end
-    %logll=logll-sum(abs(diff(simdata(rows))-diff(expdata(rows))));
-    if sign(diff(simdata(rows))) ~= sign(diff(expdata(rows)))
-        fitTF=0;
+        %logll=logll-sum(abs(diff(simdata(rows))-diff(expdata(rows))));
+        if sign(diff(simdata(rows))) ~= sign(diff(expdata(rows)))
+            fitTF=0;
+        end
+    else
+        warning("Fig 3 5 data is not present, so it is not being included in assessment of fit")
     end
 
     % check if NTD is within error bars
-    rows=[];
-    for i=1:length(expdata)
-        if data.groups{i}=="NTD data"
-            rows=[rows, i];
+    if any(contains([data.groups{:}],"NTD data"))
+        rows=[];
+        for i=1:length(expdata)
+            if data.groups{i}=="NTD data"
+                rows=[rows, i];
+            end
         end
-    end
-    topvals=data.value+data.errtop;
-    botvals=data.value-data.errbot;
-    for i=rows
-        if simdata(i)>topvals(i) || simdata(i)+.01<botvals(i)
-            fitTF=0;
+        topvals=data.value+data.errtop;
+        botvals=data.value-data.errbot;
+        for i=rows
+            if simdata(i)>topvals(i) || simdata(i)+.01<botvals(i)
+                fitTF=0;
+            end
         end
+    else
+        warning("NTD data data is not present, so it is not being included in assessment of fit")
     end
 end

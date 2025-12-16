@@ -134,7 +134,7 @@ classdef Formin < handle
                         obj.c_actin=NameValueArgs.c_actin;
                         obj.c_profilin=NameValueArgs.c_profilin;
                         obj.kd_PA=NameValueArgs.kd_PA;
-                        obj.c_PA=calcCPA(obj.c_actin,obj.c_profilin,obj.kd_PA);
+                        obj.update_cpa;
                     else
                         if isfield(NameValueArgs,"c_actin")
                             obj.c_actin=NameValueArgs.c_actin;
@@ -163,9 +163,12 @@ classdef Formin < handle
                         obj.length=NameValueArgs.length;
                         obj.NName=strcat("N",num2str(obj.length));
                         obj.PRMList=PRM.empty;
-                        PRMstartloc=NameValueArgs.PRMloc-ceil(NameValueArgs.PRMsize/2)+1;
-                        obj.PRMList(1,1)=PRM(obj,NameValueArgs.PRMloc,(obj.length-NameValueArgs.PRMloc),NameValueArgs.PRMsize,PRMstartloc);
-                        obj.Ploc=PRMstartloc:(PRMstartloc+NameValueArgs.PRMsize);
+                        obj.Ploc=[];
+                        for i=1:length(NameValueArgs.PRMloc)
+                            PRMstartloc=NameValueArgs.PRMloc(i)-ceil(NameValueArgs.PRMsize(i)/2)+1;
+                            obj.PRMList(1,i)=PRM(obj,NameValueArgs.PRMloc(i),(obj.length-NameValueArgs.PRMloc(i)),NameValueArgs.PRMsize(i),PRMstartloc);
+                            obj.Ploc=[obj.Ploc,PRMstartloc:(PRMstartloc+NameValueArgs.PRMsize(i))];
+                        end
                     end
                 elseif isfield(NameValueArgs,"sequence") && isfield(NameValueArgs,"uniprotID")
                     error("cannot provide both an input sequence and a uniprotID")
@@ -314,7 +317,9 @@ classdef Formin < handle
 
         function set.c_PA(obj,value)
             obj.c_PA=value;
-            if ~isempty(obj.c_actin) && ~isempty(obj.c_profilin) && ~isempty(obj.kd_PA)
+            [ST, I] = dbstack('-completenames', 1);
+            if ST(1).name=="Formin.update_cpa"
+            elseif ~isempty(obj.c_actin) && ~isempty(obj.c_profilin) && ~isempty(obj.kd_PA)
                 warning("you are overwriting the results of the input c_actin, c_profilin, and kd_PA values; They will no longer reflect the c_PA used in calculations until they are modified again or update_cpa is run")
             end
         end

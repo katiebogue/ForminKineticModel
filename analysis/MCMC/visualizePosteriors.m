@@ -76,6 +76,8 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     load(mfname,'prfit')
     load(mfname,'xloc')
     load(mfname,'yloc')
+    load(mfname,'plotsameexp')
+    
 
     inmemTF=[0,0];
     % logparams_all_trun=0;
@@ -412,7 +414,12 @@ function visualizePosteriors(foldername,saveTF,savefigfolder,filename)
     
     end
 
-    maxlikelihoodplot(foldername)
+    if plotsameexp
+        load(mfname,'Exp')
+        maxlikelihoodplot(foldername,Exp)
+    else
+        maxlikelihoodplot(foldername)
+    end
         
 end
 

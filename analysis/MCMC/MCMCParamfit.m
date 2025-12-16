@@ -1,4 +1,4 @@
-function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,KSCRITICAL,nondim,prcalc, prfit, xloc, yloc, titleadd,fitrexp)
+function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,KSCRITICAL,nondim,prcalc, prfit, xloc, yloc, titleadd,fitrexp,plotsameexp)
 %MCMCPARAMFIT run an MCMC metropolis algorithm to explore parameter space,
 %using an adaptive step size, KS test for convergence, and a loglikelihood
 %function based on the sum of squared errors.
@@ -24,15 +24,17 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
 %       KSCRITICAL: critical value for stopping criteria (stops when KS < KSCRITICAL) (defalt is 0.02)
 %       nondim    : whether to use nondimensionality (default is false)
 %       prcalc    : whether to use the equations for probability density, if not, then use values from the lookuptables (default is false)
-%       prfit     : wether or not to consider x and y delivery location as
+%       prfit     : whether or not to consider x and y delivery location as
 %                   a fit parameter (default is false)
 %       xloc      : x location for delivery site (default is 0), only used
 %                   if prfit is false
 %       yloc      : y location for delivery site (default is 0), only used
 %                   if prfit is false
 %       titleadd  : (string) additonal text to add to the save folder name
-%       fitrexp   : (bool) weather or not to fit the rcap exp parameter
+%       fitrexp   : (bool) whether or not to fit the rcap exp parameter
 %       (default is true)
+%       plotsameexp: (bool) whether or not to use the input experiment to
+%       run maxlikelihood plot (default is true, if false, uses the default in maxlikelihood.m)
 %        
 %   Creates a folder opts.resultsdir/opts.resultsfolder and saves
 %   mcmc_results.mat there in addition to creating a subfolder "Figures"
@@ -63,6 +65,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         yloc = 0
         titleadd = "BNI1fit"
         fitrexp = 1
+        plotsameexp = 1
     end
 
     
@@ -124,7 +127,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         opts.resultsfolder=strcat("MCMC_",opts.resultsfolder);
         fh1lengths=out_struct.fh1sizes;
         prmlocs=out_struct.prmlocs;
-        clear Exp
+        %clear Exp
         disp("Read in information from Experiment object")
     elseif exptype==2
         opts.resultsdir=Exp.resultsdir;
@@ -133,7 +136,7 @@ function MCMCParamfit(Exp,exptype,type,errtype,matfileTF, NTCHECK,NTADAPT,NTMAX,
         datatab=Exp.data;
         fh1lengths=Exp.fh1sizes;
         prmlocs=Exp.prmlocs;
-        clear Exp
+        %clear Exp
         disp("Loaded in pre-determined rates, data, and opts")
     else
         error("invalid exptype")
