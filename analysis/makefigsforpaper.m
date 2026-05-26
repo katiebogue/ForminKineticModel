@@ -37,13 +37,14 @@ else
     save("largeractinLookuptabs.mat")
 end
 %% make polymerheatmaps
-saveTF=true;
+saveTF=false;
 time= datetime('now', 'Format','yyyy-MM-dd HH-mm');
 time= string(time);
 resultsfolder= 'RESULTS_' + time;
 resultsfolder= strcat("/Users/katiebogue/MATLAB/GitHub/Data/files_for_comp_paper/",resultsfolder);
 mkdir(fullfile(resultsfolder,"polymerheatmaps"))
 savefigfolder=fullfile(resultsfolder,"polymerheatmaps");
+polymerstatheatmap("POcclude",lt_16,"16.667","ratio",false,saveTF,savefigfolder,[-1 1])
 polymerstatheatmap("POcclude",lt_35,"35.5","ratio",false,saveTF,savefigfolder,[-1 1])
 polymerstatheatmap("Prvec0",lt_35,"35.5","ratio",false,saveTF,savefigfolder,[-3 3])
 polymerstatheatmap("POcclude",lt_16,"16.667","ratio",false,saveTF,savefigfolder,[-1 1])

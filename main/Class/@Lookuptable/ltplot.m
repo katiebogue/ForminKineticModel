@@ -10,11 +10,16 @@ function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
 %                   property
 %       skip        : (double) plot points from 1:skip:end to improve plot
 %                   readability (default is 1-- aka no skip)
+%       type        : (string) "dimer," "double," "single," or "ratio" (NameValueArgs)
+%       FH1         : (double) size of the FH1 to fix; only works properly if xval='NTdist' or 'CTdist' (use -1 to plot all;
+%                    default is -1) (NameValueArgs)
+%       PRM         : (double) size of the FH1 to fix; only works properly if xval='length' (use -1 to plot all;
+%                    default is -1) (NameValueArgs)
 %       ratioscale  : (string) how to scale ratio y axis (none, log2,
 %                   log10,ln), if not specified, used the same scale as
 %                   specifed by scale (NameValueArgs) 
 %       scale       : (string) how to scale stat property y axis (none, log2,
-%                   log10,ln), if not specified, no scaling is applied (NameValueArgs)
+%                   log10,ln, amino((1.0e33*var/27*6.022e23)), if not specified, no scaling is applied (NameValueArgs)
 %       ax1         : (axes) axes to put the plot on (NameValueArgs)
 % 
 %   Output is an array of figures holding the scatterplots.
@@ -26,11 +31,29 @@ function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
         stat string 
         skip double =1 % will plots points from 1:skip:end
         NameValueArgs.type string {mustBeMember(NameValueArgs.type,{'single','dimer','double','ratio'})}
+        NameValueArgs.FH1 double
+        NameValueArgs.PRM double
         NameValueArgs.ratioscale string {mustBeMember(NameValueArgs.ratioscale,{'none','log2','log10','ln'})} % scale for ratio plot
-        NameValueArgs.scale string {mustBeMember(NameValueArgs.scale,{'none','log2','log10','ln'})} % will set scale for all plots (including ratio if no ratioscale is set)
+        NameValueArgs.scale string {mustBeMember(NameValueArgs.scale,{'none','log2','log10','ln','amino'})} % will set scale for all plots (including ratio if no ratioscale is set)
         NameValueArgs.ax1 %axes to put the plot on
     end
     obj.holdratio=true;
+
+    fixFH1=false;
+    if isfield(NameValueArgs,"FH1")
+        if NameValueArgs.FH1~=-1
+            fixFH1=true;
+            FH1fixedval=NameValueArgs.FH1;
+        end
+    end
+
+    fixPRM=false;
+    if isfield(NameValueArgs,"PRM")
+        if NameValueArgs.PRM~=-1
+            fixPRM=true;
+            PRMfixedval=NameValueArgs.PRM;
+        end
+    end
 
     if isfield(NameValueArgs,"scale")
         scale=NameValueArgs.scale;
@@ -72,12 +95,21 @@ function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
         legend
     end
 
+   
     set(gca,'fontname','Arial')
     hold off
     obj.holdratio=false;
 
     function typscatter(type,scale,ax1)
         mat=obj.stattable(stat,type);
+        if fixFH1
+            mat.a = mat.a(mat.a(:, 1) == FH1fixedval, :); % Filter by fixed FH1 value
+            mat.b = mat.b(mat.b(:, 1) == FH1fixedval, :); % Filter by fixed FH1 value
+        end
+        if fixPRM
+            mat.a = mat.a(mat.a(:, 2) == PRMfixedval, :); % Filter by fixed PRM value
+            mat.b = mat.b(mat.b(:, 2) == PRMfixedval, :); % Filter by fixed PRM value
+        end
         if class(mat)=="Filament"
             filscatter(mat.a,strcat(type," a"),'#29ABE2',ax1)
             filscatter(mat.b,strcat(type," b"),'#F15A22',ax1)
@@ -113,6 +145,9 @@ function fig=ltplot(obj,xval,stat,skip,NameValueArgs)
             elseif scale=="ln"
                 y=log(y);
                 ratioline=0;
+            elseif scale=="amino"
+                y=(1.0e33.*y./(27.*6.022e23));
+                ratioline=1;
             end
             
             s=scatter(ax1,x(1:skip:end),y(1:skip:end), 'filled','DisplayName',label);
